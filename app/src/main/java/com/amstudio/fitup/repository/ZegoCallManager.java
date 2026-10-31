@@ -37,6 +37,7 @@ public class ZegoCallManager {
     public interface CallEventListener {
         void onRemoteUserJoined(String streamId);
         void onRemoteUserLeft(String streamId);
+        void onRemoteCameraStateChanged(String streamId, boolean isOpen);
         void onError(int errorCode, String message);
     }
 
@@ -65,7 +66,7 @@ public class ZegoCallManager {
         ZegoEngineProfile profile = new ZegoEngineProfile();
         profile.appID = APP_ID;
         profile.appSign = APP_SIGN;
-        profile.scenario = ZegoScenario.GENERAL;
+        profile.scenario = ZegoScenario.DEFAULT;
         profile.application = application;
 
         engine = ZegoExpressEngine.createEngine(profile, new IZegoEventHandler() {
@@ -93,7 +94,39 @@ public class ZegoCallManager {
                     }
                 }
             }
+
+            @Override
+            public void onPublisherStateUpdate(String streamID, im.zego.zegoexpress.constants.ZegoPublisherState state, int errorCode, JSONObject extendedData) {
+                Log.d(TAG, "onPublisherStateUpdate: " + streamID + ", state: " + state + ", error: " + errorCode);
+            }
+
+            @Override
+            public void onPlayerStateUpdate(String streamID, im.zego.zegoexpress.constants.ZegoPlayerState state, int errorCode, JSONObject extendedData) {
+                Log.d(TAG, "onPlayerStateUpdate: " + streamID + ", state: " + state + ", error: " + errorCode);
+            }
+
+            @Override
+            public void onAudioRouteChange(ZegoAudioRoute audioRoute) {
+                Log.d(TAG, "onAudioRouteChange: " + audioRoute);
+            }
+
+            @Override
+            public void onRemoteCameraStateUpdate(String streamID, im.zego.zegoexpress.constants.ZegoRemoteDeviceState state) {
+                Log.d(TAG, "onRemoteCameraStateUpdate: " + streamID + ", state: " + state);
+                if (eventListener != null) {
+                    boolean isOpen = (state == im.zego.zegoexpress.constants.ZegoRemoteDeviceState.OPEN);
+                    eventListener.onRemoteCameraStateChanged(streamID, isOpen);
+                }
+            }
         });
+
+        if (engine != null) {
+            engine.enableAudioCaptureDevice(true);
+            engine.muteMicrophone(false);
+            engine.mutePublishStreamAudio(false);
+            engine.muteAllPlayStreamAudio(false);
+            engine.setCaptureVolume(100);
+        }
 
         isEngineInitialized = (engine != null);
         Log.d(TAG, "ZEGO Express Engine initialized: " + isEngineInitialized);
@@ -138,6 +171,12 @@ public class ZegoCallManager {
 
         String streamId = roomId + "_" + (userId != null ? userId : "stream");
 
+        engine.enableAudioCaptureDevice(true);
+        engine.muteMicrophone(false);
+        engine.mutePublishStreamAudio(false);
+        engine.setCaptureVolume(100);
+        engine.setAudioRouteToSpeaker(true);
+
         if (isVideo && localVideoView != null) {
             engine.enableCamera(true);
             ZegoCanvas localCanvas = new ZegoCanvas(localVideoView);
@@ -175,7 +214,11 @@ public class ZegoCallManager {
         if (engine == null) return;
         this.currentRemoteStreamId = streamId;
 
-        if (remoteVideoView != null) {
+        engine.mutePlayStreamAudio(streamId, false);
+        engine.mutePlayStreamVideo(streamId, false);
+        engine.setPlayVolume(streamId, 100);
+
+        if (remoteVideoView != null && remoteVideoView.getVisibility() == View.VISIBLE) {
             ZegoCanvas remoteCanvas = new ZegoCanvas(remoteVideoView);
             remoteCanvas.viewMode = ZegoViewMode.ASPECT_FILL;
             engine.startPlayingStream(streamId, remoteCanvas);
@@ -205,6 +248,9 @@ public class ZegoCallManager {
     public void setSpeaker(boolean isSpeakerOn) {
         if (engine != null) {
             engine.setAudioRouteToSpeaker(isSpeakerOn);
+            if (currentRemoteStreamId != null) {
+                engine.setPlayVolume(currentRemoteStreamId, isSpeakerOn ? 100 : 70);
+            }
         }
     }
 

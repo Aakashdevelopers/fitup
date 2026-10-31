@@ -76,6 +76,7 @@ public class TRTCCallActivity extends AppCompatActivity {
     private TextView tvTimer;
 
     // Outgoing / Active Audio Buttons
+    private ImageButton btnCallBack;
     private ImageButton btnMute;
     private ImageButton btnCamera;
     private ImageButton btnSpeaker;
@@ -126,6 +127,9 @@ public class TRTCCallActivity extends AppCompatActivity {
     private boolean isFrontCamera = true;
 
     private boolean isZegoRoomEntered = false;
+    private boolean isRemoteCameraOpen = true;
+
+    private BottomSheetDialog videoRequestDialog;
 
     private ListenerRegistration callListener;
     private final Handler timerHandler = new Handler(Looper.getMainLooper());
@@ -187,6 +191,9 @@ public class TRTCCallActivity extends AppCompatActivity {
                     if (Boolean.TRUE.equals(audioGranted)) {
                         Toast.makeText(this, "Microphone permission granted!", Toast.LENGTH_SHORT).show();
                         setupAudioHardwareForCall();
+                        if (!isIncoming && !isZegoRoomEntered) {
+                            initAndEnterZegoRoom();
+                        }
                     } else {
                         Toast.makeText(this, "Audio permission required for calling", Toast.LENGTH_LONG).show();
                     }
@@ -217,7 +224,10 @@ public class TRTCCallActivity extends AppCompatActivity {
         } else {
             bindCallUI();
             if (!isIncoming) {
-                initAndEnterZegoRoom();
+                boolean audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+                if (audioGranted) {
+                    initAndEnterZegoRoom();
+                }
             }
         }
 
@@ -254,10 +264,10 @@ public class TRTCCallActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tv_call_status);
         tvTimer = findViewById(R.id.tv_call_timer);
 
+        btnCallBack = findViewById(R.id.btn_call_back);
         btnMute = findViewById(R.id.btn_call_mute);
         btnCamera = findViewById(R.id.btn_call_camera);
         btnSpeaker = findViewById(R.id.btn_call_speaker);
-        btnKeypad = findViewById(R.id.btn_call_keypad);
         btnEnd = findViewById(R.id.btn_call_end);
         layoutEndCallContainer = findViewById(R.id.layout_end_call_container);
 
@@ -317,6 +327,14 @@ public class TRTCCallActivity extends AppCompatActivity {
                     }
                 }
 
+                if (btnCallBack != null) {
+                    ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) btnCallBack.getLayoutParams();
+                    if (lp != null) {
+                        lp.topMargin = statusBarHeight + dpToPx(12);
+                        btnCallBack.setLayoutParams(lp);
+                    }
+                }
+
                 if (layoutVideoBottomBar != null) {
                     ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) layoutVideoBottomBar.getLayoutParams();
                     if (lp != null) {
@@ -357,6 +375,8 @@ public class TRTCCallActivity extends AppCompatActivity {
             avatarUrl = intent.getStringExtra(EXTRA_AVATAR_URL);
             isVideo = intent.getBooleanExtra(EXTRA_IS_VIDEO, false);
             isIncoming = intent.getBooleanExtra(EXTRA_IS_INCOMING, false);
+            isSpeakerOn = isVideo;
+            isCameraOn = isVideo;
         }
     }
 
@@ -389,11 +409,24 @@ public class TRTCCallActivity extends AppCompatActivity {
         if (cardLocalVideoPip != null) cardLocalVideoPip.setVisibility(View.VISIBLE);
         if (tvLocalVideoTexture != null) tvLocalVideoTexture.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
         if (ivCallVideoPreview != null) ivCallVideoPreview.setVisibility(isCameraOn ? View.GONE : View.VISIBLE);
+
+        if (isRemoteCameraOpen) {
+            if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.VISIBLE);
+            if (ivRemoteVideoPreview != null) ivRemoteVideoPreview.setVisibility(View.GONE);
+        } else {
+            if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.GONE);
+            if (ivRemoteVideoPreview != null) {
+                ivRemoteVideoPreview.setVisibility(View.VISIBLE);
+                ivRemoteVideoPreview.bringToFront();
+            }
+        }
+
         if (layoutVideoBottomBar != null) layoutVideoBottomBar.setVisibility(View.VISIBLE);
 
         ZegoCallManager.getInstance().setLocalVideoView(tvLocalVideoTexture);
 
         // Hide Audio Call / Calling screen
+        if (btnCallBack != null) btnCallBack.setVisibility(View.GONE);
         if (layoutCallTopBar != null) layoutCallTopBar.setVisibility(View.GONE);
         if (layoutCallProfile != null) layoutCallProfile.setVisibility(View.GONE);
         if (viewAvatarAmbientGlow != null) viewAvatarAmbientGlow.setVisibility(View.GONE);
@@ -415,15 +448,23 @@ public class TRTCCallActivity extends AppCompatActivity {
         if (cardLocalVideoPip != null) cardLocalVideoPip.setVisibility(View.GONE);
         if (layoutVideoBottomBar != null) layoutVideoBottomBar.setVisibility(View.GONE);
 
+        if (btnCallBack != null) {
+            btnCallBack.setVisibility(View.VISIBLE);
+            btnCallBack.bringToFront();
+        }
         if (layoutCallTopBar != null) layoutCallTopBar.setVisibility(View.VISIBLE);
         if (layoutCallProfile != null) layoutCallProfile.setVisibility(View.VISIBLE);
         if (viewAvatarAmbientGlow != null) viewAvatarAmbientGlow.setVisibility(View.VISIBLE);
 
         if (isIncoming && !isCallConnected) {
-            if (tvStatus != null) tvStatus.setText("Incoming Call");
+            if (tvStatus != null) {
+                tvStatus.setVisibility(View.VISIBLE);
+                tvStatus.setText("Incoming Call");
+            }
+            if (tvTimer != null) tvTimer.setVisibility(View.GONE);
 
             if (btnIncomingRemind != null) btnIncomingRemind.setVisibility(View.VISIBLE);
-            if (btnIncomingMessage != null) btnIncomingMessage.setVisibility(View.GONE);
+            if (btnIncomingMessage != null) btnIncomingMessage.setVisibility(View.VISIBLE);
             if (layoutDeclineContainer != null) layoutDeclineContainer.setVisibility(View.VISIBLE);
             if (layoutAcceptContainer != null) layoutAcceptContainer.setVisibility(View.VISIBLE);
 
@@ -433,7 +474,17 @@ public class TRTCCallActivity extends AppCompatActivity {
             if (btnSpeaker != null) btnSpeaker.setVisibility(View.GONE);
             if (btnKeypad != null) btnKeypad.setVisibility(View.GONE);
         } else {
-            if (tvStatus != null) tvStatus.setText(isCallConnected ? "Connected" : "Connecting");
+            if (tvStatus != null) {
+                if (isCallConnected) {
+                    tvStatus.setVisibility(View.GONE);
+                } else {
+                    tvStatus.setVisibility(View.VISIBLE);
+                    tvStatus.setText("Connecting");
+                }
+            }
+            if (tvTimer != null) {
+                tvTimer.setVisibility(isCallConnected ? View.VISIBLE : View.GONE);
+            }
 
             if (btnIncomingRemind != null) btnIncomingRemind.setVisibility(View.GONE);
             if (btnIncomingMessage != null) btnIncomingMessage.setVisibility(View.GONE);
@@ -441,7 +492,7 @@ public class TRTCCallActivity extends AppCompatActivity {
             if (layoutAcceptContainer != null) layoutAcceptContainer.setVisibility(View.GONE);
 
             if (layoutEndCallContainer != null) layoutEndCallContainer.setVisibility(View.VISIBLE);
-            if (btnCamera != null) btnCamera.setVisibility(isVideo ? View.VISIBLE : View.GONE);
+            if (btnCamera != null) btnCamera.setVisibility(View.VISIBLE);
             if (btnMute != null) btnMute.setVisibility(View.VISIBLE);
             if (btnSpeaker != null) btnSpeaker.setVisibility(View.VISIBLE);
             if (btnKeypad != null) btnKeypad.setVisibility(View.VISIBLE);
@@ -449,7 +500,14 @@ public class TRTCCallActivity extends AppCompatActivity {
     }
 
     private void fetchTargetProfileIfNeeded() {
-        if ((avatarUrl != null && !avatarUrl.isEmpty()) || targetUid == null || targetUid.isEmpty()) {
+        if (targetUid == null || targetUid.isEmpty()) {
+            return;
+        }
+
+        boolean needName = userName == null || userName.isEmpty() || "Gym Buddy".equalsIgnoreCase(userName);
+        boolean needAvatar = avatarUrl == null || avatarUrl.isEmpty();
+
+        if (!needName && !needAvatar) {
             return;
         }
 
@@ -462,8 +520,14 @@ public class TRTCCallActivity extends AppCompatActivity {
                             photo = snapshot.getString("photoUrl");
                         }
                         String fetchedName = snapshot.getString("displayName");
-                        if (fetchedName != null && !fetchedName.isEmpty() && tvUserName != null) {
-                            tvUserName.setText(fetchedName);
+                        if (fetchedName == null || fetchedName.isEmpty()) {
+                            fetchedName = snapshot.getString("fullName");
+                        }
+                        if (fetchedName != null && !fetchedName.isEmpty()) {
+                            userName = fetchedName;
+                            if (tvUserName != null) {
+                                tvUserName.setText(userName);
+                            }
                         }
 
                         if (photo != null && !photo.isEmpty()) {
@@ -561,6 +625,10 @@ public class TRTCCallActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
+        if (btnCallBack != null) {
+            btnCallBack.setOnClickListener(v -> minimizeCall());
+        }
+
         if (btnAccept != null) {
             btnAccept.setOnClickListener(v -> acceptCall());
         }
@@ -654,14 +722,29 @@ public class TRTCCallActivity extends AppCompatActivity {
         isSpeakerOn = !isSpeakerOn;
         setHardwareSpeaker(isSpeakerOn);
         updateControlsState();
-        Toast.makeText(this, isSpeakerOn ? "Speakerphone On" : "Ear Piece Mode", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, isSpeakerOn ? "Speakerphone On (High Volume)" : "Normal Earpiece Mode", Toast.LENGTH_SHORT).show();
     }
 
     private void toggleCamera() {
-        isCameraOn = !isCameraOn;
-        ZegoCallManager.getInstance().enableCamera(isCameraOn);
-        updateControlsState();
-        Toast.makeText(this, isCameraOn ? "Camera On" : "Camera Off", Toast.LENGTH_SHORT).show();
+        if (isVideo) {
+            isCameraOn = !isCameraOn;
+            ZegoCallManager.getInstance().enableCamera(isCameraOn);
+            updateControlsState();
+            Toast.makeText(this, isCameraOn ? "Camera On" : "Camera Off", Toast.LENGTH_SHORT).show();
+        } else {
+            String currentUid = UserRepository.getInstance().getCurrentUid();
+            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            String myName = (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().isEmpty())
+                    ? currentUser.getDisplayName() : "User";
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("videoRequestStatus", "PENDING");
+            updates.put("videoRequestFrom", currentUid != null ? currentUid : "");
+            updates.put("videoRequestFromName", myName);
+            FirebaseFirestore.getInstance().collection("calls").document(callId).update(updates);
+
+            Toast.makeText(this, "Video call request sent to " + userName + "...", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void switchCamera() {
@@ -719,23 +802,19 @@ public class TRTCCallActivity extends AppCompatActivity {
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
                 audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                audioManager.setMicrophoneMute(isMuted);
-                audioManager.setSpeakerphoneOn(isSpeakerOn);
+                int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+                if (maxVol > 0) {
+                    audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol, 0);
+                }
             }
         } catch (Exception e) {
             Log.w(TAG, "Audio hardware setup warning: " + e.getLocalizedMessage());
         }
+        ZegoCallManager.getInstance().setMute(isMuted);
+        ZegoCallManager.getInstance().setSpeaker(isSpeakerOn);
     }
 
     private void setHardwareMute(boolean mute) {
-        try {
-            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (audioManager != null) {
-                audioManager.setMicrophoneMute(mute);
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Audio hardware mute error: " + e.getLocalizedMessage());
-        }
         ZegoCallManager.getInstance().setMute(mute);
     }
 
@@ -744,6 +823,13 @@ public class TRTCCallActivity extends AppCompatActivity {
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
                 audioManager.setSpeakerphoneOn(speaker);
+                int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+                if (speaker) {
+                    audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol, 0);
+                } else {
+                    int normalVol = Math.max(1, maxVol / 2);
+                    audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, normalVol, 0);
+                }
             }
         } catch (Exception e) {
             Log.w(TAG, "Audio hardware speaker error: " + e.getLocalizedMessage());
@@ -777,8 +863,90 @@ public class TRTCCallActivity extends AppCompatActivity {
                     } else if ("REJECTED".equalsIgnoreCase(status) || "ENDED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
                         Toast.makeText(this, "Call " + (status != null ? status.toLowerCase() : "ended"), Toast.LENGTH_SHORT).show();
                         finish();
+                        return;
+                    }
+
+                    String videoReqStatus = doc.getString("videoRequestStatus");
+                    String videoReqFrom = doc.getString("videoRequestFrom");
+                    String videoReqFromName = doc.getString("videoRequestFromName");
+                    String currentUid = UserRepository.getInstance().getCurrentUid();
+
+                    if ("PENDING".equalsIgnoreCase(videoReqStatus)) {
+                        if (videoReqFrom != null && !videoReqFrom.equals(currentUid)) {
+                            String reqName = (videoReqFromName != null && !videoReqFromName.isEmpty() && !"Gym Buddy".equalsIgnoreCase(videoReqFromName))
+                                    ? videoReqFromName : (userName != null && !"Gym Buddy".equalsIgnoreCase(userName) ? userName : "User");
+                            showVideoRequestDialog(reqName);
+                        }
+                    } else if ("ACCEPTED".equalsIgnoreCase(videoReqStatus)) {
+                        if (videoRequestDialog != null && videoRequestDialog.isShowing()) {
+                            videoRequestDialog.dismiss();
+                        }
+                        if (!isVideo) {
+                            isVideo = true;
+                            isCameraOn = true;
+                            isSpeakerOn = true;
+                            setHardwareSpeaker(true);
+                            ZegoCallManager.getInstance().enableCamera(true);
+                            bindCallUI();
+                            Toast.makeText(this, "Switched to Video Call!", Toast.LENGTH_SHORT).show();
+                        }
+                    } else if ("DECLINED".equalsIgnoreCase(videoReqStatus)) {
+                        if (videoRequestDialog != null && videoRequestDialog.isShowing()) {
+                            videoRequestDialog.dismiss();
+                        }
+                        if (videoReqFrom != null && videoReqFrom.equals(currentUid)) {
+                            Toast.makeText(this, userName + " declined video call request", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
+    }
+
+    private void showVideoRequestDialog(String requestorName) {
+        if ((videoRequestDialog != null && videoRequestDialog.isShowing()) || isFinishing()) return;
+
+        String displayName = (requestorName != null && !requestorName.isEmpty() && !"Gym Buddy".equalsIgnoreCase(requestorName))
+                ? requestorName : (userName != null && !"Gym Buddy".equalsIgnoreCase(userName) ? userName : "User");
+
+        videoRequestDialog = new BottomSheetDialog(this);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_video_call_request, null, false);
+        videoRequestDialog.setContentView(dialogView);
+        videoRequestDialog.setCancelable(false);
+
+        TextView tvMsg = dialogView.findViewById(R.id.tv_video_dialog_message);
+        if (tvMsg != null) {
+            tvMsg.setText(displayName + " wants to switch to Video Call.");
+        }
+
+        View btnAccept = dialogView.findViewById(R.id.btn_dialog_accept);
+        View btnDecline = dialogView.findViewById(R.id.btn_dialog_decline);
+
+        if (btnAccept != null) {
+            btnAccept.setOnClickListener(v -> {
+                if (videoRequestDialog != null) videoRequestDialog.dismiss();
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("videoRequestStatus", "ACCEPTED");
+                updates.put("isVideo", true);
+                FirebaseFirestore.getInstance().collection("calls").document(callId).update(updates);
+
+                isVideo = true;
+                isCameraOn = true;
+                isSpeakerOn = true;
+                setHardwareSpeaker(true);
+                ZegoCallManager.getInstance().enableCamera(true);
+                bindCallUI();
+            });
+        }
+
+        if (btnDecline != null) {
+            btnDecline.setOnClickListener(v -> {
+                if (videoRequestDialog != null) videoRequestDialog.dismiss();
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("videoRequestStatus", "DECLINED");
+                FirebaseFirestore.getInstance().collection("calls").document(callId).update(updates);
+            });
+        }
+
+        videoRequestDialog.show();
     }
 
     private void acceptCall() {
@@ -820,8 +988,16 @@ public class TRTCCallActivity extends AppCompatActivity {
             @Override
             public void onRemoteUserJoined(String streamId) {
                 runOnUiThread(() -> {
-                    if (ivRemoteVideoPreview != null) ivRemoteVideoPreview.setVisibility(View.GONE);
-                    if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.VISIBLE);
+                    if (!isCallConnected) {
+                        onCallConnected();
+                    }
+                    if (isRemoteCameraOpen && isVideo) {
+                        if (ivRemoteVideoPreview != null) ivRemoteVideoPreview.setVisibility(View.GONE);
+                        if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.VISIBLE);
+                    } else {
+                        if (ivRemoteVideoPreview != null) ivRemoteVideoPreview.setVisibility(View.VISIBLE);
+                        if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.GONE);
+                    }
                 });
             }
 
@@ -829,6 +1005,30 @@ public class TRTCCallActivity extends AppCompatActivity {
             public void onRemoteUserLeft(String streamId) {
                 runOnUiThread(() -> {
                     if (ivRemoteVideoPreview != null) ivRemoteVideoPreview.setVisibility(View.VISIBLE);
+                    if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.GONE);
+                });
+            }
+
+            @Override
+            public void onRemoteCameraStateChanged(String streamId, boolean isOpen) {
+                runOnUiThread(() -> {
+                    isRemoteCameraOpen = isOpen;
+                    if (isOpen && isVideo) {
+                        if (ivRemoteVideoPreview != null) ivRemoteVideoPreview.setVisibility(View.GONE);
+                        if (tvRemoteVideoTexture != null) {
+                            tvRemoteVideoTexture.setVisibility(View.VISIBLE);
+                            tvRemoteVideoTexture.bringToFront();
+                        }
+                    } else {
+                        if (tvRemoteVideoTexture != null) tvRemoteVideoTexture.setVisibility(View.GONE);
+                        if (ivRemoteVideoPreview != null) {
+                            ivRemoteVideoPreview.setVisibility(View.VISIBLE);
+                            ivRemoteVideoPreview.bringToFront();
+                        }
+                    }
+                    if (layoutVideoTopBar != null) layoutVideoTopBar.bringToFront();
+                    if (cardLocalVideoPip != null) cardLocalVideoPip.bringToFront();
+                    if (layoutVideoBottomBar != null) layoutVideoBottomBar.bringToFront();
                 });
             }
 
@@ -858,6 +1058,20 @@ public class TRTCCallActivity extends AppCompatActivity {
     }
 
     private void startCallTimer() {
+        if (tvStatus != null) {
+            tvStatus.setVisibility(View.GONE);
+        }
+        if (tvTimer != null) {
+            tvTimer.setVisibility(View.VISIBLE);
+        }
+        if (tvVideoTimerPill != null) {
+            tvVideoTimerPill.setVisibility(View.VISIBLE);
+        }
+
+        if (timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+        }
+
         timerRunnable = new Runnable() {
             @Override
             public void run() {
@@ -883,6 +1097,9 @@ public class TRTCCallActivity extends AppCompatActivity {
     }
 
     private void endOrRejectCall() {
+        if (videoRequestDialog != null && videoRequestDialog.isShowing()) {
+            videoRequestDialog.dismiss();
+        }
         stopCallTimer();
         cleanupZegoRoom();
         resetAudioHardwareAfterCall();

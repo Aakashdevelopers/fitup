@@ -42,12 +42,29 @@
     <!-- VOICE / CONNECTING CALL UI (AVATAR SCREEN) -->
 
     <!-- Top Security & Privacy Bar -->
+    <!-- Top Back / Minimize Button & Privacy Bar -->
+    <ImageButton
+        android:id="@+id/btn_call_back"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Minimize Call"
+        android:elevation="10dp"
+        android:padding="12dp"
+        android:src="@drawable/ic_arrow_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white" />
+
     <LinearLayout
         android:id="@+id/layout_call_top_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
         android:background="@drawable/bg_privacy_pill"
+        android:elevation="10dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="14dp"
@@ -174,76 +191,58 @@
 
     </LinearLayout>
 
-    <!-- OUTGOING / AUDIO CALL SATELLITE BUTTONS -->
-    <!-- Speaker Button (Middle Top Center) -->
-    <ImageButton
-        android:id="@+id/btn_call_speaker"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:background="@drawable/bg_call_satellite_btn"
-        android:contentDescription="Speakerphone"
-        android:padding="14dp"
-        android:src="@drawable/ic_speaker_on"
-        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
-        app:layout_constraintCircle="@id/view_call_controls_anchor"
-        app:layout_constraintCircleAngle="0"
-        app:layout_constraintCircleRadius="110dp"
-        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
-        app:tint="@color/white" />
-
-    <!-- Mic / Mute Button (Left Side Opposite Keypad) -->
+    <!-- OUTGOING / AUDIO CALL CONTROL BUTTONS -->
+    <!-- Top Row: Mic Mute, Camera Toggle, Speakerphone -->
     <ImageButton
         android:id="@+id/btn_call_mute"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/bg_call_satellite_btn"
         android:contentDescription="Mute Microphone"
-        android:padding="14dp"
+        android:padding="17dp"
         android:src="@drawable/ic_mic_on"
-        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
-        app:layout_constraintCircle="@id/view_call_controls_anchor"
-        app:layout_constraintCircleAngle="320"
-        app:layout_constraintCircleRadius="110dp"
-        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:layout_constraintBottom_toTopOf="@id/layout_end_call_container"
+        app:layout_constraintEnd_toStartOf="@id/btn_call_camera"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
         app:tint="@color/white" />
 
-    <!-- Keypad Button (Right Side Opposite Mic) -->
-    <ImageButton
-        android:id="@+id/btn_call_keypad"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:background="@drawable/bg_call_satellite_btn"
-        android:contentDescription="Keypad"
-        android:padding="14dp"
-        android:src="@drawable/ic_dialpad"
-        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
-        app:layout_constraintCircle="@id/view_call_controls_anchor"
-        app:layout_constraintCircleAngle="40"
-        app:layout_constraintCircleRadius="110dp"
-        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
-        app:tint="@color/white" />
-
-    <!-- Camera Toggle Button (Far Left for Video Mode) -->
     <ImageButton
         android:id="@+id/btn_call_camera"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/bg_call_satellite_btn"
         android:contentDescription="Camera Toggle"
-        android:padding="14dp"
+        android:padding="17dp"
         android:src="@drawable/ic_video_call"
-        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
-        app:layout_constraintCircle="@id/view_call_controls_anchor"
-        app:layout_constraintCircleAngle="280"
-        app:layout_constraintCircleRadius="110dp"
-        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:layout_constraintBottom_toTopOf="@id/layout_end_call_container"
+        app:layout_constraintEnd_toStartOf="@id/btn_call_speaker"
+        app:layout_constraintStart_toEndOf="@id/btn_call_mute"
+        app:tint="@color/white" />
+
+    <ImageButton
+        android:id="@+id/btn_call_speaker"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="36dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Speakerphone"
+        android:padding="17dp"
+        android:src="@drawable/ic_speaker_on"
+        app:layout_constraintBottom_toTopOf="@id/layout_end_call_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_call_camera"
         app:tint="@color/white" />
 
     <!-- Center Call End Container (Outgoing / Connected Audio) -->
     <FrameLayout
         android:id="@+id/layout_end_call_container"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
+        android:layout_width="94dp"
+        android:layout_height="94dp"
         android:background="@drawable/bg_call_end_outer_ring"
         android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
@@ -257,51 +256,50 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_call_end_inner_btn"
             android:contentDescription="End Call"
-            android:padding="16dp"
+            android:padding="18dp"
             android:src="@drawable/ic_call_end"
             app:tint="@color/white" />
     </FrameLayout>
 
-    <!-- INCOMING CALL STATE SATELLITE BUTTONS -->
+    <!-- INCOMING CALL CONTROL BUTTONS -->
+    <!-- Top Secondary Buttons (Remind Me & Quick Reply Message) -->
     <ImageButton
         android:id="@+id/btn_incoming_remind"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/bg_call_satellite_btn"
         android:contentDescription="Remind Me"
-        android:padding="14dp"
+        android:padding="17dp"
         android:src="@drawable/ic_alarm"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
-        app:layout_constraintCircle="@id/view_call_controls_anchor"
-        app:layout_constraintCircleAngle="320"
-        app:layout_constraintCircleRadius="110dp"
-        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:layout_constraintBottom_toTopOf="@id/layout_decline_container"
+        app:layout_constraintEnd_toEndOf="@id/layout_decline_container"
+        app:layout_constraintStart_toStartOf="@id/layout_decline_container"
         app:tint="@color/white"
         tools:visibility="visible" />
 
     <ImageButton
         android:id="@+id/btn_incoming_message"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/bg_call_satellite_btn"
         android:contentDescription="Quick Reply Message"
-        android:padding="14dp"
+        android:padding="17dp"
         android:src="@drawable/ic_nav_chat"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
-        app:layout_constraintCircle="@id/view_call_controls_anchor"
-        app:layout_constraintCircleAngle="40"
-        app:layout_constraintCircleRadius="110dp"
-        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:layout_constraintBottom_toTopOf="@id/layout_accept_container"
+        app:layout_constraintEnd_toEndOf="@id/layout_accept_container"
+        app:layout_constraintStart_toStartOf="@id/layout_accept_container"
         app:tint="@color/white"
-        tools:visibility="gone" />
+        tools:visibility="visible" />
 
-    <!-- INCOMING CALL PRIMARY BUTTONS (DECLINE RED & ACCEPT GREEN) -->
+    <!-- Bottom Primary Action Buttons (DECLINE RED & ACCEPT GREEN) -->
     <FrameLayout
         android:id="@+id/layout_decline_container"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
+        android:layout_width="94dp"
+        android:layout_height="94dp"
         android:layout_marginEnd="32dp"
         android:background="@drawable/bg_call_end_outer_ring"
         android:padding="10dp"
@@ -317,17 +315,17 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_call_end_inner_btn"
             android:contentDescription="Decline Call"
-            android:padding="16dp"
+            android:padding="18dp"
             android:src="@drawable/ic_call_end"
             app:tint="@color/white" />
     </FrameLayout>
 
     <FrameLayout
         android:id="@+id/layout_accept_container"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
+        android:layout_width="94dp"
+        android:layout_height="94dp"
         android:layout_marginStart="32dp"
-        android:background="@drawable/bg_call_end_outer_ring"
+        android:background="@drawable/bg_call_accept_outer_ring"
         android:padding="10dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
@@ -341,7 +339,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_call_accept_inner_btn"
             android:contentDescription="Accept Call"
-            android:padding="16dp"
+            android:padding="18dp"
             android:src="@drawable/ic_phone_call"
             app:tint="@color/white" />
     </FrameLayout>
@@ -387,7 +385,7 @@
                 android:src="@drawable/ic_arrow_back"
                 app:tint="@color/white" />
 
-            <!-- Red Timer Pill -->
+            <!-- Transparent Glass Timer Pill -->
             <TextView
                 android:id="@+id/tv_video_timer_pill"
                 android:layout_width="wrap_content"
@@ -400,6 +398,10 @@
                 android:paddingTop="5dp"
                 android:paddingEnd="12dp"
                 android:paddingBottom="5dp"
+                android:shadowColor="#A0000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="4"
                 android:textColor="@color/white"
                 android:textSize="13sp"
                 tools:text="10:23" />
