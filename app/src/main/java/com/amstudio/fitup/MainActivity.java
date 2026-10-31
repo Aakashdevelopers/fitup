@@ -125,20 +125,38 @@ public class MainActivity extends AppCompatActivity {
         float density = getResources().getDisplayMetrics().density;
 
         boolean isBannerVisible = banner != null && banner.getVisibility() == View.VISIBLE;
+        boolean isCameraScreen = TAG_CAMERA.equals(currentTag);
 
-        if (banner != null) {
-            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) banner.getLayoutParams();
-            if (lp != null) {
-                lp.topMargin = cachedStatusBarTop + Math.round(4 * density);
-                banner.setLayoutParams(lp);
+        if (isCameraScreen) {
+            // Camera Fragment: Toolbar at top, Banner floats underneath toolbar (72dp below status bar)
+            if (banner != null) {
+                ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) banner.getLayoutParams();
+                if (lp != null) {
+                    lp.topMargin = cachedStatusBarTop + Math.round(56 * density);
+                    banner.setLayoutParams(lp);
+                }
             }
-        }
-
-        if (container != null) {
-            if (isBannerVisible) {
+            if (container != null) {
                 container.setPadding(0, 0, 0, 0);
-            } else {
-                container.setPadding(0, cachedStatusBarTop, 0, 0);
+            }
+        } else {
+            // Non-Camera Fragments (Chat, Profile, etc.): Banner floats safely below status bar icons
+            int topOffset = cachedStatusBarTop > 0 ? cachedStatusBarTop + Math.round(20 * density) : Math.round(52 * density);
+            if (banner != null) {
+                ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) banner.getLayoutParams();
+                if (lp != null) {
+                    lp.topMargin = topOffset;
+                    banner.setLayoutParams(lp);
+                }
+            }
+            if (container != null) {
+                if (isBannerVisible) {
+                    int bannerHeight = (banner != null && banner.getHeight() > 0) ? banner.getHeight() : Math.round(64 * density);
+                    container.setPadding(0, topOffset + bannerHeight + Math.round(8 * density), 0, 0);
+                } else {
+                    int topPad = cachedStatusBarTop > 0 ? cachedStatusBarTop : Math.round(28 * density);
+                    container.setPadding(0, topPad, 0, 0);
+                }
             }
         }
     }
@@ -176,6 +194,9 @@ public class MainActivity extends AppCompatActivity {
                         ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_up);
                     }
                 }
+                if (activeCallBanner != null) {
+                    activeCallBanner.post(this::updateLayoutForBannerState);
+                }
             });
         }
 
@@ -211,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isActive && callId != null) {
                     activeCallBanner.setVisibility(View.VISIBLE);
                     updateLayoutForBannerState();
+                    activeCallBanner.post(this::updateLayoutForBannerState);
 
                     if (tvBannerTitle != null) {
                         tvBannerTitle.setText(name != null && !name.isEmpty() ? name : "Ongoing Call");
@@ -377,6 +399,7 @@ public class MainActivity extends AppCompatActivity {
 
         transaction.commit();
         currentTag = tag;
+        updateLayoutForBannerState();
     }
 
     private Fragment createFragmentForTag(String tag) {

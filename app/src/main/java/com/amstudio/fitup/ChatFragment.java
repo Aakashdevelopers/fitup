@@ -8,6 +8,9 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -19,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.amstudio.fitup.model.FriendRequest;
 import com.amstudio.fitup.model.UserProfile;
 import com.amstudio.fitup.repository.FriendRepository;
 import com.amstudio.fitup.repository.TencentChatManager;
@@ -39,8 +43,9 @@ public class ChatFragment extends Fragment {
     private RecyclerView rvRecentChats;
     private EditText etSearch;
     private ImageButton btnSearchClear;
-    private ImageButton btnHeaderSearch;
-    private ImageButton btnHeaderNewChat;
+    private ImageButton btnHeaderNotification;
+    private ImageButton btnHeaderAddFriend;
+    private View badgeNotification;
     private View layoutEmptyState;
     private TextView tvEmptyTitle;
     private TextView tvEmptySubtitle;
@@ -94,8 +99,9 @@ public class ChatFragment extends Fragment {
         rvRecentChats = view.findViewById(R.id.rv_recent_chats);
         etSearch = view.findViewById(R.id.et_search);
         btnSearchClear = view.findViewById(R.id.btn_search_clear);
-        btnHeaderSearch = view.findViewById(R.id.btn_header_search);
-        btnHeaderNewChat = view.findViewById(R.id.btn_header_new_chat);
+        btnHeaderNotification = view.findViewById(R.id.btn_header_notification);
+        btnHeaderAddFriend = view.findViewById(R.id.btn_header_add_friend);
+        badgeNotification = view.findViewById(R.id.badge_notification);
         layoutEmptyState = view.findViewById(R.id.layout_empty_state);
         tvEmptyTitle = view.findViewById(R.id.tv_empty_title);
         tvEmptySubtitle = view.findViewById(R.id.tv_empty_subtitle);
@@ -162,6 +168,9 @@ public class ChatFragment extends Fragment {
 
     private void loadData() {
         showShimmer();
+
+        // 0. Check pending friend requests to update notification badge
+        loadPendingRequestsBadge();
 
         // 1. Fetch real accepted friends from Firestore
         FriendRepository.getInstance().getAcceptedFriends(new FriendRepository.FriendsListCallback() {
@@ -357,22 +366,19 @@ public class ChatFragment extends Fragment {
             });
         }
 
-        if (btnHeaderSearch != null) {
-            btnHeaderSearch.setOnClickListener(v -> {
-                if (etSearch != null) {
-                    etSearch.requestFocus();
-                    InputMethodManager imm = (InputMethodManager) requireContext()
-                            .getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (imm != null) {
-                        imm.showSoftInput(etSearch, 0);
-                    }
-                }
+        if (btnHeaderNotification != null) {
+            btnHeaderNotification.setOnClickListener(v -> {
+                FriendRequestsDialog dialog = FriendRequestsDialog.newInstance(false);
+                dialog.setOnDismissListener(this::loadPendingRequestsBadge);
+                dialog.show(getChildFragmentManager(), "FriendRequestsDialog");
             });
         }
 
-        if (btnHeaderNewChat != null) {
-            btnHeaderNewChat.setOnClickListener(v -> {
-                FriendRequestsDialog.newInstance().show(getChildFragmentManager(), "FriendRequestsDialog");
+        if (btnHeaderAddFriend != null) {
+            btnHeaderAddFriend.setOnClickListener(v -> {
+                FriendRequestsDialog dialog = FriendRequestsDialog.newInstance(true);
+                dialog.setOnDismissListener(this::loadPendingRequestsBadge);
+                dialog.show(getChildFragmentManager(), "FriendRequestsDialog");
             });
         }
 
@@ -462,5 +468,50 @@ public class ChatFragment extends Fragment {
             if (tvRecentChatsHeader != null) tvRecentChatsHeader.setVisibility(View.VISIBLE);
             layoutEmptyState.setVisibility(View.GONE);
         }
+    }
+
+    private void loadPendingRequestsBadge() {
+        FriendRepository.getInstance().getPendingFriendRequests(new FriendRepository.FriendRequestsCallback() {
+            @Override
+            public void onSuccess(List<FriendRequest> requests) {
+                if (getActivity() == null || !isAdded()) return;
+                if (requests != null && !requests.isEmpty()) {
+                    startBlinkingBadge(badgeNotification);
+                } else {
+                    stopBlinkingBadge(badgeNotification);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (getActivity() == null || !isAdded()) return;
+                stopBlinkingBadge(badgeNotification);
+            }
+        });
+    }
+
+    private void startBlinkingBadge(View view) {
+        if (view == null) return;
+        view.setVisibility(View.VISIBLE);
+        if (view.getAnimation() == null) {
+            AlphaAnimation blink = new AlphaAnimation(1.0f, 0.2f);
+            blink.setDuration(600);
+            blink.setInterpolator(new LinearInterpolator());
+            blink.setRepeatCount(Animation.INFINITE);
+            blink.setRepeatMode(Animation.REVERSE);
+            view.startAnimation(blink);
+        }
+    }
+
+    private void stopBlinkingBadge(View view) {
+        if (view == null) return;
+        view.clearAnimation();
+        view.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onDestroyView() {
+        stopBlinkingBadge(badgeNotification);
+        super.onDestroyView();
     }
 }

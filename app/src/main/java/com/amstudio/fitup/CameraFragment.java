@@ -194,6 +194,16 @@ public class CameraFragment extends Fragment {
         focusRing = view.findViewById(R.id.focus_ring);
         layoutPermission = view.findViewById(R.id.layout_permission);
         topControlBar = view.findViewById(R.id.top_control_bar);
+
+        if (topControlBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topControlBar, (v, insets) -> {
+                int statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                int topPadding = statusBarHeight > 0 ? statusBarHeight + (int) (8 * getResources().getDisplayMetrics().density) : (int) (36 * getResources().getDisplayMetrics().density);
+                v.setPadding(v.getPaddingLeft(), topPadding, v.getPaddingRight(), v.getPaddingBottom());
+                return insets;
+            });
+        }
+
         btnFlash = view.findViewById(R.id.btn_flash);
         btnCameraSwitch = view.findViewById(R.id.btn_camera_switch);
         tvZoomIndicator = view.findViewById(R.id.tv_zoom_indicator);
@@ -214,6 +224,15 @@ public class CameraFragment extends Fragment {
         btnGrid = view.findViewById(R.id.btn_grid);
 
         layoutMediaPreview = view.findViewById(R.id.layout_media_preview);
+        View previewTopBar = view.findViewById(R.id.preview_top_bar);
+        if (previewTopBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(previewTopBar, (v, insets) -> {
+                int statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                int topPadding = statusBarHeight > 0 ? statusBarHeight + (int) (8 * getResources().getDisplayMetrics().density) : (int) (36 * getResources().getDisplayMetrics().density);
+                v.setPadding(v.getPaddingLeft(), topPadding, v.getPaddingRight(), v.getPaddingBottom());
+                return insets;
+            });
+        }
         ivPreviewImage = view.findViewById(R.id.iv_preview_image);
         vvPreviewVideo = view.findViewById(R.id.vv_preview_video);
         btnPreviewClose = view.findViewById(R.id.btn_preview_close);

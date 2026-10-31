@@ -56,24 +56,42 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Top App Bar Search Toggle Action -->
-            <ImageButton
-                android:id="@+id/btn_header_search"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/content_desc_search"
-                android:src="@drawable/ic_search"
-                app:tint="@color/secondary_text" />
+            <!-- Notification Action (Friend Requests) -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp">
 
-            <!-- New Chat Action -->
+                <ImageButton
+                    android:id="@+id/btn_header_notification"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/content_desc_notifications"
+                    android:src="@drawable/ic_bell"
+                    app:tint="@color/primary_text" />
+
+                <!-- Red Unread Badge Dot for Pending Requests -->
+                <View
+                    android:id="@+id/badge_notification"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_unread_badge"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </FrameLayout>
+
+            <!-- Add Friend Action -->
             <ImageButton
-                android:id="@+id/btn_header_new_chat"
+                android:id="@+id/btn_header_add_friend"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/content_desc_new_chat"
-                android:src="@drawable/ic_new_chat"
+                android:contentDescription="@string/content_desc_add_friend"
+                android:src="@drawable/ic_person_add"
                 app:tint="@color/primary_text" />
 
         </LinearLayout>

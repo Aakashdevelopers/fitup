@@ -1,6 +1,8 @@
 package com.amstudio.fitup;
 
 import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -13,25 +15,31 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.amstudio.fitup.model.FriendRequest;
 import com.amstudio.fitup.model.UserProfile;
+import com.amstudio.fitup.repository.ActiveCallManager;
 import com.amstudio.fitup.repository.FriendRepository;
 import com.amstudio.fitup.repository.UserRepository;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class FriendRequestsDialog extends DialogFragment {
 
@@ -44,8 +52,53 @@ public class FriendRequestsDialog extends DialogFragment {
     private RequestsAdapter requestsAdapter;
     private SearchUsersAdapter searchAdapter;
 
+    // Active Call Banner Views
+    private View activeCallBanner;
+    private TextView tvBannerTitle;
+    private TextView tvBannerSub;
+    private TextView tvBannerAvatarInitials;
+    private ImageView ivCallIcon;
+    private View btnSpeaker;
+    private View btnCamera;
+    private View btnMute;
+    private View btnEndCall;
+    private View btnDropdown;
+    private View layoutActions;
+
+    private ActiveCallManager.OnCallStateChangeListener activeCallStateListener;
+    private Handler bannerTimerHandler;
+    private Runnable bannerTimerRunnable;
+
+    public interface OnDialogDismissListener {
+        void onDismissed();
+    }
+
+    private OnDialogDismissListener dismissListener;
+
+    public void setOnDismissListener(OnDialogDismissListener listener) {
+        this.dismissListener = listener;
+    }
+
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (dismissListener != null) {
+            dismissListener.onDismissed();
+        }
+    }
+
+    private static final String ARG_FOCUS_SEARCH = "arg_focus_search";
+
     public static FriendRequestsDialog newInstance() {
-        return new FriendRequestsDialog();
+        return newInstance(false);
+    }
+
+    public static FriendRequestsDialog newInstance(boolean focusSearch) {
+        FriendRequestsDialog dialog = new FriendRequestsDialog();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_FOCUS_SEARCH, focusSearch);
+        dialog.setArguments(args);
+        return dialog;
     }
 
     @Override
@@ -64,6 +117,16 @@ public class FriendRequestsDialog extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Apply status bar top padding so dialog header doesn't overlap status bar
+        View rootLayout = view.findViewById(R.id.layout_requests_root);
+        if (rootLayout != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
+                int statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                v.setPadding(v.getPaddingLeft(), statusBarTop, v.getPaddingRight(), v.getPaddingBottom());
+                return insets;
+            });
+        }
+
         btnClose = view.findViewById(R.id.btn_requests_close);
         etSearchUsers = view.findViewById(R.id.et_search_users);
         rvRequests = view.findViewById(R.id.rv_pending_requests);
@@ -74,9 +137,193 @@ public class FriendRequestsDialog extends DialogFragment {
             btnClose.setOnClickListener(v -> dismiss());
         }
 
+        setupActiveCallBanner(view);
         setupRecyclerViews();
         loadPendingRequests();
         setupSearch();
+
+        if (getArguments() != null && getArguments().getBoolean(ARG_FOCUS_SEARCH, false)) {
+            if (etSearchUsers != null) {
+                etSearchUsers.requestFocus();
+                etSearchUsers.postDelayed(() -> {
+                    if (getContext() != null) {
+                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (imm != null) {
+                            imm.showSoftInput(etSearchUsers, InputMethodManager.SHOW_IMPLICIT);
+                        }
+                    }
+                }, 200);
+            }
+        }
+    }
+
+    private void setupActiveCallBanner(@NonNull View view) {
+        activeCallBanner = view.findViewById(R.id.layout_active_call_banner);
+        if (activeCallBanner == null) return;
+
+        tvBannerTitle = activeCallBanner.findViewById(R.id.tv_banner_call_title);
+        tvBannerSub = activeCallBanner.findViewById(R.id.tv_banner_call_sub);
+        tvBannerAvatarInitials = activeCallBanner.findViewById(R.id.tv_banner_avatar_initials);
+        ivCallIcon = activeCallBanner.findViewById(R.id.iv_banner_call_icon);
+
+        btnSpeaker = activeCallBanner.findViewById(R.id.btn_banner_speaker);
+        btnCamera = activeCallBanner.findViewById(R.id.btn_banner_camera);
+        btnMute = activeCallBanner.findViewById(R.id.btn_banner_mute);
+        btnEndCall = activeCallBanner.findViewById(R.id.btn_banner_end_call);
+        btnDropdown = activeCallBanner.findViewById(R.id.btn_banner_dropdown);
+        layoutActions = activeCallBanner.findViewById(R.id.layout_banner_actions);
+
+        if (btnDropdown != null && layoutActions != null) {
+            btnDropdown.setOnClickListener(v -> {
+                boolean isCurrentlyVisible = layoutActions.getVisibility() == View.VISIBLE;
+                if (isCurrentlyVisible) {
+                    layoutActions.setVisibility(View.GONE);
+                    if (btnDropdown instanceof ImageButton) {
+                        ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_down);
+                    }
+                } else {
+                    layoutActions.setVisibility(View.VISIBLE);
+                    if (btnDropdown instanceof ImageButton) {
+                        ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_up);
+                    }
+                }
+            });
+        }
+
+        if (btnSpeaker != null) {
+            btnSpeaker.setOnClickListener(v -> ActiveCallManager.getInstance().toggleSpeaker());
+        }
+        if (btnCamera != null) {
+            btnCamera.setOnClickListener(v -> ActiveCallManager.getInstance().toggleCamera());
+        }
+        if (btnMute != null) {
+            btnMute.setOnClickListener(v -> ActiveCallManager.getInstance().toggleMute());
+        }
+        if (btnEndCall != null) {
+            btnEndCall.setOnClickListener(v -> ActiveCallManager.getInstance().endCall());
+        }
+
+        View.OnClickListener expandListener = v -> {
+            String cId = ActiveCallManager.getInstance().getActiveCallId();
+            if (cId != null && getContext() != null) {
+                String targetUid = ActiveCallManager.getInstance().getTargetUid();
+                String name = ActiveCallManager.getInstance().getUserName();
+                String initials = ActiveCallManager.getInstance().getUserInitials();
+                boolean isVideo = ActiveCallManager.getInstance().isVideo();
+                TRTCCallActivity.start(getContext(), cId, targetUid != null ? targetUid : "", name, initials, isVideo, false);
+            }
+        };
+
+        activeCallBanner.setOnClickListener(expandListener);
+
+        activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isActive && callId != null) {
+                        activeCallBanner.setVisibility(View.VISIBLE);
+
+                        if (tvBannerTitle != null) {
+                            tvBannerTitle.setText(name != null && !name.isEmpty() ? name : "Ongoing Call");
+                        }
+                        if (tvBannerAvatarInitials != null) {
+                            tvBannerAvatarInitials.setText(initials != null ? initials : "GB");
+                        }
+                        if (ivCallIcon != null) {
+                            ivCallIcon.setImageResource(isVideo ? R.drawable.ic_video_call : R.drawable.ic_phone_call);
+                        }
+
+                        boolean speakerOn = ActiveCallManager.getInstance().isSpeakerOn();
+                        boolean cameraOn = ActiveCallManager.getInstance().isCameraOn();
+                        boolean muteOn = ActiveCallManager.getInstance().isMuteOn();
+
+                        if (btnSpeaker != null) {
+                            btnSpeaker.setBackgroundResource(speakerOn ? R.drawable.bg_call_btn_white : R.drawable.bg_call_btn_dark);
+                            if (btnSpeaker instanceof ImageButton) {
+                                ((ImageButton) btnSpeaker).setColorFilter(speakerOn ? Color.BLACK : Color.WHITE);
+                                ((ImageButton) btnSpeaker).setImageResource(speakerOn ? R.drawable.ic_speaker_on : R.drawable.ic_speaker_off);
+                            }
+                        }
+
+                        if (btnCamera != null) {
+                            btnCamera.setBackgroundResource(cameraOn ? R.drawable.bg_call_btn_dark : R.drawable.bg_call_btn_dark_active);
+                            if (btnCamera instanceof ImageButton) {
+                                ((ImageButton) btnCamera).setImageResource(cameraOn ? R.drawable.ic_video_call : R.drawable.ic_video_off);
+                            }
+                        }
+
+                        if (btnMute != null) {
+                            btnMute.setBackgroundResource(muteOn ? R.drawable.bg_call_btn_dark_active : R.drawable.bg_call_btn_dark);
+                            if (btnMute instanceof ImageButton) {
+                                ((ImageButton) btnMute).setImageResource(muteOn ? R.drawable.ic_mic_off : R.drawable.ic_mic_on);
+                            }
+                        }
+
+                        startBannerTimer(startTime, isVideo);
+                    } else {
+                        activeCallBanner.setVisibility(View.GONE);
+                        stopBannerTimer();
+                    }
+                });
+            }
+        };
+    }
+
+    private void startBannerTimer(long startTime, boolean isVideo) {
+        stopBannerTimer();
+        bannerTimerHandler = new Handler(Looper.getMainLooper());
+        bannerTimerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (tvBannerSub != null && ActiveCallManager.getInstance().isActive()) {
+                    long elapsedSec = Math.max(0, (System.currentTimeMillis() - startTime) / 1000);
+                    long mm = elapsedSec / 60;
+                    long ss = elapsedSec % 60;
+                    String durationStr = String.format(Locale.getDefault(), "%02d:%02d", mm, ss);
+                    String prefix = isVideo ? "FitUp Video • " : "FitUp Voice • ";
+                    tvBannerSub.setText(prefix + durationStr);
+                    bannerTimerHandler.postDelayed(this, 1000);
+                }
+            }
+        };
+        bannerTimerHandler.post(bannerTimerRunnable);
+    }
+
+    private void stopBannerTimer() {
+        if (bannerTimerHandler != null && bannerTimerRunnable != null) {
+            bannerTimerHandler.removeCallbacks(bannerTimerRunnable);
+            bannerTimerHandler = null;
+            bannerTimerRunnable = null;
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (activeCallStateListener != null) {
+            ActiveCallManager.getInstance().addListener(activeCallStateListener);
+            boolean isActive = ActiveCallManager.getInstance().isActive();
+            if (isActive) {
+                activeCallStateListener.onCallStateChanged(
+                        true,
+                        ActiveCallManager.getInstance().getActiveCallId(),
+                        ActiveCallManager.getInstance().getUserName(),
+                        ActiveCallManager.getInstance().getUserInitials(),
+                        ActiveCallManager.getInstance().isVideo(),
+                        ActiveCallManager.getInstance().getCallStartTimeMs()
+                );
+            } else if (activeCallBanner != null) {
+                activeCallBanner.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (activeCallStateListener != null) {
+            ActiveCallManager.getInstance().removeListener(activeCallStateListener);
+        }
+        stopBannerTimer();
     }
 
     private void setupRecyclerViews() {

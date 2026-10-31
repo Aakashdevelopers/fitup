@@ -58,6 +58,8 @@
     <string name="content_desc_search">Search</string>
     <string name="content_desc_new_chat">New Chat</string>
     <string name="content_desc_clear_search">Clear search</string>
+    <string name="content_desc_notifications">Notifications</string>
+    <string name="content_desc_add_friend">Add Friend</string>
 
     <!-- Profile UI Strings -->
     <string name="profile_title">My Profile</string>
