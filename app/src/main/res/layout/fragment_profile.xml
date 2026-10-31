@@ -1,0 +1,834 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_profile_gradient"
+    android:fillViewport="true"
+    android:overScrollMode="never">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="36dp">
+
+        <!-- 1. TOP APP BAR -->
+        <RelativeLayout
+            android:id="@+id/top_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="52dp">
+
+            <TextView
+                android:id="@+id/tv_profile_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/btn_settings_top"
+                android:layout_alignParentStart="true"
+                android:text="@string/profile_title"
+                android:textColor="@color/primary_text"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-bold"/>
+
+            <ImageButton
+                android:id="@+id/btn_settings_top"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_control_circle"
+                android:contentDescription="@string/content_desc_settings"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_settings_gear"
+                app:tint="@color/primary_text"/>
+        </RelativeLayout>
+
+        <!-- 2. PROFILE HEADER SECTION -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp">
+
+            <!-- Profile Avatar -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_avatar"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:padding="3dp"
+                android:background="@drawable/bg_avatar_ring"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/content_desc_profile_avatar"
+                android:src="@drawable/ic_avatar_placeholder"
+                app:shapeAppearanceOverlay="@style/CircularImageView"/>
+
+            <!-- Avatar Edit Badge -->
+            <FrameLayout
+                android:id="@+id/btn_edit_avatar"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_avatar_edit_badge"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/content_desc_edit_avatar">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_edit_camera"
+                    android:contentDescription="@null"
+                    app:tint="@color/white"/>
+            </FrameLayout>
+        </FrameLayout>
+
+        <!-- Display Name, Username & Bio -->
+        <TextView
+            android:id="@+id/tv_display_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:text="@string/profile_default_name"
+            android:textColor="@color/primary_text"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-bold"/>
+
+        <TextView
+            android:id="@+id/tv_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="2dp"
+            android:text="@string/profile_default_username"
+            android:textColor="@color/electric_blue"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"/>
+
+        <TextView
+            android:id="@+id/tv_bio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/profile_default_bio"
+            android:textColor="@color/secondary_text"
+            android:textSize="13sp"
+            android:lineSpacingExtra="2dp"/>
+
+        <!-- Location & Goal Pill -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_pill_surface"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="5dp">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/ic_location"
+                android:contentDescription="@null"
+                app:tint="@color/light_blue"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="@string/profile_default_location"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <!-- 3. FOLLOW AND SOCIAL ACTIONS -->
+        <!-- Stats Card Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_profile_card"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp">
+
+            <!-- Posts Stat -->
+            <LinearLayout
+                android:id="@+id/stat_posts_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_stat_posts_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_stat_posts_default"
+                    android:textColor="@color/primary_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_stat_posts"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:background="@color/profile_divider"/>
+
+            <!-- Followers Stat -->
+            <LinearLayout
+                android:id="@+id/stat_followers_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_stat_followers_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_stat_followers_default"
+                    android:textColor="@color/primary_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_stat_followers"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:background="@color/profile_divider"/>
+
+            <!-- Following Stat -->
+            <LinearLayout
+                android:id="@+id/stat_following_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_stat_following_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_stat_following_default"
+                    android:textColor="@color/primary_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_stat_following"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Social Buttons Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_edit_profile"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:backgroundTint="@color/primary_blue"
+                android:text="@string/btn_edit_profile"
+                android:textAllCaps="false"
+                android:textColor="@color/primary_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:elevation="0dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_share_profile"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:paddingHorizontal="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:backgroundTint="@color/profile_surface"
+                android:text="@string/btn_share_profile"
+                android:textAllCaps="false"
+                android:textColor="@color/light_blue"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:strokeColor="@color/subtle_border"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_share"
+                app:iconSize="18dp"
+                app:iconTint="@color/light_blue"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"/>
+        </LinearLayout>
+
+        <!-- 4. FITNESS STATS SECTION -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"
+            android:text="@string/profile_section_activity"
+            android:textColor="@color/primary_text"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-bold"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <!-- Card 1: Workout Days -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_workout_days"
+                    android:contentDescription="@null"
+                    app:tint="@color/electric_blue"/>
+
+                <TextView
+                    android:id="@+id/tv_activity_days_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/profile_stat_workout_days_default"
+                    android:textColor="@color/primary_text"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_stat_workout_days"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="11sp"/>
+            </LinearLayout>
+
+            <!-- Card 2: Current Streak -->
+            <LinearLayout
+                android:id="@+id/card_current_streak"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/bg_stat_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_streak_flame"
+                    android:contentDescription="@null"
+                    app:tint="@color/streak_orange"/>
+
+                <TextView
+                    android:id="@+id/tv_activity_streak_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/profile_stat_streak_default"
+                    android:textColor="@color/primary_text"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_stat_streak"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="11sp"/>
+            </LinearLayout>
+
+            <!-- Card 3: Total Workouts -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_dumbbell"
+                    android:contentDescription="@null"
+                    app:tint="@color/light_blue"/>
+
+                <TextView
+                    android:id="@+id/tv_activity_total_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/profile_stat_total_default"
+                    android:textColor="@color/primary_text"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_stat_total_workouts"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="11sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 5. PROFILE CONTENT TABS -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Tab 1: Posts -->
+            <LinearLayout
+                android:id="@+id/tab_posts"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_tab_posts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_tab_posts"
+                    android:textColor="@color/electric_blue"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
+                <View
+                    android:id="@+id/indicator_tab_posts"
+                    android:layout_width="24dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_tab_indicator"/>
+            </LinearLayout>
+
+            <!-- Tab 2: Snaps -->
+            <LinearLayout
+                android:id="@+id/tab_snaps"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_tab_snaps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_tab_snaps"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
+                <View
+                    android:id="@+id/indicator_tab_snaps"
+                    android:layout_width="24dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_tab_indicator"
+                    android:visibility="invisible"/>
+            </LinearLayout>
+
+            <!-- Tab 3: Activity -->
+            <LinearLayout
+                android:id="@+id/tab_activity"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_tab_activity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_tab_activity"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
+                <View
+                    android:id="@+id/indicator_tab_activity"
+                    android:layout_width="24dp"
+                    android:layout_height="3dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_tab_indicator"
+                    android:visibility="invisible"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/profile_divider"/>
+
+        <!-- Tab Content Empty State Container -->
+        <LinearLayout
+            android:id="@+id/container_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_profile_card"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <ImageView
+                android:id="@+id/iv_empty_icon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_posts_grid"
+                android:contentDescription="@null"
+                app:tint="@color/subtle_border"/>
+
+            <TextView
+                android:id="@+id/tv_empty_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/profile_empty_posts_title"
+                android:textColor="@color/primary_text"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-bold"/>
+
+            <TextView
+                android:id="@+id/tv_empty_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:text="@string/profile_empty_posts_sub"
+                android:textColor="@color/secondary_text"
+                android:textSize="13sp"/>
+        </LinearLayout>
+
+        <!-- 6. SETTINGS AND ACCOUNT OPTIONS -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="12dp"
+            android:text="@string/profile_section_account"
+            android:textColor="@color/primary_text"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-bold"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_profile_card"
+            android:orientation="vertical">
+
+            <!-- Item 1: Edit Personal Details -->
+            <LinearLayout
+                android:id="@+id/row_edit_personal_details"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_settings_row_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_user_edit"
+                    android:contentDescription="@null"
+                    app:tint="@color/light_blue"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_edit_details"
+                    android:textColor="@color/primary_text"
+                    android:textSize="14sp"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="@null"
+                    app:tint="@color/nav_inactive_item"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="50dp"
+                android:background="@color/profile_divider"/>
+
+            <!-- Item 2: Privacy & Security -->
+            <LinearLayout
+                android:id="@+id/row_privacy_security"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_settings_row_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_security"
+                    android:contentDescription="@null"
+                    app:tint="@color/light_blue"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_privacy_security"
+                    android:textColor="@color/primary_text"
+                    android:textSize="14sp"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="@null"
+                    app:tint="@color/nav_inactive_item"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="50dp"
+                android:background="@color/profile_divider"/>
+
+            <!-- Item 3: Notifications -->
+            <LinearLayout
+                android:id="@+id/row_notifications"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_settings_row_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_bell"
+                    android:contentDescription="@null"
+                    app:tint="@color/light_blue"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_notifications"
+                    android:textColor="@color/primary_text"
+                    android:textSize="14sp"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="@null"
+                    app:tint="@color/nav_inactive_item"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="50dp"
+                android:background="@color/profile_divider"/>
+
+            <!-- Item 4: Help & Support -->
+            <LinearLayout
+                android:id="@+id/row_help_support"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_settings_row_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_help"
+                    android:contentDescription="@null"
+                    app:tint="@color/light_blue"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_help_support"
+                    android:textColor="@color/primary_text"
+                    android:textSize="14sp"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="@null"
+                    app:tint="@color/nav_inactive_item"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="50dp"
+                android:background="@color/profile_divider"/>
+
+            <!-- Item 5: Log Out -->
+            <LinearLayout
+                android:id="@+id/row_logout"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_settings_row_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_logout"
+                    android:contentDescription="@null"
+                    app:tint="@color/logout_red"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_logout"
+                    android:textColor="@color/logout_red"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="@null"
+                    app:tint="@color/logout_red"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Version Footer -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="@string/profile_version_footer"
+            android:textColor="@color/nav_inactive_item"
+            android:textSize="12sp"/>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="80"
+    android:viewportHeight="80">
+
+    <!-- Outer Social Orbital Ring (Electric Blue Accent) -->
+    <path
+        android:fillColor="#38B6FF"
+        android:fillAlpha="0.75"
+        android:pathData="M40,12 C55.46,12 68,24.54 68,40 C68,55.46 55.46,68 40,68 C24.54,68 12,55.46 12,40 C12,24.54 24.54,12 40,12 Z M40,16 C26.75,16 16,26.75 16,40 C16,53.25 26.75,64 40,64 C53.25,64 64,53.25 64,40 C64,26.75 53.25,16 40,16 Z" />
+
+    <!-- Top Connection Node (Electric Blue Accent) -->
+    <path
+        android:fillColor="#38B6FF"
+        android:pathData="M40,7 A7,7 0 1,1 40,21 A7,7 0 1,1 40,7 Z" />
+
+    <!-- Left & Right Social Nodes (Electric Blue Accent) -->
+    <path
+        android:fillColor="#38B6FF"
+        android:pathData="M12,35 A5,5 0 1,1 12,45 A5,5 0 1,1 12,35 Z M68,35 A5,5 0 1,1 68,45 A5,5 0 1,1 68,35 Z" />
+
+    <!-- Central Fitness Dumbbell & Shield Motif (White) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M26,30 C24.34,30 23,31.34 23,33 L23,47 C23,48.66 24.34,50 26,50 C27.66,50 29,48.66 29,47 L29,43 L51,43 L51,47 C51,48.66 52.34,50 54,50 C55.66,50 57,48.66 57,47 L57,33 C57,31.34 55.66,30 54,30 C52.34,30 51,31.34 51,33 L51,37 L29,37 L29,33 C29,31.34 27.66,30 26,30 Z M26,34 C26.83,34 27.5,34.67 27.5,35.5 L27.5,44.5 C27.5,45.33 26.83,46 26,46 C25.17,46 24.5,45.33 24.5,44.5 L24.5,35.5 C24.5,34.67 25.17,34 26,34 Z M54,34 C54.83,34 55.5,34.67 55.5,35.5 L55.5,44.5 C55.5,45.33 54.83,46 54,46 C53.17,46 52.5,45.33 52.5,44.5 L52.5,35.5 C52.5,34.67 53.17,34 54,34 Z" />
+</vector>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Minimalist sleek fitness emblem: geometric dumbbell & pulse motif -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6,4 C4.89,4 4,4.89 4,6 L4,18 C4,19.11 4.89,20 6,20 C7.11,20 8,19.11 8,18 L8,14 L16,14 L16,18 C16,19.11 16.89,20 18,20 C19.11,20 20,19.11 20,18 L20,6 C20,4.89 19.11,4 18,4 C16.89,4 16,4.89 16,6 L16,10 L8,10 L8,6 C8,4.89 7.11,4 6,4 Z M6,7 C6.55,7 7,7.45 7,8 L7,16 C7,16.55 6.55,17 6,17 C5.45,17 5,16.55 5,16 L5,8 C5,7.45 5.45,7 6,7 Z M18,7 C18.55,7 19,7.45 19,8 L19,16 C19,16.55 18.55,17 18,17 C17.45,17 17,16.55 17,16 L17,8 C17,7.45 17.45,7 18,7 Z" />
+</vector>

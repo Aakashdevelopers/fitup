@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basic System Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Global Blue Design System Standard Tokens -->
+    <color name="deep_navy">#06162E</color>
+    <color name="near_black">#05080F</color>
+    <color name="primary_blue">#1677FF</color>
+    <color name="electric_blue">#38B6FF</color>
+    <color name="light_blue">#80AFFF</color>
+    <color name="primary_text">#FFFFFF</color>
+    <color name="secondary_text">#B9C9DC</color>
+    <color name="input_background">#10233D</color>
+    <color name="subtle_border">#263E5C</color>
+
+    <!-- Profile UI Specific Tokens -->
+    <color name="profile_surface">#0B192B</color>
+    <color name="profile_surface_variant">#10233D</color>
+    <color name="profile_card_border">#1D3557</color>
+    <color name="profile_stat_bg">#0D1E36</color>
+    <color name="profile_divider">#162C47</color>
+    <color name="streak_orange">#FF9500</color>
+    <color name="logout_red">#FF4D4F</color>
+    <color name="logout_red_bg">#2A1218</color>
+
+    <!-- Brand Color Aliases -->
+    <color name="brand_top_blue">#80AFFF</color>
+    <color name="brand_electric_blue">#38B6FF</color>
+    <color name="brand_royal_blue">#1555CC</color>
+    <color name="brand_deep_navy">#06162E</color>
+    <color name="brand_bottom_black_blue">#05080F</color>
+    <color name="brand_cta_blue">#1677FF</color>
+    <color name="brand_accent_light_blue">#60A5FA</color>
+
+    <!-- App Shell & Navigation Color Tokens -->
+    <color name="app_bg">#05080F</color>
+    <color name="nav_bg">#09182B</color>
+    <color name="nav_selected_item">#38B6FF</color>
+    <color name="nav_inactive_item">#8397B2</color>
+    <color name="nav_divider">#16283E</color>
+
+    <!-- Splash Screen Tokens -->
+    <color name="splash_top_luminous">#80AFFF</color>
+    <color name="splash_vibrant_royal">#347FFF</color>
+    <color name="splash_electric_accent">#38B6FF</color>
+    <color name="splash_tagline_color">#C2D7F5</color>
+
+    <!-- Typography Tokens -->
+    <color name="text_primary_white">#FFFFFF</color>
+    <color name="text_secondary_muted">#94A3B8</color>
+    <color name="text_secondary_blue">#B9C9DC</color>
+
+    <!-- Form & Input Design Tokens -->
+    <color name="input_border">#263E5C</color>
+    <color name="input_border_focused">#38B6FF</color>
+    <color name="input_hint">#64748B</color>
+    <color name="input_icon_tint">#80AFFF</color>
+    <color name="segmented_container_bg">#0B1B30</color>
+    <color name="google_btn_text">#1F2937</color>
+    <color name="divider_line">#1D3557</color>
+
+    <!-- UI Component Tokens -->
+    <color name="indicator_active">#1677FF</color>
+    <color name="indicator_inactive">#334155</color>
+
+    <!-- Chat Component Tokens -->
+    <color name="chat_surface">#0B192B</color>
+    <color name="online_green">#10B981</color>
+    <color name="streak_flame">#FF7A00</color>
+    <color name="chat_card_border">#16283E</color>
+    <color name="chat_time_text">#8397B2</color>
+</resources>

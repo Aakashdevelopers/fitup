@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#14151B"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-medium"
+            android:text="In-Call Quick Message"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <ImageButton
+            android:id="@+id/btn_in_call_chat_close"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            android:src="@drawable/ic_close"
+            app:tint="#8E8E93" />
+    </RelativeLayout>
+
+    <!-- Message Input Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_composer_input"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="6dp">
+
+        <EditText
+            android:id="@+id/et_in_call_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:fontFamily="sans-serif"
+            android:hint="Type a quick message..."
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLines="3"
+            android:textColor="@color/white"
+            android:textColorHint="#8E8E93"
+            android:textSize="15sp" />
+
+        <ImageButton
+            android:id="@+id/btn_in_call_send"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_control_circle"
+            android:contentDescription="Send"
+            android:padding="10dp"
+            android:src="@drawable/ic_send"
+            app:tint="@color/electric_blue" />
+
+    </LinearLayout>
+
+</LinearLayout>

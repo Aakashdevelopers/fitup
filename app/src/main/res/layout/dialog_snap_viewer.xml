@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Photo Media View -->
+    <ImageView
+        android:id="@+id/iv_snap_preview_media"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Video Media View -->
+    <VideoView
+        android:id="@+id/vv_snap_preview_video"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Indeterminate Loading Spinner -->
+    <ProgressBar
+        android:id="@+id/pb_snap_loading"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/electric_blue"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Loading Error Message -->
+    <TextView
+        android:id="@+id/tv_snap_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="#FF5252"
+        android:textSize="15sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Unable to load snap media" />
+
+    <!-- Dark Gradient Overlay for Header Readability -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="140dp"
+        android:background="@drawable/bg_preview_top_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Progress Timer Bar -->
+    <ProgressBar
+        android:id="@+id/pb_snap_timer"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="4dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:max="100"
+        android:progress="100"
+        android:progressDrawable="@drawable/bg_indicator_active"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Header Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_snap_dialog_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pb_snap_timer">
+
+        <!-- Friend Avatar Initials -->
+        <TextView
+            android:id="@+id/tv_dialog_avatar"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_avatar_gradient_3"
+            android:fontFamily="sans-serif-bold"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="MV" />
+
+        <!-- Friend Display Name & Snap Type Badge -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_dialog_close"
+            app:layout_constraintStart_toEndOf="@id/tv_dialog_avatar"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_dialog_user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-bold"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                tools:text="Marcus Vance" />
+
+            <!-- Snap Type Pill Badge -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/bg_privacy_pill"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="2dp">
+
+                <ImageView
+                    android:id="@+id/iv_dialog_snap_icon"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_nav_camera"
+                    app:tint="@color/electric_blue" />
+
+                <TextView
+                    android:id="@+id/tv_dialog_snap_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="sans-serif-bold"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    tools:text="Private Snap" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Close Action Button -->
+        <ImageButton
+            android:id="@+id/btn_dialog_close"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_control_circle"
+            android:contentDescription="@string/content_desc_close"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_close"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

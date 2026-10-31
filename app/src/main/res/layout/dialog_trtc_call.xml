@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/trtc_call_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0B0E">
+
+    <!-- Anchor View for Bottom Arc Controls -->
+    <View
+        android:id="@+id/view_call_controls_anchor"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_marginBottom="90dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- FULL SCREEN REMOTE VIDEO VIEW (ACTIVE VIDEO CALL) -->
+    <FrameLayout
+        android:id="@+id/layout_video_full_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:visibility="gone"
+        tools:visibility="gone">
+
+        <TextureView
+            android:id="@+id/tv_remote_video_texture"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/iv_remote_video_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/ic_avatar_placeholder" />
+    </FrameLayout>
+
+    <!-- VOICE / CONNECTING CALL UI (AVATAR SCREEN) -->
+
+    <!-- Top Security & Privacy Bar -->
+    <LinearLayout
+        android:id="@+id/layout_call_top_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/bg_privacy_pill"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_security"
+            app:tint="@color/electric_blue" />
+
+        <TextView
+            android:id="@+id/tv_call_top_notice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="ZEGO Cloud Encrypted"
+            android:textColor="@color/electric_blue"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Ambient Radial Glow Behind Avatar -->
+    <View
+        android:id="@+id/view_avatar_ambient_glow"
+        android:layout_width="320dp"
+        android:layout_height="320dp"
+        android:background="@drawable/bg_call_ambient_glow"
+        app:layout_constraintBottom_toBottomOf="@id/layout_call_profile"
+        app:layout_constraintEnd_toEndOf="@id/layout_call_profile"
+        app:layout_constraintStart_toStartOf="@id/layout_call_profile"
+        app:layout_constraintTop_toTopOf="@id/layout_call_profile" />
+
+    <!-- Caller Avatar & Profile Info Section -->
+    <LinearLayout
+        android:id="@+id/layout_call_profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/view_call_controls_anchor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_call_top_bar">
+
+        <!-- Outer Ring Frame -->
+        <FrameLayout
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:background="@drawable/bg_call_avatar_outer_ring"
+            android:padding="16dp">
+
+            <!-- Inner Border Ring Frame -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_call_avatar_inner_border"
+                android:padding="3dp">
+
+                <!-- Caller Photo ImageView -->
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/iv_call_avatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    app:shapeAppearanceOverlay="@style/CircularImageView"
+                    tools:src="@drawable/ic_avatar_placeholder" />
+
+                <!-- Caller Initials TextView -->
+                <TextView
+                    android:id="@+id/tv_call_avatar_initials"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_avatar_gradient_3"
+                    android:fontFamily="sans-serif-bold"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="38sp"
+                    tools:text="BD" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <!-- Display Name -->
+        <TextView
+            android:id="@+id/tv_call_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            tools:text="Brianna Duffy" />
+
+        <!-- Call Status Subtitle -->
+        <TextView
+            android:id="@+id/tv_call_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif"
+            android:textColor="#9A9BA4"
+            android:textSize="14sp"
+            tools:text="Incoming Call" />
+
+        <!-- Duration Timer -->
+        <TextView
+            android:id="@+id/tv_call_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="#8E8E93"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:text="00:15"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <!-- OUTGOING / AUDIO CALL SATELLITE BUTTONS -->
+    <!-- Speaker Button (Middle Top Center) -->
+    <ImageButton
+        android:id="@+id/btn_call_speaker"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Speakerphone"
+        android:padding="14dp"
+        android:src="@drawable/ic_speaker_on"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintCircle="@id/view_call_controls_anchor"
+        app:layout_constraintCircleAngle="0"
+        app:layout_constraintCircleRadius="110dp"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:tint="@color/white" />
+
+    <!-- Mic / Mute Button (Left Side Opposite Keypad) -->
+    <ImageButton
+        android:id="@+id/btn_call_mute"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Mute Microphone"
+        android:padding="14dp"
+        android:src="@drawable/ic_mic_on"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintCircle="@id/view_call_controls_anchor"
+        app:layout_constraintCircleAngle="320"
+        app:layout_constraintCircleRadius="110dp"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:tint="@color/white" />
+
+    <!-- Keypad Button (Right Side Opposite Mic) -->
+    <ImageButton
+        android:id="@+id/btn_call_keypad"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Keypad"
+        android:padding="14dp"
+        android:src="@drawable/ic_dialpad"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintCircle="@id/view_call_controls_anchor"
+        app:layout_constraintCircleAngle="40"
+        app:layout_constraintCircleRadius="110dp"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:tint="@color/white" />
+
+    <!-- Camera Toggle Button (Far Left for Video Mode) -->
+    <ImageButton
+        android:id="@+id/btn_call_camera"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Camera Toggle"
+        android:padding="14dp"
+        android:src="@drawable/ic_video_call"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintCircle="@id/view_call_controls_anchor"
+        app:layout_constraintCircleAngle="280"
+        app:layout_constraintCircleRadius="110dp"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:tint="@color/white" />
+
+    <!-- Center Call End Container (Outgoing / Connected Audio) -->
+    <FrameLayout
+        android:id="@+id/layout_end_call_container"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:background="@drawable/bg_call_end_outer_ring"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintEnd_toEndOf="@id/view_call_controls_anchor"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:layout_constraintTop_toTopOf="@id/view_call_controls_anchor">
+
+        <ImageButton
+            android:id="@+id/btn_call_end"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_call_end_inner_btn"
+            android:contentDescription="End Call"
+            android:padding="16dp"
+            android:src="@drawable/ic_call_end"
+            app:tint="@color/white" />
+    </FrameLayout>
+
+    <!-- INCOMING CALL STATE SATELLITE BUTTONS -->
+    <ImageButton
+        android:id="@+id/btn_incoming_remind"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Remind Me"
+        android:padding="14dp"
+        android:src="@drawable/ic_alarm"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintCircle="@id/view_call_controls_anchor"
+        app:layout_constraintCircleAngle="320"
+        app:layout_constraintCircleRadius="110dp"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:tint="@color/white"
+        tools:visibility="visible" />
+
+    <ImageButton
+        android:id="@+id/btn_incoming_message"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_call_satellite_btn"
+        android:contentDescription="Quick Reply Message"
+        android:padding="14dp"
+        android:src="@drawable/ic_nav_chat"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintCircle="@id/view_call_controls_anchor"
+        app:layout_constraintCircleAngle="40"
+        app:layout_constraintCircleRadius="110dp"
+        app:layout_constraintStart_toStartOf="@id/view_call_controls_anchor"
+        app:tint="@color/white"
+        tools:visibility="gone" />
+
+    <!-- INCOMING CALL PRIMARY BUTTONS (DECLINE RED & ACCEPT GREEN) -->
+    <FrameLayout
+        android:id="@+id/layout_decline_container"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/bg_call_end_outer_ring"
+        android:padding="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintEnd_toStartOf="@id/view_call_controls_anchor"
+        app:layout_constraintTop_toTopOf="@id/view_call_controls_anchor"
+        tools:visibility="visible">
+
+        <ImageButton
+            android:id="@+id/btn_call_decline"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_call_end_inner_btn"
+            android:contentDescription="Decline Call"
+            android:padding="16dp"
+            android:src="@drawable/ic_call_end"
+            app:tint="@color/white" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layout_accept_container"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:layout_marginStart="32dp"
+        android:background="@drawable/bg_call_end_outer_ring"
+        android:padding="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/view_call_controls_anchor"
+        app:layout_constraintStart_toEndOf="@id/view_call_controls_anchor"
+        app:layout_constraintTop_toTopOf="@id/view_call_controls_anchor"
+        tools:visibility="visible">
+
+        <ImageButton
+            android:id="@+id/btn_call_accept"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_call_accept_inner_btn"
+            android:contentDescription="Accept Call"
+            android:padding="16dp"
+            android:src="@drawable/ic_phone_call"
+            app:tint="@color/white" />
+    </FrameLayout>
+
+    <!-- ============================================================== -->
+    <!-- CONNECTED ACTIVE VIDEO CALL OVERLAY (TOP BAR, PIP, BOTTOM BAR) -->
+    <!-- ============================================================== -->
+
+    <!-- Top Video Call Overlay Bar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_video_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_preview_top_bar"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone">
+
+        <!-- Left Group: Back Button + Red Call Duration Timer Pill -->
+        <LinearLayout
+            android:id="@+id/layout_video_top_left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/btn_video_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Minimize"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/white" />
+
+            <!-- Red Timer Pill -->
+            <TextView
+                android:id="@+id/tv_video_timer_pill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_video_timer_pill"
+                android:fontFamily="sans-serif-bold"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="5dp"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                tools:text="10:23" />
+        </LinearLayout>
+
+        <!-- Right Group: Expand, Switch Camera -->
+        <LinearLayout
+            android:id="@+id/layout_video_top_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/btn_video_expand"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Expand View"
+                android:padding="8dp"
+                android:src="@drawable/ic_expand"
+                app:tint="@color/white" />
+
+            <ImageButton
+                android:id="@+id/btn_video_switch_camera"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Switch Camera"
+                android:padding="8dp"
+                android:src="@drawable/ic_camera_switch"
+                app:tint="@color/white" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Floating Local Camera PiP Window (Bottom Right Overlay) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_local_video_pip"
+        android:layout_width="110dp"
+        android:layout_height="150dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="#1A1C24"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:strokeColor="#33FFFFFF"
+        app:strokeWidth="1.5dp"
+        app:layout_constraintBottom_toTopOf="@id/layout_video_bottom_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone">
+
+        <TextureView
+            android:id="@+id/tv_local_video_texture"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/iv_call_video_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/ic_avatar_placeholder" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Floating Translucent Bottom Control Bar for Connected Video Call -->
+    <LinearLayout
+        android:id="@+id/layout_video_bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="28dp"
+        android:background="@drawable/bg_video_call_bottom_bar"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="gone">
+
+        <!-- 1. Chat Message Button -->
+        <ImageButton
+            android:id="@+id/btn_video_chat"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="In-Call Chat"
+            android:padding="12dp"
+            android:src="@drawable/ic_nav_chat"
+            app:tint="@color/white" />
+
+        <!-- 2. Mic Mute Toggle -->
+        <ImageButton
+            android:id="@+id/btn_video_mic"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Mute Microphone"
+            android:padding="12dp"
+            android:src="@drawable/ic_mic_on"
+            app:tint="@color/white" />
+
+        <!-- 3. Primary Center End Call Button (Vibrant Red Circle) -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:id="@+id/btn_video_end"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_call_end_inner_btn"
+                android:contentDescription="End Call"
+                android:padding="12dp"
+                android:src="@drawable/ic_call_end"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- 4. Video / Camera Toggle -->
+        <ImageButton
+            android:id="@+id/btn_video_camera"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Camera Toggle"
+            android:padding="12dp"
+            android:src="@drawable/ic_video_call"
+            app:tint="@color/white" />
+
+        <!-- 5. Speaker Toggle -->
+        <ImageButton
+            android:id="@+id/btn_video_speaker"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Speakerphone"
+            android:padding="12dp"
+            android:src="@drawable/ic_speaker_on"
+            app:tint="@color/white" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

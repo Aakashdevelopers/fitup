@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isBlocked(targetUid) {
+      return exists(/databases/$(database)/documents/userBlocks/$(request.auth.uid + '_' + targetUid)) ||
+             exists(/databases/$(database)/documents/userBlocks/$(targetUid + '_' + request.auth.uid));
+    }
+
+    // 1. Users Collection
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(uid);
+      allow delete: if false;
+
+      match /deviceTokens/{tokenId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Streak collections - Owner read and write access
+      match /streak/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /streakHistory/{date} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /streakRewards/{rewardId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // 2. Username Unique Mappings
+    match /usernames/{username} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+
+    // 3. Friend Requests
+    match /friendRequests/{requestId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
+      allow create: if isAuthenticated() &&
+        request.resource.data.senderUid == request.auth.uid &&
+        !isBlocked(request.resource.data.receiverUid);
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
+    }
+
+    // 4. Friendships
+    match /friendships/{friendshipId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.user1Uid == request.auth.uid || resource.data.user2Uid == request.auth.uid);
+      allow create: if isAuthenticated() &&
+        (request.auth.uid == request.resource.data.user1Uid || request.auth.uid == request.resource.data.user2Uid);
+      allow update, delete: if isAuthenticated() &&
+        (request.auth.uid == resource.data.user1Uid || request.auth.uid == resource.data.user2Uid);
+    }
+
+    // 5. User Blocks
+    match /userBlocks/{blockId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.blockerUid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.blockerUid == request.auth.uid;
+    }
+
+    // 6. Private Snaps Metadata
+    match /snaps/{snapId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid in resource.data.recipientUids || resource.data.senderUid == request.auth.uid) &&
+        !isBlocked(resource.data.senderUid);
+      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // 7. Realtime Chats & Messages
+    match /chats/{conversationId} {
+      allow read, write: if isAuthenticated();
+
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // 8. TRTC Calls
+    match /calls/{callId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

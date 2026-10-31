@@ -1,0 +1,194 @@
+package com.amstudio.fitup.view;
+
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.core.content.ContextCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+
+import com.amstudio.fitup.R;
+
+public class CustomBottomNavigationView extends FrameLayout {
+
+    public interface OnItemSelectedListener {
+        boolean onNavigationItemSelected(@NonNull MenuItem item);
+    }
+
+    public interface OnItemReselectedListener {
+        void onNavigationItemReselected(@NonNull MenuItem item);
+    }
+
+    private View indicatorLine;
+    private LinearLayout tabChat;
+    private LinearLayout tabCamera;
+    private LinearLayout tabProfile;
+
+    private ImageView ivChatIcon;
+    private TextView tvChatLabel;
+    private ImageView ivCameraIcon;
+    private TextView tvCameraLabel;
+    private ImageView ivProfileIcon;
+    private TextView tvProfileLabel;
+
+    private MenuItem itemChat;
+    private MenuItem itemCamera;
+    private MenuItem itemProfile;
+
+    private OnItemSelectedListener itemSelectedListener;
+    private OnItemReselectedListener itemReselectedListener;
+
+    private int selectedItemId = R.id.nav_camera;
+    private int selectedColor;
+    private int inactiveColor;
+
+    public CustomBottomNavigationView(@NonNull Context context) {
+        super(context);
+        init(context);
+    }
+
+    public CustomBottomNavigationView(@NonNull Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
+    }
+
+    public CustomBottomNavigationView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context) {
+        LayoutInflater.from(context).inflate(R.layout.layout_custom_bottom_nav, this, true);
+
+        selectedColor = ContextCompat.getColor(context, R.color.nav_selected_item);
+        inactiveColor = ContextCompat.getColor(context, R.color.nav_inactive_item);
+
+        indicatorLine = findViewById(R.id.indicator_line);
+        tabChat = findViewById(R.id.tab_chat);
+        tabCamera = findViewById(R.id.tab_camera);
+        tabProfile = findViewById(R.id.tab_profile);
+
+        ivChatIcon = findViewById(R.id.iv_chat_icon);
+        tvChatLabel = findViewById(R.id.tv_chat_label);
+        ivCameraIcon = findViewById(R.id.iv_camera_icon);
+        tvCameraLabel = findViewById(R.id.tv_camera_label);
+        ivProfileIcon = findViewById(R.id.iv_profile_icon);
+        tvProfileLabel = findViewById(R.id.tv_profile_label);
+
+        PopupMenu popupMenu = new PopupMenu(context, this);
+        itemChat = popupMenu.getMenu().add(0, R.id.nav_chat, 0, R.string.nav_chat);
+        itemCamera = popupMenu.getMenu().add(0, R.id.nav_camera, 1, R.string.nav_camera);
+        itemProfile = popupMenu.getMenu().add(0, R.id.nav_profile, 2, R.string.nav_profile);
+
+        tabChat.setOnClickListener(v -> handleTabClick(R.id.nav_chat, itemChat));
+        tabCamera.setOnClickListener(v -> handleTabClick(R.id.nav_camera, itemCamera));
+        tabProfile.setOnClickListener(v -> handleTabClick(R.id.nav_profile, itemProfile));
+
+        post(() -> updateUI(false));
+    }
+
+    private void handleTabClick(int itemId, MenuItem menuItem) {
+        if (selectedItemId == itemId) {
+            if (itemReselectedListener != null) {
+                itemReselectedListener.onNavigationItemReselected(menuItem);
+            }
+            return;
+        }
+
+        if (itemSelectedListener != null) {
+            boolean handled = itemSelectedListener.onNavigationItemSelected(menuItem);
+            if (handled) {
+                selectedItemId = itemId;
+                updateUI(true);
+            }
+        } else {
+            selectedItemId = itemId;
+            updateUI(true);
+        }
+    }
+
+    public void setOnItemSelectedListener(@Nullable OnItemSelectedListener listener) {
+        this.itemSelectedListener = listener;
+    }
+
+    public void setOnItemReselectedListener(@Nullable OnItemReselectedListener listener) {
+        this.itemReselectedListener = listener;
+    }
+
+    public void setSelectedItemId(int itemId) {
+        if (this.selectedItemId != itemId) {
+            this.selectedItemId = itemId;
+            updateUI(true);
+        } else {
+            updateUI(false);
+        }
+    }
+
+    public int getSelectedItemId() {
+        return selectedItemId;
+    }
+
+    private void updateUI(boolean animate) {
+        boolean isChat = (selectedItemId == R.id.nav_chat);
+        boolean isCamera = (selectedItemId == R.id.nav_camera);
+        boolean isProfile = (selectedItemId == R.id.nav_profile);
+
+        setTabState(ivChatIcon, tvChatLabel, isChat);
+        setTabState(ivCameraIcon, tvCameraLabel, isCamera);
+        setTabState(ivProfileIcon, tvProfileLabel, isProfile);
+
+        int targetIndex = 1; // Default middle (camera)
+        if (isChat) targetIndex = 0;
+        else if (isProfile) targetIndex = 2;
+
+        updateIndicatorPosition(targetIndex, animate);
+    }
+
+    private void setTabState(ImageView icon, TextView label, boolean active) {
+        int color = active ? selectedColor : inactiveColor;
+        icon.setImageTintList(ColorStateList.valueOf(color));
+        label.setTextColor(color);
+        label.setAlpha(active ? 1.0f : 0.75f);
+        icon.setAlpha(active ? 1.0f : 0.75f);
+    }
+
+    private void updateIndicatorPosition(int index, boolean animate) {
+        int totalWidth = getWidth();
+        if (totalWidth <= 0) return;
+
+        int tabWidth = totalWidth / 3;
+        int indicatorWidth = indicatorLine.getWidth();
+        if (indicatorWidth <= 0) {
+            indicatorWidth = (int) (48 * getResources().getDisplayMetrics().density);
+        }
+
+        float centerX = (index + 0.5f) * tabWidth;
+        float targetX = centerX - (indicatorWidth / 2.0f);
+
+        if (animate) {
+            indicatorLine.animate()
+                    .translationX(targetX)
+                    .setDuration(220)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .start();
+        } else {
+            indicatorLine.setTranslationX(targetX);
+        }
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        post(() -> updateUI(false));
+    }
+}

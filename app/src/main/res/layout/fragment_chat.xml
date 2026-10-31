@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_bg">
+
+    <!-- Top Header App Bar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header_bar"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Title Container with Accent Dot -->
+        <LinearLayout
+            android:id="@+id/layout_title_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!-- Title "Chats" -->
+            <TextView
+                android:id="@+id/tv_header_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/chat_title"
+                android:textColor="@color/primary_text"
+                android:textSize="26sp" />
+
+            <!-- Small Electric Blue Brand Accent Dot -->
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_unread_badge" />
+        </LinearLayout>
+
+        <!-- Right Side Header Action Buttons -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!-- Top App Bar Search Toggle Action -->
+            <ImageButton
+                android:id="@+id/btn_header_search"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/content_desc_search"
+                android:src="@drawable/ic_search"
+                app:tint="@color/secondary_text" />
+
+            <!-- New Chat Action -->
+            <ImageButton
+                android:id="@+id/btn_header_new_chat"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/content_desc_new_chat"
+                android:src="@drawable/ic_new_chat"
+                app:tint="@color/primary_text" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Search Bar Field Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/search_bar_container"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_search_input"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_bar">
+
+        <!-- Search Icon -->
+        <ImageView
+            android:id="@+id/iv_search_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_search"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/input_icon_tint" />
+
+        <!-- Search Input Field -->
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="8dp"
+            android:background="@null"
+            android:fontFamily="sans-serif"
+            android:hint="@string/chat_search_placeholder"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/primary_text"
+            android:textColorHint="@color/input_hint"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_search_clear"
+            app:layout_constraintStart_toEndOf="@id/iv_search_icon"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Clear Search Input Action -->
+        <ImageButton
+            android:id="@+id/btn_search_clear"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_desc_clear_search"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_clear"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Main Scrollable Content Area -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nested_scroll_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_bar_container">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Shimmer Loading Effect -->
+            <include
+                android:id="@+id/shimmer_view_container"
+                layout="@layout/layout_chat_shimmer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible" />
+
+            <!-- Main Content Container -->
+            <LinearLayout
+                android:id="@+id/layout_content_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <!-- Active Friends Section Header -->
+                <TextView
+                    android:id="@+id/tv_active_friends_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.06"
+                    android:text="@string/active_friends_header"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="12sp" />
+
+                <!-- Horizontally Scrollable Active Friends RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_active_friends"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clipToPadding="false"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    tools:listitem="@layout/item_active_friend" />
+
+                <!-- No Friends Message for Active Friends Section -->
+                <TextView
+                    android:id="@+id/tv_no_active_friends"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="sans-serif"
+                    android:text="@string/no_friend_found"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!-- Recent Chats Section Header -->
+                <TextView
+                    android:id="@+id/tv_recent_chats_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.06"
+                    android:text="@string/recent_chats_header"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="12sp" />
+
+                <!-- Vertically Scrollable Recent Chats RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_recent_chats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_chat_conversation" />
+
+                <!-- Clean Empty State View Group -->
+                <LinearLayout
+                    android:id="@+id/layout_empty_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingStart="32dp"
+                    android:paddingTop="48dp"
+                    android:paddingEnd="32dp"
+                    android:paddingBottom="48dp"
+                    android:visibility="gone"
+                    tools:visibility="gone">
+
+                    <!-- Subtle Vector Illustration -->
+                    <ImageView
+                        android:id="@+id/iv_empty_icon"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_empty_chat" />
+
+                    <!-- Empty State Title -->
+                    <TextView
+                        android:id="@+id/tv_empty_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="sans-serif-bold"
+                        android:text="@string/empty_chats_title"
+                        android:textColor="@color/primary_text"
+                        android:textSize="18sp" />
+
+                    <!-- Empty State Subtitle -->
+                    <TextView
+                        android:id="@+id/tv_empty_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="sans-serif"
+                        android:gravity="center"
+                        android:text="@string/empty_chats_subtitle"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="14sp" />
+
+                    <!-- Secondary Action "Find Friends" -->
+                    <TextView
+                        android:id="@+id/btn_find_friends"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:background="@drawable/bg_btn_find_friends"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="sans-serif-bold"
+                        android:paddingStart="28dp"
+                        android:paddingTop="12dp"
+                        android:paddingEnd="28dp"
+                        android:paddingBottom="12dp"
+                        android:text="@string/btn_find_friends"
+                        android:textColor="@color/electric_blue"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

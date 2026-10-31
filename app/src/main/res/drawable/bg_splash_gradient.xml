@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base Vertical Linear Gradient: Luminous Top -> Royal Blue/Deep Navy -> Near-Black Navy -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:type="linear"
+                android:startColor="#80AFFF"
+                android:centerColor="#06162E"
+                android:endColor="#05080F" />
+        </shape>
+    </item>
+
+    <!-- Center Ambient Luminous Lighting Glow (#347FFF) -->
+    <item
+        android:width="380dp"
+        android:height="380dp"
+        android:gravity="center">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="190dp"
+                android:startColor="#55347FFF"
+                android:endColor="#00347FFF" />
+        </shape>
+    </item>
+
+    <!-- Top Soft Luminous Halo (#80AFFF) -->
+    <item
+        android:top="-100dp"
+        android:width="400dp"
+        android:height="400dp"
+        android:gravity="top|center_horizontal">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="200dp"
+                android:startColor="#6080AFFF"
+                android:endColor="#0080AFFF" />
+        </shape>
+    </item>
+</layer-list>

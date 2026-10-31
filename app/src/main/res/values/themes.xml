@@ -1,0 +1,44 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.FitUp" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand_cta_blue</item>
+        <item name="colorOnPrimary">@color/text_primary_white</item>
+        <item name="android:windowBackground">@color/brand_deep_navy</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Theme.FitUp" parent="Base.Theme.FitUp" />
+
+    <!-- Circular Image Shape Overlay -->
+    <style name="CircularImageView">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Bottom Navigation Text Styles -->
+    <style name="NavTextActive" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/nav_selected_item</item>
+    </style>
+
+    <style name="NavTextInactive" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/nav_inactive_item</item>
+    </style>
+
+    <!-- Keypad Button Style -->
+    <style name="KeypadButtonStyle">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">64dp</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:background">@drawable/bg_call_satellite_btn</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:fontFamily">sans-serif-bold</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+</resources>

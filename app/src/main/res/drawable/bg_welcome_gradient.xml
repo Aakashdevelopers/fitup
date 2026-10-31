@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base vertical linear gradient: Electric/Luminous Blue -> Deep Navy -> Near-Black Navy -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:type="linear"
+                android:startColor="#1E52A8"
+                android:centerColor="#071933"
+                android:endColor="#05080F" />
+        </shape>
+    </item>
+
+    <!-- Top-Right Soft Light-Blue Luminous Glow -->
+    <item
+        android:top="-100dp"
+        android:right="-100dp"
+        android:width="360dp"
+        android:height="360dp"
+        android:gravity="top|end">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="180dp"
+                android:startColor="#5080AFFF"
+                android:endColor="#0080AFFF" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+  <!-- Gradient background circle -->
+  <path
+      android:fillColor="#162F52"
+      android:pathData="M48,0A48,48 0,1 1,0,48A48,48 0,0 1,48,0z"/>
+  <!-- User head -->
+  <path
+      android:fillColor="#38B6FF"
+      android:pathData="M48,22a15,15 0,1 0,15,15A15,15 0,0 0,48,22z"/>
+  <!-- User body -->
+  <path
+      android:fillColor="#38B6FF"
+      android:pathData="M48,56c-18,0 -30,10 -30,22a2,2 0,0 0,2,2h56a2,2 0,0 0,2,-2c0,-12 -12,-22 -30,-22z"/>
+</vector>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="192dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <!-- Background Gradient representing gym lighting -->
+    <path
+        android:pathData="M0,0h1080v1920H0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:angle="135"
+                android:startColor="#06162E"
+                android:centerColor="#0B1B30"
+                android:endColor="#05080F" />
+        </aapt:attr>
+    </path>
+
+    <!-- Ambient Glow Circle Top Right -->
+    <path
+        android:pathData="M540,200m-400,0a400,400 0 1,0 800,0a400,400 0 1,0 -800,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="540"
+                android:centerY="200"
+                android:gradientRadius="400"
+                android:startColor="#3338B6FF"
+                android:endColor="#00000000" />
+        </aapt:attr>
+    </path>
+
+    <!-- Center Gym Watermark Graphic -->
+    <path
+        android:fillColor="#1A80AFFF"
+        android:pathData="M540,760 C420,760 320,860 320,980 C320,1100 420,1200 540,1200 C660,1200 760,1100 760,980 C760,860 660,760 540,760 Z M540,1120 C463,1120 400,1057 400,980 C400,903 463,840 540,840 C617,840 680,903 680,980 C680,1057 617,1120 540,1120 Z" />
+
+    <!-- Dumbbell Symbol in Center -->
+    <path
+        android:fillColor="#4038B6FF"
+        android:pathData="M420,950 v60 h20 v-60 z M640,950 v60 h20 v-60 z M440,930 v100 h30 v-100 z M610,930 v100 h30 v-100 z M470,970 h140 v20 h-140 z" />
+
+</vector>

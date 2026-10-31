@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="12dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="4dp">
+
+    <!-- Distinct Outgoing Private Snap Card Bubble -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/card_snap_bubble"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_snap_outgoing_bubble"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:padding="12dp"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Snap Icon Circle Container -->
+        <FrameLayout
+            android:id="@+id/layout_snap_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_control_circle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/iv_snap_icon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_snap_video"
+                app:tint="@color/electric_blue" />
+        </FrameLayout>
+
+        <!-- Label & Subtext Info -->
+        <LinearLayout
+            android:id="@+id/layout_snap_info"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="6dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/iv_snap_chevron"
+            app:layout_constraintStart_toEndOf="@id/layout_snap_icon"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_snap_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-bold"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                tools:text="Video Snap" />
+
+            <TextView
+                android:id="@+id/tv_snap_subtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="sans-serif"
+                android:textColor="#D0E3FF"
+                android:textSize="12sp"
+                tools:text="Delivered • 15s" />
+
+        </LinearLayout>
+
+        <!-- Right Chevron Indicator -->
+        <ImageView
+            android:id="@+id/iv_snap_chevron"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron_right"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Message Timestamp Below Card -->
+    <TextView
+        android:id="@+id/tv_message_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/chat_time_text"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="@id/card_snap_bubble"
+        app:layout_constraintTop_toBottomOf="@id/card_snap_bubble"
+        tools:text="10:45 AM" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

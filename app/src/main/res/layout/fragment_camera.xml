@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/camera_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_bottom_black_blue">
+
+    <!-- Live Camera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/preview_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 3x3 Composition Grid Overlay -->
+    <com.amstudio.fitup.GridOverlayView
+        android:id="@+id/grid_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/preview_view"
+        app:layout_constraintEnd_toEndOf="@id/preview_view"
+        app:layout_constraintStart_toStartOf="@id/preview_view"
+        app:layout_constraintTop_toTopOf="@id/preview_view" />
+
+    <!-- Tap-to-Focus Ring Overlay -->
+    <com.amstudio.fitup.FocusRingView
+        android:id="@+id/focus_ring"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Camera Permission Required Overlay -->
+    <LinearLayout
+        android:id="@+id/layout_permission"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:background="@drawable/bg_mode_pill"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="28dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_camera_perm" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Camera Access Required"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Enable camera and microphone permissions to capture photos and 15-second videos."
+            android:textColor="@color/text_secondary_blue"
+            android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_grant_permission"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/primary_blue"
+            android:text="Grant Permissions"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:cornerRadius="26dp" />
+    </LinearLayout>
+
+    <!-- Top Control Bar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/top_control_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Flash Toggle Button -->
+        <ImageButton
+            android:id="@+id/btn_flash"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_control_circle"
+            android:contentDescription="Toggle Flash"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_flash_off"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Minimal App Title / Brand -->
+        <TextView
+            android:id="@+id/tv_top_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.15"
+            android:text="FITUP"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Camera Switch Button -->
+        <ImageButton
+            android:id="@+id/btn_camera_switch"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_control_circle"
+            android:contentDescription="Switch Camera"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_camera_switch"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Temporary Zoom Ratio Indicator -->
+    <TextView
+        android:id="@+id/tv_zoom_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_zoom_pill"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="6dp"
+        android:text="1.0x"
+        android:textColor="@color/electric_blue"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_control_bar"
+        tools:visibility="visible" />
+
+    <!-- Video Recording Timer & Progress Indicator -->
+    <LinearLayout
+        android:id="@+id/layout_recording_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_recording_pill"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_control_bar"
+        tools:visibility="visible">
+
+        <!-- Pulsing Red Recording Dot -->
+        <View
+            android:id="@+id/v_recording_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_shutter_inner_video" />
+
+        <TextView
+            android:id="@+id/tv_recording_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00 / 00:15"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Flash Capture White Overlay Effect -->
+    <View
+        android:id="@+id/v_capture_flash"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Bottom Capture Section -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottom_capture_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- PHOTO / VIDEO Mode Selector -->
+        <LinearLayout
+            android:id="@+id/mode_selector_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_mode_pill"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            app:layout_constraintBottom_toTopOf="@id/btn_shutter"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/btn_mode_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="8dp"
+                android:text="PHOTO"
+                android:textColor="@color/brand_electric_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btn_mode_video"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="8dp"
+                android:text="VIDEO"
+                android:textColor="@color/text_secondary_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Gallery Button (Left) -->
+        <FrameLayout
+            android:id="@+id/btn_gallery"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_control_circle"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/btn_shutter">
+
+            <ImageView
+                android:id="@+id/iv_gallery_icon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:contentDescription="Gallery Picker"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_gallery" />
+
+            <ImageView
+                android:id="@+id/iv_gallery_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Latest Media Thumbnail"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- Shutter / Record Button (Center) -->
+        <FrameLayout
+            android:id="@+id/btn_shutter"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <!-- Outer Ring -->
+            <View
+                android:id="@+id/v_shutter_outer"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_shutter_ring" />
+
+            <!-- Inner Circle -->
+            <View
+                android:id="@+id/v_shutter_inner"
+                android:layout_width="62dp"
+                android:layout_height="62dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_shutter_inner_photo" />
+        </FrameLayout>
+
+        <!-- Grid Lines Toggle Button (Right) -->
+        <ImageButton
+            android:id="@+id/btn_grid"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_control_circle"
+            android:contentDescription="Toggle Grid Lines"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_grid_off"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/btn_shutter" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Media Preview Dialog Overlay (Shown when gallery photo/video selected or after capture) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_media_preview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/brand_bottom_black_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone">
+
+        <ImageView
+            android:id="@+id/iv_preview_image"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="Media Preview"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@id/preview_bottom_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/preview_top_bar" />
+
+        <VideoView
+            android:id="@+id/vv_preview_video"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/preview_bottom_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/preview_top_bar" />
+
+        <!-- Preview Top Bar -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/preview_top_bar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/btn_preview_close"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_control_circle"
+                android:contentDescription="Close Preview"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_close"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_preview_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Media Preview"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Preview Bottom Action Bar -->
+        <FrameLayout
+            android:id="@+id/preview_bottom_bar"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:paddingHorizontal="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_preview_save"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_gravity="end|center_vertical"
+                android:backgroundTint="@color/primary_blue"
+                android:paddingHorizontal="28dp"
+                android:text="Done"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="25dp" />
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

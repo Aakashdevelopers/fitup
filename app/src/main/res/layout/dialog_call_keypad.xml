@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#14151B"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Header bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-medium"
+            android:text="Keypad"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <ImageButton
+            android:id="@+id/btn_keypad_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            android:src="@drawable/ic_close"
+            app:tint="#8E8E93" />
+    </RelativeLayout>
+
+    <!-- Digits Display -->
+    <TextView
+        android:id="@+id/tv_keypad_digits"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="24dp"
+        android:fontFamily="sans-serif-bold"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="28sp" />
+
+    <!-- Dialpad Grid 3x4 -->
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:columnCount="3"
+        android:rowCount="4">
+
+        <!-- Row 1: 1, 2, 3 -->
+        <TextView
+            android:id="@+id/btn_num_1"
+            style="@style/KeypadButtonStyle"
+            android:text="1" />
+
+        <TextView
+            android:id="@+id/btn_num_2"
+            style="@style/KeypadButtonStyle"
+            android:text="2" />
+
+        <TextView
+            android:id="@+id/btn_num_3"
+            style="@style/KeypadButtonStyle"
+            android:text="3" />
+
+        <!-- Row 2: 4, 5, 6 -->
+        <TextView
+            android:id="@+id/btn_num_4"
+            style="@style/KeypadButtonStyle"
+            android:text="4" />
+
+        <TextView
+            android:id="@+id/btn_num_5"
+            style="@style/KeypadButtonStyle"
+            android:text="5" />
+
+        <TextView
+            android:id="@+id/btn_num_6"
+            style="@style/KeypadButtonStyle"
+            android:text="6" />
+
+        <!-- Row 3: 7, 8, 9 -->
+        <TextView
+            android:id="@+id/btn_num_7"
+            style="@style/KeypadButtonStyle"
+            android:text="7" />
+
+        <TextView
+            android:id="@+id/btn_num_8"
+            style="@style/KeypadButtonStyle"
+            android:text="8" />
+
+        <TextView
+            android:id="@+id/btn_num_9"
+            style="@style/KeypadButtonStyle"
+            android:text="9" />
+
+        <!-- Row 4: *, 0, # -->
+        <TextView
+            android:id="@+id/btn_num_star"
+            style="@style/KeypadButtonStyle"
+            android:text="*" />
+
+        <TextView
+            android:id="@+id/btn_num_0"
+            style="@style/KeypadButtonStyle"
+            android:text="0" />
+
+        <TextView
+            android:id="@+id/btn_num_hash"
+            style="@style/KeypadButtonStyle"
+            android:text="#" />
+
+    </GridLayout>
+
+</LinearLayout>

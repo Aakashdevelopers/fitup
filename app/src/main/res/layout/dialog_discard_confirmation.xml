@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_profile_card"
+    android:padding="24dp">
+
+    <!-- Discard Header Icon -->
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_discard_btn"
+        android:padding="12dp"
+        android:src="@drawable/ic_trash"
+        app:tint="@color/logout_red" />
+
+    <!-- Dialog Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:text="@string/dialog_discard_title"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- Dialog Subtitle / Message -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="@string/dialog_discard_message"
+        android:textColor="@color/secondary_text"
+        android:textSize="14sp"
+        android:lineSpacingExtra="2dp" />
+
+    <!-- Buttons Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_dialog_cancel"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="@string/dialog_cancel"
+            android:textColor="@color/white"
+            app:strokeColor="@color/subtle_border"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_dialog_discard"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/dialog_discard_confirm"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/logout_red"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
+
+</LinearLayout>

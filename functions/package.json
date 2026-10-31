@@ -1,0 +1,25 @@
+{
+  "name": "fitup-cloud-functions",
+  "version": "1.0.0",
+  "description": "Production Firebase Cloud Functions backend for FitUp Gym Social App",
+  "main": "index.js",
+  "scripts": {
+    "lint": "echo \"No linting required\"",
+    "serve": "firebase serve --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "form-data": "^4.0.0",
+    "tls-sig-api-v2": "^1.1.0"
+  },
+  "private": true
+}

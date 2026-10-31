@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="72dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackgroundBorderless"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <!-- Avatar Container with Online Indicator -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="58dp"
+        android:layout_height="58dp">
+
+        <!-- Subtle Outer Blue Accent Ring -->
+        <View
+            android:id="@+id/view_avatar_ring"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
+            android:background="@drawable/bg_active_friend_avatar_ring"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Circular Avatar Circle (Initials or Image) -->
+        <TextView
+            android:id="@+id/tv_active_avatar_initials"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_avatar_gradient_1"
+            android:fontFamily="sans-serif-bold"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="AL" />
+
+        <!-- Online Green Status Indicator Badge -->
+        <View
+            android:id="@+id/view_online_indicator"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/bg_online_badge"
+            app:layout_constraintBottom_toBottomOf="@id/tv_active_avatar_initials"
+            app:layout_constraintEnd_toEndOf="@id/tv_active_avatar_initials" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Friend Display Name -->
+    <TextView
+        android:id="@+id/tv_active_friend_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/primary_text"
+        android:textSize="12sp"
+        tools:text="Alex" />
+
+</LinearLayout>

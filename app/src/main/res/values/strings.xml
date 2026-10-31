@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FitUp</string>
+    <string name="welcome_brand_name">FITUP</string>
+    <string name="welcome_headline_full">Own Your Fitness,\nFind Your People.</string>
+    <string name="welcome_subtitle">Share your progress, connect with friends, and build stronger habits every day.</string>
+    <string name="btn_get_started">Get Started</string>
+    <string name="btn_login">Log in</string>
+    <string name="splash_tagline">Stronger Together.</string>
+
+    <!-- Navigation Strings -->
+    <string name="nav_camera">Camera</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Auth Screen Strings -->
+    <string name="auth_welcome_title">Welcome to FitUp</string>
+    <string name="auth_welcome_subtitle">Your fitness journey starts here.</string>
+    <string name="tab_login">Login</string>
+    <string name="tab_signup">Sign Up</string>
+    <string name="hint_full_name">Full Name</string>
+    <string name="hint_email">Email Address</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_confirm_password">Confirm Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="btn_create_account">Create Account</string>
+    <string name="or_continue_with">OR CONTINUE WITH</string>
+    <string name="btn_google_signin">Continue with Google</string>
+    <string name="dont_have_account_prompt">Don\'t have an account? </string>
+    <string name="action_signup_link">Sign Up</string>
+    <string name="already_have_account_prompt">Already have an account? </string>
+    <string name="action_login_link">Login</string>
+    <string name="terms_privacy_notice">By continuing, you agree to our Terms of Service and Privacy Policy.</string>
+    <string name="content_desc_back">Back</string>
+    <string name="content_desc_close">Close</string>
+    <string name="content_desc_google_logo">Google Logo</string>
+
+    <!-- Development Navigation Panel Strings -->
+    <string name="dev_panel_title">DEV SCREEN PREVIEW</string>
+    <string name="dev_panel_subtitle">Development Build Navigation</string>
+    <string name="btn_dev_splash_preview">Splash Preview</string>
+    <string name="btn_dev_welcome_screen">Welcome Screen</string>
+    <string name="btn_dev_login_signup">Login / Sign Up</string>
+    <string name="btn_dev_camera_app">Camera App</string>
+    <string name="toast_splash_preview">Previewing Splash Screen UI</string>
+
+    <!-- Chat UI Strings -->
+    <string name="chat_title">Chats</string>
+    <string name="chat_search_placeholder">Search friends&#8230;</string>
+    <string name="active_friends_header">ACTIVE FRIENDS</string>
+    <string name="recent_chats_header">RECENT CHATS</string>
+    <string name="empty_chats_title">No friend found</string>
+    <string name="empty_chats_subtitle">Connect with friends and start your fitness journey together.</string>
+    <string name="no_search_results_title">No friend found</string>
+    <string name="no_search_results_subtitle">No friends or messages matching \"%1$s\"</string>
+    <string name="no_friend_found">No friend found</string>
+    <string name="btn_find_friends">Find Friends</string>
+    <string name="content_desc_search">Search</string>
+    <string name="content_desc_new_chat">New Chat</string>
+    <string name="content_desc_clear_search">Clear search</string>
+
+    <!-- Profile UI Strings -->
+    <string name="profile_title">My Profile</string>
+    <string name="profile_default_name">Alex Rivers</string>
+    <string name="profile_default_username">\@alex_fitup</string>
+    <string name="profile_default_bio">Building strength, one day at a time. 🏋️‍♂️\nConsistency over perfection.</string>
+    <string name="profile_default_location">San Francisco, CA • Hypertrophy Goal</string>
+    <string name="profile_stat_posts">Posts</string>
+    <string name="profile_stat_followers">Followers</string>
+    <string name="profile_stat_following">Following</string>
+    <string name="profile_stat_posts_default">28</string>
+    <string name="profile_stat_followers_default">1.4k</string>
+    <string name="profile_stat_following_default">382</string>
+    <string name="profile_stat_workout_days_default">12</string>
+    <string name="profile_stat_streak_default">5 Days</string>
+    <string name="profile_stat_total_default">24</string>
+    <string name="btn_edit_profile">Edit Profile</string>
+    <string name="btn_share_profile">Share Profile</string>
+    <string name="profile_section_activity">Your Activity</string>
+    <string name="profile_stat_workout_days">Workout Days</string>
+    <string name="profile_stat_streak">Current Streak</string>
+    <string name="profile_stat_total_workouts">Total Workouts</string>
+    <string name="profile_tab_posts">Posts</string>
+    <string name="profile_tab_snaps">Snaps</string>
+    <string name="profile_tab_activity">Activity</string>
+    <string name="profile_empty_posts_title">No posts yet</string>
+    <string name="profile_empty_posts_sub">Your fitness journey will appear here.</string>
+    <string name="profile_empty_snaps_title">No snaps yet</string>
+    <string name="profile_empty_snaps_sub">Captured workout snaps and quick clips will show up here.</string>
+    <string name="profile_empty_activity_title">No activity logs yet</string>
+    <string name="profile_empty_activity_sub">Tracked gym sessions and milestones will be summarized here.</string>
+    <string name="profile_section_account">Account &amp; Settings</string>
+    <string name="settings_edit_details">Edit Personal Details</string>
+    <string name="settings_privacy_security">Privacy &amp; Security</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_help_support">Help &amp; Support</string>
+    <string name="settings_logout">Log Out</string>
+    <string name="content_desc_settings">Settings</string>
+    <string name="content_desc_edit_avatar">Edit avatar</string>
+    <string name="content_desc_profile_avatar">Profile avatar</string>
+    <string name="profile_version_footer">FitUp v1.0.0 • Profile UI</string>
+
+    <!-- Edit Profile Strings -->
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="edit_profile_save">Save</string>
+    <string name="edit_profile_change_photo">Change Photo</string>
+    <string name="edit_profile_remove_photo">Remove</string>
+    <string name="edit_profile_hint_full_name">Full Name *</string>
+    <string name="edit_profile_hint_username">Username *</string>
+    <string name="edit_profile_prefix_at">\@</string>
+    <string name="edit_profile_username_default_status">3–30 characters: lowercase, numbers, underscores</string>
+    <string name="edit_profile_hint_bio">Bio</string>
+    <string name="edit_profile_hint_gender">Gender (Optional)</string>
+    <string name="edit_profile_hint_dob">Date of Birth (Optional)</string>
+    <string name="edit_profile_hint_location">Location (Optional)</string>
+    <string name="edit_profile_btn_save">Save Changes</string>
+    <string name="edit_profile_loading">Updating Profile…</string>
+
+
+    <!-- Snap Preview & Private Snap Strings -->
+    <string name="preview_snap_title">Preview Snap</string>
+    <string name="privacy_badge_private">Private</string>
+    <string name="privacy_message_notice">Only selected friends can receive this Snap.</string>
+    <string name="btn_send_to_friends">Send To Friends</string>
+    <string name="btn_retake">Retake</string>
+    <string name="content_desc_discard_snap">Discard Snap</string>
+    <string name="dialog_discard_title">Discard Snap?</string>
+    <string name="dialog_discard_message">Are you sure you want to discard this private snap? Your captured media will be removed.</string>
+    <string name="dialog_discard_confirm">Discard</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="tool_text_label">Text</string>
+    <string name="tool_crop_label">Crop</string>
+    <string name="tool_draw_label">Draw</string>
+    <string name="tool_sticker_label">Stickers</string>
+    <string name="preview_mode_photo">Photo Preview</string>
+    <string name="preview_mode_video">Video Preview</string>
+
+    <!-- Select Friends Private Snap Destination Strings -->
+    <string name="select_friends_title">Send Private Snap</string>
+    <string name="select_friends_subtitle">Select gym friends to receive your private snap.</string>
+    <string name="btn_send_snap_now">Send Snap</string>
+    <string name="friends_selected_count">%1$d friends selected</string>
+
+    <!-- Snap Sent Confirmation Strings -->
+    <string name="snap_sent_title">Snap Sent!</string>
+    <string name="snap_sent_subtitle">Your private Snap has been sent to your friends.</string>
+    <string name="sent_snap_label">Your Snap</string>
+    <string name="sent_to_header">Sent To</string>
+    <string name="privacy_sent_notice">Shared privately with selected friends only.</string>
+    <string name="btn_back_to_camera">Back to Camera</string>
+    <string name="btn_done">Done</string>
+    <string name="btn_send_another_snap">Send Another Snap</string>
+    <string name="local_preview_notice">Local UI Success Preview</string>
+    <string name="status_delivered">Delivered</string>
+    <string name="status_sending">Sending&#8230;</string>
+    <string name="status_failed">Failed to deliver</string>
+    <string name="photo_snap_label">Photo Snap</string>
+    <string name="video_snap_label">Video Snap • %1$s</string>
+</resources>

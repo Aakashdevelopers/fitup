@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_active_call_banner"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_btn_find_friends"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:paddingStart="14dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="10dp"
+    android:visibility="gone"
+    tools:visibility="visible">
+
+    <!-- Green Call Icon -->
+    <ImageView
+        android:id="@+id/iv_banner_call_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_phone_call"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white" />
+
+    <!-- Ongoing Call Title & Duration -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/layout_banner_avatar"
+        app:layout_constraintStart_toEndOf="@id/iv_banner_call_icon"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_banner_call_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-bold"
+            android:maxLines="1"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            tools:text="Ongoing Call • Prabal" />
+
+        <TextView
+            android:id="@+id/tv_banner_call_sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:fontFamily="sans-serif"
+            android:textColor="#E0F2FE"
+            android:textSize="11sp"
+            tools:text="Tap to return to call • 01:23" />
+
+    </LinearLayout>
+
+    <!-- Floating Avatar Bubble Circle on Right -->
+    <FrameLayout
+        android:id="@+id/layout_banner_avatar"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_active_friend_avatar_ring"
+        android:padding="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_banner_avatar_initials"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_avatar_gradient_3"
+            android:fontFamily="sans-serif-bold"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            tools:text="PR" />
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissions required for Calling, Audio, Camera & Realtime Communication -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+
+    <!-- Optional features for device hardware capabilities -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+
+    <application
+        android:name=".FitUpApplication"
+        android:allowBackup="true"
+        tools:replace="android:allowBackup"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FitUp">
+
+        <!-- Launcher Splash Screen Activity -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.FitUp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Welcome Screen Onboarding Activity -->
+        <activity
+            android:name=".WelcomeActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Main Shell Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Login & Sign Up Authentication Activity -->
+        <activity
+            android:name=".AuthActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Friends Only Private Snap Preview Activity -->
+        <activity
+            android:name=".SnapPreviewActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Friends Only Private Snap Friend Selection Activity -->
+        <activity
+            android:name=".SelectFriendsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Friends Only Private Snap Delivery Confirmation Activity -->
+        <activity
+            android:name=".SnapSentConfirmationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Individual Chat Conversation Activity -->
+        <activity
+            android:name=".IndividualChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Edit Profile Activity -->
+        <activity
+            android:name=".EditProfileActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Daily Streak Activity -->
+        <activity
+            android:name=".StreakActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Real-Time Audio & Video Call Activity -->
+        <activity
+            android:name=".TRTCCallActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.FitUp" />
+
+        <!-- Firebase Cloud Messaging Push Service -->
+        <service
+            android:name=".service.FitUpMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>
