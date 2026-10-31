@@ -1,7 +1,10 @@
 package com.amstudio.fitup;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,12 +34,48 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private static final int VIEW_TYPE_SNAP_INCOMING = 2;
     private static final int VIEW_TYPE_SNAP_OUTGOING = 3;
     private static final int VIEW_TYPE_CALL_EVENT = 4;
+    private static final int VIEW_TYPE_IMAGE_INCOMING = 5;
+    private static final int VIEW_TYPE_IMAGE_OUTGOING = 6;
 
     private final List<ChatMessage> messageList = new ArrayList<>();
     private final OnSnapClickListener snapClickListener;
 
     public ChatMessageAdapter(OnSnapClickListener snapClickListener) {
         this.snapClickListener = snapClickListener;
+    }
+
+    public static Object getLocalFileOrTarget(String mediaUriStr, Context context) {
+        if (mediaUriStr == null || mediaUriStr.isEmpty()) {
+            return mediaUriStr;
+        }
+
+        try {
+            if (mediaUriStr.startsWith("file://")) {
+                Uri uri = Uri.parse(mediaUriStr);
+                if (uri.getPath() != null) {
+                    File file = new File(uri.getPath());
+                    if (file.exists() && file.isFile()) {
+                        return file;
+                    }
+                }
+            } else if (mediaUriStr.startsWith("/")) {
+                File file = new File(mediaUriStr);
+                if (file.exists() && file.isFile()) {
+                    return file;
+                }
+            } else if (mediaUriStr.startsWith("content://") && context != null) {
+                Uri uri = Uri.parse(mediaUriStr);
+                try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
+                    if (inputStream != null) {
+                        return uri;
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            Log.w("ChatMessageAdapter", "Error resolving local media file: " + e.getMessage());
+        }
+
+        return mediaUriStr;
     }
 
     public void setMessages(List<ChatMessage> messages) {
@@ -62,6 +103,10 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 return VIEW_TYPE_SNAP_INCOMING;
             case SNAP_OUTGOING:
                 return VIEW_TYPE_SNAP_OUTGOING;
+            case IMAGE_INCOMING:
+                return VIEW_TYPE_IMAGE_INCOMING;
+            case IMAGE_OUTGOING:
+                return VIEW_TYPE_IMAGE_OUTGOING;
             case CALL_EVENT:
                 return VIEW_TYPE_CALL_EVENT;
             case TEXT_INCOMING:
@@ -84,6 +129,12 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case VIEW_TYPE_SNAP_OUTGOING:
                 View snapOut = inflater.inflate(R.layout.item_message_snap_outgoing, parent, false);
                 return new SnapMessageViewHolder(snapOut);
+            case VIEW_TYPE_IMAGE_OUTGOING:
+                View imgOut = inflater.inflate(R.layout.item_message_image_outgoing, parent, false);
+                return new ImageMessageViewHolder(imgOut);
+            case VIEW_TYPE_IMAGE_INCOMING:
+                View imgIn = inflater.inflate(R.layout.item_message_image_incoming, parent, false);
+                return new ImageMessageViewHolder(imgIn);
             case VIEW_TYPE_CALL_EVENT:
                 View callView = inflater.inflate(R.layout.item_message_call, parent, false);
                 return new CallMessageViewHolder(callView);
@@ -126,6 +177,24 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
 
             vh.cardSnapBubble.setOnClickListener(v -> {
+                if (snapClickListener != null) {
+                    snapClickListener.onSnapClick(message);
+                }
+            });
+        } else if (holder instanceof ImageMessageViewHolder) {
+            ImageMessageViewHolder vh = (ImageMessageViewHolder) holder;
+            vh.tvMessageTime.setText(message.getTimestamp());
+
+            if (message.getMediaUri() != null && !message.getMediaUri().isEmpty()) {
+                Object loadTarget = getLocalFileOrTarget(message.getMediaUri(), holder.itemView.getContext());
+                Glide.with(holder.itemView.getContext())
+                        .load(loadTarget)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .placeholder(R.drawable.bg_avatar_gradient_3)
+                        .into(vh.ivMessageImage);
+            }
+
+            vh.cardImageBubble.setOnClickListener(v -> {
                 if (snapClickListener != null) {
                     snapClickListener.onSnapClick(message);
                 }
@@ -176,6 +245,19 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ivSnapIcon = itemView.findViewById(R.id.iv_snap_icon);
             tvSnapLabel = itemView.findViewById(R.id.tv_snap_label);
             tvSnapSubtext = itemView.findViewById(R.id.tv_snap_subtext);
+            tvMessageTime = itemView.findViewById(R.id.tv_message_time);
+        }
+    }
+
+    static class ImageMessageViewHolder extends RecyclerView.ViewHolder {
+        final View cardImageBubble;
+        final ImageView ivMessageImage;
+        final TextView tvMessageTime;
+
+        ImageMessageViewHolder(@NonNull View itemView) {
+            super(itemView);
+            cardImageBubble = itemView.findViewById(R.id.card_image_bubble);
+            ivMessageImage = itemView.findViewById(R.id.iv_message_image);
             tvMessageTime = itemView.findViewById(R.id.tv_message_time);
         }
     }

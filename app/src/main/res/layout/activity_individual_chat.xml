@@ -7,17 +7,6 @@
     android:layout_height="match_parent"
     android:background="@color/app_bg">
 
-    <!-- Green Active Call Banner Overlay -->
-    <include
-        android:id="@+id/layout_active_call_banner"
-        layout="@layout/layout_active_call_banner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- Header Bar -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/chat_header_bar"
@@ -30,7 +19,7 @@
         android:paddingBottom="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_active_call_banner">
+        app:layout_constraintTop_toTopOf="parent">
 
         <!-- Back Action Button -->
         <ImageButton
@@ -159,6 +148,16 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Active Call Banner Overlay -->
+    <include
+        android:id="@+id/layout_active_call_banner"
+        layout="@layout/layout_active_call_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chat_header_bar" />
+
     <!-- Message Timeline Feed -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_chat_messages"
@@ -180,7 +179,7 @@
         android:layout_height="wrap_content"
         android:background="#09182B"
         android:paddingStart="8dp"
-        android:paddingTop="8dp"
+        android:paddingTop="0dp"
         android:paddingEnd="8dp"
         android:paddingBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -239,9 +238,9 @@
             android:layout_marginEnd="6dp"
             android:background="@drawable/bg_composer_input"
             android:paddingStart="14dp"
-            android:paddingEnd="8dp"
+            android:paddingEnd="14dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/btn_chat_snap_shortcut"
+            app:layout_constraintEnd_toStartOf="@id/layout_action_button_container"
             app:layout_constraintStart_toEndOf="@id/btn_chat_emoji"
             app:layout_constraintTop_toBottomOf="@id/v_composer_divider">
 
@@ -259,42 +258,48 @@
                 android:textColorHint="@color/input_hint"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/btn_chat_send"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Action Button Container (Camera / Send) -->
+        <FrameLayout
+            android:id="@+id/layout_action_button_container"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/v_composer_divider">
+
+            <!-- Private Snap Camera Shortcut Button -->
+            <ImageButton
+                android:id="@+id/btn_chat_snap_shortcut"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_snap_shortcut_btn"
+                android:contentDescription="Send Private Snap"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_edit_camera"
+                app:tint="@color/white" />
 
             <!-- Send Action Button -->
             <ImageButton
                 android:id="@+id/btn_chat_send"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_snap_shortcut_btn"
                 android:contentDescription="Send Message"
-                android:padding="4dp"
+                android:padding="9dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_send"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/primary_blue" />
+                android:visibility="gone"
+                app:tint="@color/white" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <!-- Private Snap Camera Shortcut Button -->
-        <ImageButton
-            android:id="@+id/btn_chat_snap_shortcut"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_marginTop="4dp"
-            android:background="@drawable/bg_snap_shortcut_btn"
-            android:contentDescription="Send Private Snap"
-            android:padding="9dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_edit_camera"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/v_composer_divider"
-            app:tint="@color/white" />
+        </FrameLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

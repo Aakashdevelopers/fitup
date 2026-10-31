@@ -93,6 +93,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Fullscreen Gallery Image Preview Activity -->
+        <activity
+            android:name=".GalleryPreviewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FitUp" />
+
         <!-- Real-Time Audio & Video Call Activity -->
         <activity
             android:name=".TRTCCallActivity"

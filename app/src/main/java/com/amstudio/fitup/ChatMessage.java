@@ -7,6 +7,8 @@ public class ChatMessage {
         TEXT_OUTGOING,
         SNAP_INCOMING,
         SNAP_OUTGOING,
+        IMAGE_INCOMING,
+        IMAGE_OUTGOING,
         CALL_EVENT
     }
 
@@ -115,6 +117,8 @@ public class ChatMessage {
     }
 
     public boolean isOutgoing() {
-        return messageType == MessageType.TEXT_OUTGOING || messageType == MessageType.SNAP_OUTGOING;
+        return messageType == MessageType.TEXT_OUTGOING
+                || messageType == MessageType.SNAP_OUTGOING
+                || messageType == MessageType.IMAGE_OUTGOING;
     }
 }

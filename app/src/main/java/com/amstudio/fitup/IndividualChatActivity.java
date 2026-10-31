@@ -1,6 +1,10 @@
 package com.amstudio.fitup;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,9 +13,11 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +26,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -43,6 +50,10 @@ import com.tencent.imsdk.v2.V2TIMAdvancedMsgListener;
 import com.tencent.imsdk.v2.V2TIMMessage;
 
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -106,6 +117,8 @@ public class IndividualChatActivity extends AppCompatActivity {
     private boolean isOnline = true;
 
     private ActivityResultLauncher<String> galleryPickerLauncher;
+    private ActivityResultLauncher<Void> cameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -140,6 +153,29 @@ public class IndividualChatActivity extends AppCompatActivity {
                 uri -> {
                     if (uri != null) {
                         sendImageFromGallery(uri);
+                    }
+                }
+        );
+
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicturePreview(),
+                bitmap -> {
+                    if (bitmap != null) {
+                        Uri uri = getImageUriFromBitmap(bitmap);
+                        if (uri != null) {
+                            sendImageFromGallery(uri);
+                        }
+                    }
+                }
+        );
+
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        launchCameraIntent();
+                    } else {
+                        Toast.makeText(this, "Camera permission is required to capture photos", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
@@ -254,8 +290,6 @@ public class IndividualChatActivity extends AppCompatActivity {
         }
 
         String callId = "call_" + System.currentTimeMillis();
-
-        ActiveCallManager.getInstance().setActiveCall(callId, chatId, userName, userInitials, isVideoCall, System.currentTimeMillis());
 
         Map<String, Object> callDoc = new HashMap<>();
         callDoc.put("callId", callId);
@@ -405,16 +439,24 @@ public class IndividualChatActivity extends AppCompatActivity {
                                     adapter.addMessage(chatMsg);
                                     scrollToBottom();
                                 }
-                            } else if ("SNAP".equalsIgnoreCase(type)) {
+                            } else if ("SNAP".equalsIgnoreCase(type) || "IMAGE".equalsIgnoreCase(type)) {
                                 String mType = doc.getString("mediaType");
                                 String mediaUrl = doc.getString("mediaUrl");
                                 Long duration = doc.getLong("duration");
                                 boolean isVideo = "VIDEO".equalsIgnoreCase(mType);
 
-                                ChatMessage.MessageType msgType = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
-                                ChatMessage.SnapKind kind = isVideo ? ChatMessage.SnapKind.VIDEO : ChatMessage.SnapKind.PHOTO;
-                                String durationStr = isVideo ? "0:" + (duration != null ? duration : 15) : (duration != null ? duration : 10) + "s";
-                                String label = isVideo ? "Video Snap" : "Snap";
+                                ChatMessage.MessageType msgType;
+                                ChatMessage.SnapKind kind;
+                                if (isVideo) {
+                                    msgType = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
+                                    kind = ChatMessage.SnapKind.VIDEO;
+                                } else {
+                                    msgType = isSelf ? ChatMessage.MessageType.IMAGE_OUTGOING : ChatMessage.MessageType.IMAGE_INCOMING;
+                                    kind = ChatMessage.SnapKind.PHOTO;
+                                }
+
+                                String durationStr = isVideo ? "0:" + (duration != null ? duration : 15) : "";
+                                String label = isVideo ? "Video Snap" : "Photo";
 
                                 ChatMessage snapMsg = new ChatMessage(mId, isSelf ? "me" : chatId, isSelf ? "You" : userName, label, msgType, kind, getCurrentFormattedTime(), durationStr, mediaUrl, false);
                                 if (adapter != null) {
@@ -466,6 +508,15 @@ public class IndividualChatActivity extends AppCompatActivity {
             return new ChatMessage(msgId, senderId, senderName, text, type, ChatMessage.SnapKind.NONE, timeStr, "", null, false);
         }
 
+        if (msg.getElemType() == V2TIMMessage.V2TIM_ELEM_TYPE_IMAGE && msg.getImageElem() != null) {
+            String imageUrl = null;
+            if (msg.getImageElem().getImageList() != null && !msg.getImageElem().getImageList().isEmpty()) {
+                imageUrl = msg.getImageElem().getImageList().get(0).getUrl();
+            }
+            ChatMessage.MessageType type = isSelf ? ChatMessage.MessageType.IMAGE_OUTGOING : ChatMessage.MessageType.IMAGE_INCOMING;
+            return new ChatMessage(msgId, senderId, senderName, "Photo", type, ChatMessage.SnapKind.PHOTO, timeStr, "", imageUrl, false);
+        }
+
         if (msg.getElemType() == V2TIMMessage.V2TIM_ELEM_TYPE_CUSTOM && msg.getCustomElem() != null) {
             try {
                 byte[] data = msg.getCustomElem().getData();
@@ -509,10 +560,18 @@ public class IndividualChatActivity extends AppCompatActivity {
                     long duration = json.optLong("duration", 10);
                     boolean isVideo = "VIDEO".equalsIgnoreCase(mediaType);
 
-                    ChatMessage.MessageType type = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
-                    ChatMessage.SnapKind kind = isVideo ? ChatMessage.SnapKind.VIDEO : ChatMessage.SnapKind.PHOTO;
-                    String durationStr = isVideo ? "0:" + duration : duration + "s";
-                    String label = isVideo ? "Video Snap" : "Snap";
+                    ChatMessage.MessageType type;
+                    ChatMessage.SnapKind kind;
+                    if (isVideo) {
+                        type = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
+                        kind = ChatMessage.SnapKind.VIDEO;
+                    } else {
+                        type = isSelf ? ChatMessage.MessageType.IMAGE_OUTGOING : ChatMessage.MessageType.IMAGE_INCOMING;
+                        kind = ChatMessage.SnapKind.PHOTO;
+                    }
+
+                    String durationStr = isVideo ? "0:" + duration : "";
+                    String label = isVideo ? "Video Snap" : "Photo";
 
                     return new ChatMessage(snapId, senderId, senderName, label, type, kind, timeStr, durationStr, mediaUrl, false);
                 }
@@ -525,6 +584,14 @@ public class IndividualChatActivity extends AppCompatActivity {
     }
 
     private void setupComposer() {
+        boolean initialHasText = etInput != null && etInput.getText() != null && !etInput.getText().toString().trim().isEmpty();
+        if (btnSend != null) {
+            btnSend.setVisibility(initialHasText ? View.VISIBLE : View.GONE);
+        }
+        if (btnSnapShortcut != null) {
+            btnSnapShortcut.setVisibility(initialHasText ? View.GONE : View.VISIBLE);
+        }
+
         if (etInput != null) {
             etInput.setOnEditorActionListener((v, actionId, event) -> {
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -540,9 +607,12 @@ public class IndividualChatActivity extends AppCompatActivity {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    boolean hasText = s != null && s.toString().trim().length() > 0;
+                    boolean hasText = s != null && !s.toString().trim().isEmpty();
                     if (btnSend != null) {
-                        btnSend.setAlpha(hasText ? 1.0f : 0.5f);
+                        btnSend.setVisibility(hasText ? View.VISIBLE : View.GONE);
+                    }
+                    if (btnSnapShortcut != null) {
+                        btnSnapShortcut.setVisibility(hasText ? View.GONE : View.VISIBLE);
                     }
                 }
 
@@ -636,19 +706,42 @@ public class IndividualChatActivity extends AppCompatActivity {
         }
     }
 
+    private Uri getImageUriFromBitmap(Bitmap bitmap) {
+        if (bitmap == null) return null;
+        try {
+            File cachePath = new File(getCacheDir(), "images");
+            if (!cachePath.exists() && !cachePath.mkdirs()) {
+                Log.w(TAG, "Failed to create directory for cached images");
+            }
+            File file = new File(cachePath, "captured_image_" + System.currentTimeMillis() + ".jpg");
+            FileOutputStream stream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
+            stream.close();
+            return Uri.fromFile(file);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to save captured image", e);
+            return null;
+        }
+    }
+
     private void sendImageFromGallery(Uri imageUri) {
         if (imageUri == null) return;
 
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        String msgId = "img_" + System.currentTimeMillis();
         String currentTime = getCurrentFormattedTime();
+
+        processedMsgIds.add(msgId);
+
         ChatMessage msg = new ChatMessage(
-                "snap_" + System.currentTimeMillis(),
+                msgId,
                 "me",
                 "You",
-                "Photo Snap",
-                ChatMessage.MessageType.SNAP_OUTGOING,
+                "Photo",
+                ChatMessage.MessageType.IMAGE_OUTGOING,
                 ChatMessage.SnapKind.PHOTO,
                 currentTime,
-                "10s",
+                "",
                 imageUri.toString(),
                 false
         );
@@ -658,12 +751,59 @@ public class IndividualChatActivity extends AppCompatActivity {
             scrollToBottom();
         }
 
-        Toast.makeText(this, "Photo Snap sent from gallery!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Photo sent!", Toast.LENGTH_SHORT).show();
+
+        TencentChatManager.getInstance().sendImageMessage(
+                chatId,
+                imageUri.toString(),
+                new TencentChatManager.MessageCallback() {
+                    @Override
+                    public void onSuccess(V2TIMMessage message) {}
+
+                    @Override
+                    public void onError(int code, String desc) {
+                        Log.w(TAG, "Tencent IM send image code " + code + ": " + desc);
+                    }
+                }
+        );
+
+        if (currentUid != null && chatId != null && !chatId.isEmpty()) {
+            String conversationId = currentUid.compareTo(chatId) < 0 ? currentUid + "_" + chatId : chatId + "_" + currentUid;
+            Map<String, Object> msgDoc = new HashMap<>();
+            msgDoc.put("id", msgId);
+            msgDoc.put("senderUid", currentUid);
+            msgDoc.put("senderName", "You");
+            msgDoc.put("text", "Photo");
+            msgDoc.put("type", "IMAGE");
+            msgDoc.put("mediaType", "PHOTO");
+            msgDoc.put("mediaUrl", imageUri.toString());
+            msgDoc.put("createdAt", FieldValue.serverTimestamp());
+
+            FirebaseFirestore.getInstance().collection("chats").document(conversationId)
+                    .collection("messages").document(msgId)
+                    .set(msgDoc);
+        }
     }
 
     private void openSnapCamera() {
-        Intent intent = new Intent(this, SelectFriendsActivity.class);
-        startActivity(intent);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            if (cameraPermissionLauncher != null) {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+            }
+        } else {
+            launchCameraIntent();
+        }
+    }
+
+    private void launchCameraIntent() {
+        try {
+            if (cameraLauncher != null) {
+                cameraLauncher.launch(null);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to launch camera", e);
+            Toast.makeText(this, "Unable to open camera: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupTencentMessageListener() {
@@ -734,33 +874,116 @@ public class IndividualChatActivity extends AppCompatActivity {
     }
 
     private void setupActiveCallBanner() {
-        activeCallBanner = findViewById(R.id.card_active_call_banner);
+        activeCallBanner = findViewById(R.id.layout_active_call_banner);
+        if (activeCallBanner == null) {
+            activeCallBanner = findViewById(R.id.card_active_call_banner);
+        }
         if (activeCallBanner == null) return;
 
-        tvBannerTitle = findViewById(R.id.tv_banner_call_title);
-        tvBannerSub = findViewById(R.id.tv_banner_call_sub);
-        tvBannerAvatarInitials = findViewById(R.id.tv_banner_avatar_initials);
+        tvBannerTitle = activeCallBanner.findViewById(R.id.tv_banner_call_title);
+        tvBannerSub = activeCallBanner.findViewById(R.id.tv_banner_call_sub);
+        tvBannerAvatarInitials = activeCallBanner.findViewById(R.id.tv_banner_avatar_initials);
+        ImageView ivCallIcon = activeCallBanner.findViewById(R.id.iv_banner_call_icon);
+
+        View btnSpeaker = activeCallBanner.findViewById(R.id.btn_banner_speaker);
+        View btnCamera = activeCallBanner.findViewById(R.id.btn_banner_camera);
+        View btnMute = activeCallBanner.findViewById(R.id.btn_banner_mute);
+        View btnEndCall = activeCallBanner.findViewById(R.id.btn_banner_end_call);
+        View btnDropdown = activeCallBanner.findViewById(R.id.btn_banner_dropdown);
+        View layoutActions = activeCallBanner.findViewById(R.id.layout_banner_actions);
+
+        if (btnDropdown != null && layoutActions != null) {
+            btnDropdown.setOnClickListener(v -> {
+                boolean isCurrentlyVisible = layoutActions.getVisibility() == View.VISIBLE;
+                if (isCurrentlyVisible) {
+                    layoutActions.setVisibility(View.GONE);
+                    if (btnDropdown instanceof ImageButton) {
+                        ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_down);
+                    }
+                } else {
+                    layoutActions.setVisibility(View.VISIBLE);
+                    if (btnDropdown instanceof ImageButton) {
+                        ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_up);
+                    }
+                }
+            });
+        }
+
+        if (btnSpeaker != null) {
+            btnSpeaker.setOnClickListener(v -> ActiveCallManager.getInstance().toggleSpeaker());
+        }
+        if (btnCamera != null) {
+            btnCamera.setOnClickListener(v -> ActiveCallManager.getInstance().toggleCamera());
+        }
+        if (btnMute != null) {
+            btnMute.setOnClickListener(v -> ActiveCallManager.getInstance().toggleMute());
+        }
+        if (btnEndCall != null) {
+            btnEndCall.setOnClickListener(v -> ActiveCallManager.getInstance().endCall());
+        }
+
+        View.OnClickListener expandListener = v -> {
+            String cId = ActiveCallManager.getInstance().getActiveCallId();
+            if (cId != null) {
+                String targetUid = ActiveCallManager.getInstance().getTargetUid();
+                String name = ActiveCallManager.getInstance().getUserName();
+                String initials = ActiveCallManager.getInstance().getUserInitials();
+                boolean isVideo = ActiveCallManager.getInstance().isVideo();
+                TRTCCallActivity.start(this, cId, targetUid != null ? targetUid : "", name, initials, isVideo, false);
+            }
+        };
+
+        activeCallBanner.setOnClickListener(expandListener);
+
 
         activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> {
             runOnUiThread(() -> {
                 if (isActive && callId != null) {
                     activeCallBanner.setVisibility(View.VISIBLE);
+                    View rootLayout = findViewById(R.id.chat_root_layout);
+                    if (rootLayout != null) ViewCompat.requestApplyInsets(rootLayout);
+
                     if (tvBannerTitle != null) {
-                        tvBannerTitle.setText("Ongoing " + (isVideo ? "Video" : "Voice") + " Call • " + name);
+                        tvBannerTitle.setText(name != null && !name.isEmpty() ? name : "Ongoing Call");
                     }
                     if (tvBannerAvatarInitials != null) {
                         tvBannerAvatarInitials.setText(initials != null ? initials : "GB");
                     }
+                    if (ivCallIcon != null) {
+                        ivCallIcon.setImageResource(isVideo ? R.drawable.ic_video_call : R.drawable.ic_phone_call);
+                    }
 
-                    activeCallBanner.setOnClickListener(v -> {
-                        TRTCCallActivity.start(
-                                this, callId, "", name, initials, isVideo, false
-                        );
-                    });
+                    boolean speakerOn = ActiveCallManager.getInstance().isSpeakerOn();
+                    boolean cameraOn = ActiveCallManager.getInstance().isCameraOn();
+                    boolean muteOn = ActiveCallManager.getInstance().isMuteOn();
 
-                    startBannerTimer(startTime);
+                    if (btnSpeaker != null) {
+                        btnSpeaker.setBackgroundResource(speakerOn ? R.drawable.bg_call_btn_white : R.drawable.bg_call_btn_dark);
+                        if (btnSpeaker instanceof ImageButton) {
+                            ((ImageButton) btnSpeaker).setColorFilter(speakerOn ? Color.BLACK : Color.WHITE);
+                            ((ImageButton) btnSpeaker).setImageResource(speakerOn ? R.drawable.ic_speaker_on : R.drawable.ic_speaker_off);
+                        }
+                    }
+
+                    if (btnCamera != null) {
+                        btnCamera.setBackgroundResource(cameraOn ? R.drawable.bg_call_btn_dark : R.drawable.bg_call_btn_dark_active);
+                        if (btnCamera instanceof ImageButton) {
+                            ((ImageButton) btnCamera).setImageResource(cameraOn ? R.drawable.ic_video_call : R.drawable.ic_video_off);
+                        }
+                    }
+
+                    if (btnMute != null) {
+                        btnMute.setBackgroundResource(muteOn ? R.drawable.bg_call_btn_dark_active : R.drawable.bg_call_btn_dark);
+                        if (btnMute instanceof ImageButton) {
+                            ((ImageButton) btnMute).setImageResource(muteOn ? R.drawable.ic_mic_off : R.drawable.ic_mic_on);
+                        }
+                    }
+
+                    startBannerTimer(startTime, isVideo);
                 } else {
                     activeCallBanner.setVisibility(View.GONE);
+                    View rootLayout = findViewById(R.id.chat_root_layout);
+                    if (rootLayout != null) ViewCompat.requestApplyInsets(rootLayout);
                     stopBannerTimer();
                 }
             });
@@ -769,7 +992,7 @@ public class IndividualChatActivity extends AppCompatActivity {
         ActiveCallManager.getInstance().addListener(activeCallStateListener);
     }
 
-    private void startBannerTimer(long startTimeMs) {
+    private void startBannerTimer(long startTimeMs, boolean isVideo) {
         stopBannerTimer();
         bannerTimerRunnable = new Runnable() {
             @Override
@@ -778,7 +1001,8 @@ public class IndividualChatActivity extends AppCompatActivity {
                     long elapsedSec = (System.currentTimeMillis() - startTimeMs) / 1000;
                     long min = elapsedSec / 60;
                     long sec = elapsedSec % 60;
-                    tvBannerSub.setText(String.format(Locale.US, "Tap to return to call • %02d:%02d", min, sec));
+                    String callTypeStr = isVideo ? "FitUp Video" : "Voice Call";
+                    tvBannerSub.setText(String.format(Locale.US, "%s • %02d:%02d", callTypeStr, min, sec));
                     bannerHandler.postDelayed(this, 1000);
                 }
             }

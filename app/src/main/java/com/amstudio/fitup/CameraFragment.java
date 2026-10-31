@@ -164,9 +164,9 @@ public class CameraFragment extends Fragment {
                 new ActivityResultContracts.PickVisualMedia(),
                 uri -> {
                     if (uri != null) {
-                        Intent intent = new Intent(requireContext(), SnapPreviewActivity.class);
-                        intent.putExtra(SnapPreviewActivity.EXTRA_MEDIA_URI, uri.toString());
-                        startActivity(intent);
+                        ArrayList<String> uris = new ArrayList<>();
+                        uris.add(uri.toString());
+                        GalleryPreviewActivity.open(requireContext(), uris, null, "Read at least 10 pages");
                     }
                 });
     }
@@ -184,19 +184,6 @@ public class CameraFragment extends Fragment {
         bindViews(view);
         setupListeners(view);
         setupGestures();
-
-        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-            Insets statusInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars());
-            if (topControlBar != null && statusInsets.top > 0) {
-                topControlBar.setPadding(
-                        topControlBar.getPaddingLeft(),
-                        statusInsets.top,
-                        topControlBar.getPaddingRight(),
-                        topControlBar.getPaddingBottom()
-                );
-            }
-            return insets;
-        });
 
         checkAndRequestPermissions();
     }
@@ -262,11 +249,16 @@ public class CameraFragment extends Fragment {
         });
 
         btnGallery.setOnClickListener(v -> {
+            GalleryPreviewActivity.openWithSampleData(requireContext(), "Read at least 10 pages");
+        });
+
+        btnGallery.setOnLongClickListener(v -> {
             pickMediaLauncher.launch(
                     new PickVisualMediaRequest.Builder()
                             .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo.INSTANCE)
                             .build()
             );
+            return true;
         });
 
         btnPreviewClose.setOnClickListener(v -> {

@@ -1,9 +1,13 @@
 package com.amstudio.fitup;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -47,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private ActiveCallManager.OnCallStateChangeListener activeCallStateListener;
     private final Handler bannerHandler = new Handler(Looper.getMainLooper());
     private Runnable bannerTimerRunnable;
+    private int cachedStatusBarTop = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,21 +81,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Handle edge-to-edge system insets cleanly
         View rootLayout = findViewById(R.id.main_root);
-        View fragmentContainer = findViewById(R.id.fragment_container);
         CustomBottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
 
         if (rootLayout != null) {
             ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                if (fragmentContainer != null) {
-                    fragmentContainer.setPadding(
-                            fragmentContainer.getPaddingLeft(),
-                            systemBars.top,
-                            fragmentContainer.getPaddingRight(),
-                            0
-                    );
-                }
+                cachedStatusBarTop = systemBars.top;
 
                 if (bottomNav != null) {
                     bottomNav.setPadding(
@@ -100,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
                             systemBars.bottom
                     );
                 }
+
+                updateLayoutForBannerState();
 
                 return WindowInsetsCompat.CONSUMED;
             });
@@ -121,34 +119,139 @@ public class MainActivity extends AppCompatActivity {
         setupActiveCallBanner();
     }
 
+    private void updateLayoutForBannerState() {
+        View banner = activeCallBanner != null ? activeCallBanner : findViewById(R.id.layout_active_call_banner);
+        View container = findViewById(R.id.fragment_container);
+        float density = getResources().getDisplayMetrics().density;
+
+        boolean isBannerVisible = banner != null && banner.getVisibility() == View.VISIBLE;
+
+        if (banner != null) {
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) banner.getLayoutParams();
+            if (lp != null) {
+                lp.topMargin = cachedStatusBarTop + Math.round(4 * density);
+                banner.setLayoutParams(lp);
+            }
+        }
+
+        if (container != null) {
+            if (isBannerVisible) {
+                container.setPadding(0, 0, 0, 0);
+            } else {
+                container.setPadding(0, cachedStatusBarTop, 0, 0);
+            }
+        }
+    }
+
     private void setupActiveCallBanner() {
-        activeCallBanner = findViewById(R.id.card_active_call_banner);
+        activeCallBanner = findViewById(R.id.layout_active_call_banner);
+        if (activeCallBanner == null) {
+            activeCallBanner = findViewById(R.id.card_active_call_banner);
+        }
         if (activeCallBanner == null) return;
 
-        tvBannerTitle = findViewById(R.id.tv_banner_call_title);
-        tvBannerSub = findViewById(R.id.tv_banner_call_sub);
-        tvBannerAvatarInitials = findViewById(R.id.tv_banner_avatar_initials);
+        tvBannerTitle = activeCallBanner.findViewById(R.id.tv_banner_call_title);
+        tvBannerSub = activeCallBanner.findViewById(R.id.tv_banner_call_sub);
+        tvBannerAvatarInitials = activeCallBanner.findViewById(R.id.tv_banner_avatar_initials);
+        ImageView ivCallIcon = activeCallBanner.findViewById(R.id.iv_banner_call_icon);
+
+        View btnSpeaker = activeCallBanner.findViewById(R.id.btn_banner_speaker);
+        View btnCamera = activeCallBanner.findViewById(R.id.btn_banner_camera);
+        View btnMute = activeCallBanner.findViewById(R.id.btn_banner_mute);
+        View btnEndCall = activeCallBanner.findViewById(R.id.btn_banner_end_call);
+        View btnDropdown = activeCallBanner.findViewById(R.id.btn_banner_dropdown);
+        View layoutActions = activeCallBanner.findViewById(R.id.layout_banner_actions);
+
+        if (btnDropdown != null && layoutActions != null) {
+            btnDropdown.setOnClickListener(v -> {
+                boolean isCurrentlyVisible = layoutActions.getVisibility() == View.VISIBLE;
+                if (isCurrentlyVisible) {
+                    layoutActions.setVisibility(View.GONE);
+                    if (btnDropdown instanceof ImageButton) {
+                        ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_down);
+                    }
+                } else {
+                    layoutActions.setVisibility(View.VISIBLE);
+                    if (btnDropdown instanceof ImageButton) {
+                        ((ImageButton) btnDropdown).setImageResource(R.drawable.ic_chevron_up);
+                    }
+                }
+            });
+        }
+
+        if (btnSpeaker != null) {
+            btnSpeaker.setOnClickListener(v -> ActiveCallManager.getInstance().toggleSpeaker());
+        }
+        if (btnCamera != null) {
+            btnCamera.setOnClickListener(v -> ActiveCallManager.getInstance().toggleCamera());
+        }
+        if (btnMute != null) {
+            btnMute.setOnClickListener(v -> ActiveCallManager.getInstance().toggleMute());
+        }
+        if (btnEndCall != null) {
+            btnEndCall.setOnClickListener(v -> ActiveCallManager.getInstance().endCall());
+        }
+
+        View.OnClickListener expandListener = v -> {
+            String cId = ActiveCallManager.getInstance().getActiveCallId();
+            if (cId != null) {
+                String targetUid = ActiveCallManager.getInstance().getTargetUid();
+                String name = ActiveCallManager.getInstance().getUserName();
+                String initials = ActiveCallManager.getInstance().getUserInitials();
+                boolean isVideo = ActiveCallManager.getInstance().isVideo();
+                TRTCCallActivity.start(this, cId, targetUid != null ? targetUid : "", name, initials, isVideo, false);
+            }
+        };
+
+        activeCallBanner.setOnClickListener(expandListener);
+
 
         activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> {
             runOnUiThread(() -> {
                 if (isActive && callId != null) {
                     activeCallBanner.setVisibility(View.VISIBLE);
+                    updateLayoutForBannerState();
+
                     if (tvBannerTitle != null) {
-                        tvBannerTitle.setText("Ongoing " + (isVideo ? "Video" : "Voice") + " Call • " + name);
+                        tvBannerTitle.setText(name != null && !name.isEmpty() ? name : "Ongoing Call");
                     }
                     if (tvBannerAvatarInitials != null) {
                         tvBannerAvatarInitials.setText(initials != null ? initials : "GB");
                     }
+                    if (ivCallIcon != null) {
+                        ivCallIcon.setImageResource(isVideo ? R.drawable.ic_video_call : R.drawable.ic_phone_call);
+                    }
 
-                    activeCallBanner.setOnClickListener(v -> {
-                        TRTCCallActivity.start(
-                                this, callId, "", name, initials, isVideo, false
-                        );
-                    });
+                    boolean speakerOn = ActiveCallManager.getInstance().isSpeakerOn();
+                    boolean cameraOn = ActiveCallManager.getInstance().isCameraOn();
+                    boolean muteOn = ActiveCallManager.getInstance().isMuteOn();
 
-                    startBannerTimer(startTime);
+                    if (btnSpeaker != null) {
+                        btnSpeaker.setBackgroundResource(speakerOn ? R.drawable.bg_call_btn_white : R.drawable.bg_call_btn_dark);
+                        if (btnSpeaker instanceof ImageButton) {
+                            ((ImageButton) btnSpeaker).setColorFilter(speakerOn ? Color.BLACK : Color.WHITE);
+                            ((ImageButton) btnSpeaker).setImageResource(speakerOn ? R.drawable.ic_speaker_on : R.drawable.ic_speaker_off);
+                        }
+                    }
+
+                    if (btnCamera != null) {
+                        btnCamera.setBackgroundResource(cameraOn ? R.drawable.bg_call_btn_dark : R.drawable.bg_call_btn_dark_active);
+                        if (btnCamera instanceof ImageButton) {
+                            ((ImageButton) btnCamera).setImageResource(cameraOn ? R.drawable.ic_video_call : R.drawable.ic_video_off);
+                        }
+                    }
+
+                    if (btnMute != null) {
+                        btnMute.setBackgroundResource(muteOn ? R.drawable.bg_call_btn_dark_active : R.drawable.bg_call_btn_dark);
+                        if (btnMute instanceof ImageButton) {
+                            ((ImageButton) btnMute).setImageResource(muteOn ? R.drawable.ic_mic_off : R.drawable.ic_mic_on);
+                        }
+                    }
+
+                    startBannerTimer(startTime, isVideo);
                 } else {
                     activeCallBanner.setVisibility(View.GONE);
+                    updateLayoutForBannerState();
                     stopBannerTimer();
                 }
             });
@@ -157,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
         ActiveCallManager.getInstance().addListener(activeCallStateListener);
     }
 
-    private void startBannerTimer(long startTimeMs) {
+    private void startBannerTimer(long startTimeMs, boolean isVideo) {
         stopBannerTimer();
         bannerTimerRunnable = new Runnable() {
             @Override
@@ -166,7 +269,8 @@ public class MainActivity extends AppCompatActivity {
                     long elapsedSec = (System.currentTimeMillis() - startTimeMs) / 1000;
                     long min = elapsedSec / 60;
                     long sec = elapsedSec % 60;
-                    tvBannerSub.setText(String.format(Locale.US, "Tap to return to call • %02d:%02d", min, sec));
+                    String callTypeStr = isVideo ? "FitUp Video" : "Voice Call";
+                    tvBannerSub.setText(String.format(Locale.US, "%s • %02d:%02d", callTypeStr, min, sec));
                     bannerHandler.postDelayed(this, 1000);
                 }
             }
@@ -205,7 +309,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                             String initials = callerName.length() >= 2 ? callerName.substring(0, 2).toUpperCase() : "GB";
 
-                            ActiveCallManager.getInstance().setActiveCall(callId, callerUid, callerName, initials, isVideo, System.currentTimeMillis());
                             TRTCCallActivity.start(
                                     this, callId, callerUid, callerName, initials, isVideo, true
                             );

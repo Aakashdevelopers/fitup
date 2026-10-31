@@ -1,7 +1,13 @@
 package com.amstudio.fitup.repository;
 
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ActiveCallManager {
 
@@ -14,6 +20,12 @@ public class ActiveCallManager {
     private boolean isVideo;
     private long callStartTimeMs = 0;
     private boolean isActive = false;
+
+    private boolean isSpeakerOn = true;
+    private boolean isMuteOn = false;
+    private boolean isCameraOn = true;
+
+    private ListenerRegistration activeCallFirestoreListener;
 
     public interface OnCallStateChangeListener {
         void onCallStateChanged(boolean isActive, String callId, String userName, String userInitials, boolean isVideo, long callStartTimeMs);
@@ -38,14 +50,74 @@ public class ActiveCallManager {
         this.isVideo = isVideo;
         this.callStartTimeMs = callStartTimeMs > 0 ? callStartTimeMs : System.currentTimeMillis();
         this.isActive = true;
+
+        this.isSpeakerOn = isVideo;
+        this.isMuteOn = false;
+        this.isCameraOn = isVideo;
+
+        attachFirestoreListener(callId);
         notifyListeners();
     }
 
+    private void attachFirestoreListener(String callId) {
+        detachFirestoreListener();
+        if (callId == null || callId.isEmpty()) return;
+
+        activeCallFirestoreListener = FirebaseFirestore.getInstance()
+                .collection("calls")
+                .document(callId)
+                .addSnapshotListener((doc, error) -> {
+                    if (error != null || doc == null || !doc.exists()) return;
+                    String status = doc.getString("status");
+                    if ("ENDED".equalsIgnoreCase(status) || "REJECTED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
+                        ZegoCallManager.getInstance().leaveRoomAndEndCall();
+                        clearActiveCall();
+                    }
+                });
+    }
+
+    private void detachFirestoreListener() {
+        if (activeCallFirestoreListener != null) {
+            activeCallFirestoreListener.remove();
+            activeCallFirestoreListener = null;
+        }
+    }
+
     public void clearActiveCall() {
+        detachFirestoreListener();
         this.isActive = false;
         this.activeCallId = null;
         this.targetUid = null;
         notifyListeners();
+    }
+
+    public void toggleSpeaker() {
+        this.isSpeakerOn = !this.isSpeakerOn;
+        ZegoCallManager.getInstance().setSpeaker(isSpeakerOn);
+        notifyListeners();
+    }
+
+    public void toggleMute() {
+        this.isMuteOn = !this.isMuteOn;
+        ZegoCallManager.getInstance().setMute(isMuteOn);
+        notifyListeners();
+    }
+
+    public void toggleCamera() {
+        this.isCameraOn = !this.isCameraOn;
+        ZegoCallManager.getInstance().enableCamera(isCameraOn);
+        notifyListeners();
+    }
+
+    public void endCall() {
+        if (activeCallId != null && !activeCallId.isEmpty()) {
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("status", "ENDED");
+            updates.put("endedAt", FieldValue.serverTimestamp());
+            FirebaseFirestore.getInstance().collection("calls").document(activeCallId).update(updates);
+        }
+        ZegoCallManager.getInstance().leaveRoomAndEndCall();
+        clearActiveCall();
     }
 
     public void addListener(OnCallStateChangeListener listener) {
@@ -94,5 +166,17 @@ public class ActiveCallManager {
 
     public long getCallStartTimeMs() {
         return callStartTimeMs;
+    }
+
+    public boolean isSpeakerOn() {
+        return isSpeakerOn;
+    }
+
+    public boolean isMuteOn() {
+        return isMuteOn;
+    }
+
+    public boolean isCameraOn() {
+        return isCameraOn;
     }
 }

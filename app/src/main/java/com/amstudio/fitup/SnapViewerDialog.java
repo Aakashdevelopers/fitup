@@ -32,6 +32,8 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
+import java.io.File;
+
 public class SnapViewerDialog extends DialogFragment {
 
     private static final String ARG_NAME = "arg_name";
@@ -172,8 +174,10 @@ public class SnapViewerDialog extends DialogFragment {
         if (ivSnapMedia != null) ivSnapMedia.setVisibility(View.GONE);
         if (vvSnapVideo != null) vvSnapVideo.setVisibility(View.GONE);
 
+        Object loadTarget = ChatMessageAdapter.getLocalFileOrTarget(url, getContext());
+
         Glide.with(this)
-                .load(url)
+                .load(loadTarget)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .priority(Priority.IMMEDIATE)
                 .dontAnimate()
@@ -210,7 +214,14 @@ public class SnapViewerDialog extends DialogFragment {
 
         if (vvSnapVideo != null) {
             vvSnapVideo.setVisibility(View.VISIBLE);
-            vvSnapVideo.setVideoURI(Uri.parse(url));
+            Object target = ChatMessageAdapter.getLocalFileOrTarget(url, getContext());
+            if (target instanceof File) {
+                vvSnapVideo.setVideoPath(((File) target).getAbsolutePath());
+            } else if (target instanceof Uri) {
+                vvSnapVideo.setVideoURI((Uri) target);
+            } else {
+                vvSnapVideo.setVideoURI(Uri.parse(url));
+            }
 
             vvSnapVideo.setOnPreparedListener(mp -> {
                 if (!isAdded()) return;

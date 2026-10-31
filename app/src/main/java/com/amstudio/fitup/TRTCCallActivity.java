@@ -203,15 +203,28 @@ public class TRTCCallActivity extends AppCompatActivity {
         fetchTargetProfileIfNeeded();
         loadCurrentUserAvatarForPip();
 
-        if (!isIncoming) {
-            initAndEnterZegoRoom();
+        boolean isRoomAlreadyJoined = ZegoCallManager.getInstance().getCurrentRoomId() != null &&
+                ZegoCallManager.getInstance().getCurrentRoomId().equals(callId);
+
+        if (isRoomAlreadyJoined) {
+            isCallConnected = true;
+            callStartTimeMs = ActiveCallManager.getInstance().getCallStartTimeMs();
+            isZegoRoomEntered = true;
+            ZegoCallManager.getInstance().setLocalVideoView(tvLocalVideoTexture);
+            ZegoCallManager.getInstance().setRemoteVideoView(tvRemoteVideoTexture);
+            bindCallUI();
+            startCallTimer();
+        } else {
+            bindCallUI();
+            if (!isIncoming) {
+                initAndEnterZegoRoom();
+            }
         }
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                Toast.makeText(TRTCCallActivity.this, "Call minimized to background", Toast.LENGTH_SHORT).show();
-                finish();
+                minimizeCall();
             }
         });
     }
@@ -761,7 +774,7 @@ public class TRTCCallActivity extends AppCompatActivity {
                     String status = doc.getString("status");
                     if ("ACCEPTED".equalsIgnoreCase(status)) {
                         onCallConnected();
-                    } else if ("REJECTED".equalsIgnoreCase(status) || "ENDED".equalsIgnoreCase(status)) {
+                    } else if ("REJECTED".equalsIgnoreCase(status) || "ENDED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
                         Toast.makeText(this, "Call " + (status != null ? status.toLowerCase() : "ended"), Toast.LENGTH_SHORT).show();
                         finish();
                     }
@@ -835,6 +848,7 @@ public class TRTCCallActivity extends AppCompatActivity {
                 tvRemoteVideoTexture
         );
         isZegoRoomEntered = true;
+        ActiveCallManager.getInstance().setActiveCall(callId, targetUid, userName, userInitials, isVideo, callStartTimeMs > 0 ? callStartTimeMs : System.currentTimeMillis());
         Log.d(TAG, "Entered ZEGO room successfully: " + callId);
     }
 
@@ -935,8 +949,8 @@ public class TRTCCallActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         stopCallTimer();
-        cleanupZegoRoom();
         if (!ActiveCallManager.getInstance().isActive()) {
+            cleanupZegoRoom();
             resetAudioHardwareAfterCall();
         }
         if (callListener != null) {

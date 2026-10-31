@@ -51,6 +51,10 @@ public class ZegoCallManager {
         return instance;
     }
 
+    public String getCurrentRoomId() {
+        return currentRoomId;
+    }
+
     public void setEventListener(CallEventListener listener) {
         this.eventListener = listener;
     }
@@ -147,8 +151,15 @@ public class ZegoCallManager {
         Log.d(TAG, "Started publishing stream: " + streamId + " (isVideo=" + isVideo + ")");
     }
 
+    private String currentRemoteStreamId;
+
     public void setRemoteVideoView(View remoteView) {
         this.remoteVideoView = remoteView;
+        if (engine != null && remoteView != null && currentRemoteStreamId != null) {
+            ZegoCanvas remoteCanvas = new ZegoCanvas(remoteView);
+            remoteCanvas.viewMode = ZegoViewMode.ASPECT_FILL;
+            engine.startPlayingStream(currentRemoteStreamId, remoteCanvas);
+        }
     }
 
     public void setLocalVideoView(View localView) {
@@ -162,6 +173,7 @@ public class ZegoCallManager {
 
     private void startPlayingRemoteStream(String streamId) {
         if (engine == null) return;
+        this.currentRemoteStreamId = streamId;
 
         if (remoteVideoView != null) {
             ZegoCanvas remoteCanvas = new ZegoCanvas(remoteVideoView);
@@ -177,6 +189,9 @@ public class ZegoCallManager {
         if (engine != null) {
             engine.stopPlayingStream(streamId);
             Log.d(TAG, "Stopped playing remote stream: " + streamId);
+        }
+        if (streamId != null && streamId.equals(currentRemoteStreamId)) {
+            this.currentRemoteStreamId = null;
         }
     }
 
@@ -221,6 +236,7 @@ public class ZegoCallManager {
         this.currentRoomId = null;
         this.localVideoView = null;
         this.remoteVideoView = null;
+        this.currentRemoteStreamId = null;
         this.eventListener = null;
     }
 
