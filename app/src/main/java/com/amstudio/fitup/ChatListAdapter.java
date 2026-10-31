@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -18,6 +19,8 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
 
     public interface OnChatItemClickListener {
         void onChatItemClick(ChatItem item);
+        void onVoiceCallClick(ChatItem item);
+        void onVideoCallClick(ChatItem item);
     }
 
     private final List<ChatItem> chatList = new ArrayList<>();
@@ -95,6 +98,22 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
                 clickListener.onChatItemClick(item);
             }
         });
+
+        if (holder.btnVoiceCall != null) {
+            holder.btnVoiceCall.setOnClickListener(v -> {
+                if (clickListener != null) {
+                    clickListener.onVoiceCallClick(item);
+                }
+            });
+        }
+
+        if (holder.btnVideoCall != null) {
+            holder.btnVideoCall.setOnClickListener(v -> {
+                if (clickListener != null) {
+                    clickListener.onVideoCallClick(item);
+                }
+            });
+        }
     }
 
     @Override
@@ -113,6 +132,8 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
         final View layoutStreak;
         final View viewOnlineDot;
         final View viewAvatarRing;
+        final ImageButton btnVoiceCall;
+        final ImageButton btnVideoCall;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -126,6 +147,8 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             layoutStreak = itemView.findViewById(R.id.layout_streak);
             viewOnlineDot = itemView.findViewById(R.id.view_chat_online_dot);
             viewAvatarRing = itemView.findViewById(R.id.view_chat_avatar_ring);
+            btnVoiceCall = itemView.findViewById(R.id.btn_item_voice_call);
+            btnVideoCall = itemView.findViewById(R.id.btn_item_video_call);
         }
     }
 }

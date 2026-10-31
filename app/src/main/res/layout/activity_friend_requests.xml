@@ -31,11 +31,21 @@
             android:orientation="horizontal"
             android:paddingBottom="12dp">
 
+            <ImageButton
+                android:id="@+id/btn_requests_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/white" />
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Gym Buddies &amp; Requests"
+                android:text="Add Friends &amp; Requests"
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -45,8 +55,9 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Close dialog"
+                android:contentDescription="Close"
                 android:src="@drawable/ic_close"
+                android:visibility="gone"
                 app:tint="@color/white" />
         </LinearLayout>
 
@@ -75,24 +86,37 @@
             android:text="Pending Friend Requests"
             android:textColor="@color/brand_electric_blue"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <!-- Pending Requests List -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_pending_requests"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false" />
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:visibility="gone" />
 
-        <!-- Search Results List (Hidden by default) -->
+        <!-- Discover / Search Results Header -->
+        <TextView
+            android:id="@+id/tv_discover_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="Discover Gym Goers"
+            android:textColor="@color/brand_electric_blue"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- Search / Discover Results List -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_user_search_results"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
     </LinearLayout>
 

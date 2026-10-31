@@ -139,14 +139,14 @@ public class SelectFriendsActivity extends AppCompatActivity {
                                 : (user.getUsername() != null ? user.getUsername() : "Gym Buddy");
                         String handle = "@" + (user.getUsername() != null ? user.getUsername() : "user");
                         int bgRes = avatars[i % avatars.length];
-                        friendList.add(new FriendModel(user.getUid(), name, handle, true, bgRes));
+                        friendList.add(new FriendModel(user.getUid(), name, handle, user.isOnline(), bgRes));
                     }
                 } else {
                     // Fallback sample friends if no real friends added yet
-                    friendList.add(new FriendModel("1", "Jordan Miller", "@jordan_lift", true, R.drawable.bg_avatar_gradient_1));
-                    friendList.add(new FriendModel("2", "Sarah Chen", "@sarah_fit", true, R.drawable.bg_avatar_gradient_2));
+                    friendList.add(new FriendModel("1", "Jordan Miller", "@jordan_lift", false, R.drawable.bg_avatar_gradient_1));
+                    friendList.add(new FriendModel("2", "Sarah Chen", "@sarah_fit", false, R.drawable.bg_avatar_gradient_2));
                     friendList.add(new FriendModel("3", "Marcus Vance", "@marcus_power", false, R.drawable.bg_avatar_gradient_3));
-                    friendList.add(new FriendModel("4", "Chris Paul", "@cp_gains", true, R.drawable.bg_avatar_gradient_4));
+                    friendList.add(new FriendModel("4", "Chris Paul", "@cp_gains", false, R.drawable.bg_avatar_gradient_4));
                 }
                 if (adapter != null) {
                     adapter.setItems(friendList);
@@ -157,8 +157,8 @@ public class SelectFriendsActivity extends AppCompatActivity {
             public void onError(Exception e) {
                 friendList.clear();
                 // Fallback sample friends on error
-                friendList.add(new FriendModel("1", "Jordan Miller", "@jordan_lift", true, R.drawable.bg_avatar_gradient_1));
-                friendList.add(new FriendModel("2", "Sarah Chen", "@sarah_fit", true, R.drawable.bg_avatar_gradient_2));
+                friendList.add(new FriendModel("1", "Jordan Miller", "@jordan_lift", false, R.drawable.bg_avatar_gradient_1));
+                friendList.add(new FriendModel("2", "Sarah Chen", "@sarah_fit", false, R.drawable.bg_avatar_gradient_2));
                 friendList.add(new FriendModel("3", "Marcus Vance", "@marcus_power", false, R.drawable.bg_avatar_gradient_3));
                 if (adapter != null) {
                     adapter.setItems(friendList);

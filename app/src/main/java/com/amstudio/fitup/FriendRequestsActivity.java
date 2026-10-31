@@ -1,10 +1,8 @@
 package com.amstudio.fitup;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,8 +11,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -24,9 +20,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -35,22 +31,29 @@ import com.amstudio.fitup.model.UserProfile;
 import com.amstudio.fitup.repository.ActiveCallManager;
 import com.amstudio.fitup.repository.FriendRepository;
 import com.amstudio.fitup.repository.UserRepository;
-import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
-public class FriendRequestsDialog extends DialogFragment {
+public class FriendRequestsActivity extends AppCompatActivity {
 
+    public static final String EXTRA_FOCUS_SEARCH = "extra_focus_search";
+
+    private ImageButton btnBack;
     private ImageButton btnClose;
     private EditText etSearchUsers;
     private RecyclerView rvRequests;
     private RecyclerView rvSearchResults;
     private TextView tvRequestsHeader;
+    private TextView tvDiscoverHeader;
 
     private RequestsAdapter requestsAdapter;
     private SearchUsersAdapter searchAdapter;
+    private final List<UserProfile> discoverableUsers = new ArrayList<>();
+    private boolean hasPendingRequests = false;
 
     // Active Call Banner Views
     private View activeCallBanner;
@@ -69,96 +72,62 @@ public class FriendRequestsDialog extends DialogFragment {
     private Handler bannerTimerHandler;
     private Runnable bannerTimerRunnable;
 
-    public interface OnDialogDismissListener {
-        void onDismissed();
-    }
-
-    private OnDialogDismissListener dismissListener;
-
-    public void setOnDismissListener(OnDialogDismissListener listener) {
-        this.dismissListener = listener;
+    public static void start(Context context, boolean focusSearch) {
+        Intent intent = new Intent(context, FriendRequestsActivity.class);
+        intent.putExtra(EXTRA_FOCUS_SEARCH, focusSearch);
+        context.startActivity(intent);
     }
 
     @Override
-    public void onDismiss(@NonNull DialogInterface dialog) {
-        super.onDismiss(dialog);
-        if (dismissListener != null) {
-            dismissListener.onDismissed();
-        }
-    }
-
-    private static final String ARG_FOCUS_SEARCH = "arg_focus_search";
-
-    public static FriendRequestsDialog newInstance() {
-        return newInstance(false);
-    }
-
-    public static FriendRequestsDialog newInstance(boolean focusSearch) {
-        FriendRequestsDialog dialog = new FriendRequestsDialog();
-        Bundle args = new Bundle();
-        args.putBoolean(ARG_FOCUS_SEARCH, focusSearch);
-        dialog.setArguments(args);
-        return dialog;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-    }
+        setContentView(R.layout.activity_friend_requests);
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.dialog_friend_requests, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        // Apply status bar top padding so dialog header doesn't overlap status bar
-        View rootLayout = view.findViewById(R.id.layout_requests_root);
+        View rootLayout = findViewById(R.id.layout_requests_root);
         if (rootLayout != null) {
             ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
                 int statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                v.setPadding(v.getPaddingLeft(), statusBarTop, v.getPaddingRight(), v.getPaddingBottom());
+                int navBarBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+                v.setPadding(v.getPaddingLeft(), statusBarTop, v.getPaddingRight(), navBarBottom);
                 return insets;
             });
         }
 
-        btnClose = view.findViewById(R.id.btn_requests_close);
-        etSearchUsers = view.findViewById(R.id.et_search_users);
-        rvRequests = view.findViewById(R.id.rv_pending_requests);
-        rvSearchResults = view.findViewById(R.id.rv_user_search_results);
-        tvRequestsHeader = view.findViewById(R.id.tv_requests_header);
+        btnBack = findViewById(R.id.btn_requests_back);
+        btnClose = findViewById(R.id.btn_requests_close);
+        etSearchUsers = findViewById(R.id.et_search_users);
+        rvRequests = findViewById(R.id.rv_pending_requests);
+        rvSearchResults = findViewById(R.id.rv_user_search_results);
+        tvRequestsHeader = findViewById(R.id.tv_requests_header);
+        tvDiscoverHeader = findViewById(R.id.tv_discover_header);
 
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
         if (btnClose != null) {
-            btnClose.setOnClickListener(v -> dismiss());
+            btnClose.setOnClickListener(v -> finish());
         }
 
-        setupActiveCallBanner(view);
+        setupActiveCallBanner();
         setupRecyclerViews();
         loadPendingRequests();
+        loadDiscoverableUsers();
         setupSearch();
 
-        if (getArguments() != null && getArguments().getBoolean(ARG_FOCUS_SEARCH, false)) {
-            if (etSearchUsers != null) {
-                etSearchUsers.requestFocus();
-                etSearchUsers.postDelayed(() -> {
-                    if (getContext() != null) {
-                        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        if (imm != null) {
-                            imm.showSoftInput(etSearchUsers, InputMethodManager.SHOW_IMPLICIT);
-                        }
-                    }
-                }, 200);
-            }
+        boolean focusSearch = getIntent().getBooleanExtra(EXTRA_FOCUS_SEARCH, false);
+        if (focusSearch && etSearchUsers != null) {
+            etSearchUsers.requestFocus();
+            etSearchUsers.postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(etSearchUsers, InputMethodManager.SHOW_IMPLICIT);
+                }
+            }, 200);
         }
     }
 
-    private void setupActiveCallBanner(@NonNull View view) {
-        activeCallBanner = view.findViewById(R.id.layout_active_call_banner);
+    private void setupActiveCallBanner() {
+        activeCallBanner = findViewById(R.id.layout_active_call_banner);
         if (activeCallBanner == null) return;
 
         tvBannerTitle = activeCallBanner.findViewById(R.id.tv_banner_call_title);
@@ -203,69 +172,70 @@ public class FriendRequestsDialog extends DialogFragment {
             btnEndCall.setOnClickListener(v -> ActiveCallManager.getInstance().endCall());
         }
 
+        View layoutText = activeCallBanner.findViewById(R.id.layout_banner_text);
+        View layoutAvatar = activeCallBanner.findViewById(R.id.layout_banner_avatar);
+
         View.OnClickListener expandListener = v -> {
             String cId = ActiveCallManager.getInstance().getActiveCallId();
-            if (cId != null && getContext() != null) {
+            if (cId != null) {
                 String targetUid = ActiveCallManager.getInstance().getTargetUid();
                 String name = ActiveCallManager.getInstance().getUserName();
                 String initials = ActiveCallManager.getInstance().getUserInitials();
                 boolean isVideo = ActiveCallManager.getInstance().isVideo();
-                TRTCCallActivity.start(getContext(), cId, targetUid != null ? targetUid : "", name, initials, isVideo, false);
+                TRTCCallActivity.start(this, cId, targetUid != null ? targetUid : "", name, initials, isVideo, false);
             }
         };
 
-        activeCallBanner.setOnClickListener(expandListener);
+        if (layoutText != null) layoutText.setOnClickListener(expandListener);
+        if (layoutAvatar != null) layoutAvatar.setOnClickListener(expandListener);
+        activeCallBanner.setOnClickListener(null);
 
-        activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> {
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    if (isActive && callId != null) {
-                        activeCallBanner.setVisibility(View.VISIBLE);
+        activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> runOnUiThread(() -> {
+            if (isActive && callId != null) {
+                activeCallBanner.setVisibility(View.VISIBLE);
 
-                        if (tvBannerTitle != null) {
-                            tvBannerTitle.setText(name != null && !name.isEmpty() ? name : "Ongoing Call");
-                        }
-                        if (tvBannerAvatarInitials != null) {
-                            tvBannerAvatarInitials.setText(initials != null ? initials : "GB");
-                        }
-                        if (ivCallIcon != null) {
-                            ivCallIcon.setImageResource(isVideo ? R.drawable.ic_video_call : R.drawable.ic_phone_call);
-                        }
+                if (tvBannerTitle != null) {
+                    tvBannerTitle.setText(name != null && !name.isEmpty() ? name : "Ongoing Call");
+                }
+                if (tvBannerAvatarInitials != null) {
+                    tvBannerAvatarInitials.setText(initials != null ? initials : "GB");
+                }
+                if (ivCallIcon != null) {
+                    ivCallIcon.setImageResource(isVideo ? R.drawable.ic_video_call : R.drawable.ic_phone_call);
+                }
 
-                        boolean speakerOn = ActiveCallManager.getInstance().isSpeakerOn();
-                        boolean cameraOn = ActiveCallManager.getInstance().isCameraOn();
-                        boolean muteOn = ActiveCallManager.getInstance().isMuteOn();
+                boolean speakerOn = ActiveCallManager.getInstance().isSpeakerOn();
+                boolean cameraOn = ActiveCallManager.getInstance().isCameraOn();
+                boolean muteOn = ActiveCallManager.getInstance().isMuteOn();
 
-                        if (btnSpeaker != null) {
-                            btnSpeaker.setBackgroundResource(speakerOn ? R.drawable.bg_call_btn_white : R.drawable.bg_call_btn_dark);
-                            if (btnSpeaker instanceof ImageButton) {
-                                ((ImageButton) btnSpeaker).setColorFilter(speakerOn ? Color.BLACK : Color.WHITE);
-                                ((ImageButton) btnSpeaker).setImageResource(speakerOn ? R.drawable.ic_speaker_on : R.drawable.ic_speaker_off);
-                            }
-                        }
-
-                        if (btnCamera != null) {
-                            btnCamera.setBackgroundResource(cameraOn ? R.drawable.bg_call_btn_dark : R.drawable.bg_call_btn_dark_active);
-                            if (btnCamera instanceof ImageButton) {
-                                ((ImageButton) btnCamera).setImageResource(cameraOn ? R.drawable.ic_video_call : R.drawable.ic_video_off);
-                            }
-                        }
-
-                        if (btnMute != null) {
-                            btnMute.setBackgroundResource(muteOn ? R.drawable.bg_call_btn_dark_active : R.drawable.bg_call_btn_dark);
-                            if (btnMute instanceof ImageButton) {
-                                ((ImageButton) btnMute).setImageResource(muteOn ? R.drawable.ic_mic_off : R.drawable.ic_mic_on);
-                            }
-                        }
-
-                        startBannerTimer(startTime, isVideo);
-                    } else {
-                        activeCallBanner.setVisibility(View.GONE);
-                        stopBannerTimer();
+                if (btnSpeaker != null) {
+                    btnSpeaker.setBackgroundResource(speakerOn ? R.drawable.bg_call_btn_white : R.drawable.bg_call_btn_dark);
+                    if (btnSpeaker instanceof ImageButton) {
+                        ((ImageButton) btnSpeaker).setColorFilter(speakerOn ? Color.BLACK : Color.WHITE);
+                        ((ImageButton) btnSpeaker).setImageResource(speakerOn ? R.drawable.ic_speaker_on : R.drawable.ic_speaker_off);
                     }
-                });
+                }
+
+                if (btnCamera != null) {
+                    btnCamera.setBackgroundResource(cameraOn ? R.drawable.bg_call_btn_dark : R.drawable.bg_call_btn_dark_active);
+                    if (btnCamera instanceof ImageButton) {
+                        ((ImageButton) btnCamera).setImageResource(cameraOn ? R.drawable.ic_video_call : R.drawable.ic_video_off);
+                    }
+                }
+
+                if (btnMute != null) {
+                    btnMute.setBackgroundResource(muteOn ? R.drawable.bg_call_btn_dark_active : R.drawable.bg_call_btn_dark);
+                    if (btnMute instanceof ImageButton) {
+                        ((ImageButton) btnMute).setImageResource(muteOn ? R.drawable.ic_mic_off : R.drawable.ic_mic_on);
+                    }
+                }
+
+                startBannerTimer(startTime, isVideo);
+            } else {
+                activeCallBanner.setVisibility(View.GONE);
+                stopBannerTimer();
             }
-        };
+        });
     }
 
     private void startBannerTimer(long startTime, boolean isVideo) {
@@ -297,7 +267,7 @@ public class FriendRequestsDialog extends DialogFragment {
     }
 
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
         if (activeCallStateListener != null) {
             ActiveCallManager.getInstance().addListener(activeCallStateListener);
@@ -318,7 +288,7 @@ public class FriendRequestsDialog extends DialogFragment {
     }
 
     @Override
-    public void onStop() {
+    protected void onStop() {
         super.onStop();
         if (activeCallStateListener != null) {
             ActiveCallManager.getInstance().removeListener(activeCallStateListener);
@@ -328,13 +298,13 @@ public class FriendRequestsDialog extends DialogFragment {
 
     private void setupRecyclerViews() {
         if (rvRequests != null) {
-            rvRequests.setLayoutManager(new LinearLayoutManager(getContext()));
+            rvRequests.setLayoutManager(new LinearLayoutManager(this));
             requestsAdapter = new RequestsAdapter();
             rvRequests.setAdapter(requestsAdapter);
         }
 
         if (rvSearchResults != null) {
-            rvSearchResults.setLayoutManager(new LinearLayoutManager(getContext()));
+            rvSearchResults.setLayoutManager(new LinearLayoutManager(this));
             searchAdapter = new SearchUsersAdapter();
             rvSearchResults.setAdapter(searchAdapter);
         }
@@ -344,18 +314,59 @@ public class FriendRequestsDialog extends DialogFragment {
         FriendRepository.getInstance().getPendingFriendRequests(new FriendRepository.FriendRequestsCallback() {
             @Override
             public void onSuccess(List<FriendRequest> requests) {
-                if (isAdded() && requestsAdapter != null) {
+                if (!isFinishing() && !isDestroyed() && requestsAdapter != null) {
                     requestsAdapter.setItems(requests);
-                    if (tvRequestsHeader != null) {
-                        tvRequestsHeader.setText(requests.isEmpty() ? "No pending friend requests" : "Pending Friend Requests (" + requests.size() + ")");
+                    hasPendingRequests = requests != null && !requests.isEmpty();
+
+                    String query = etSearchUsers != null ? etSearchUsers.getText().toString().trim() : "";
+                    if (query.length() < 2) {
+                        if (tvRequestsHeader != null) {
+                            tvRequestsHeader.setVisibility(hasPendingRequests ? View.VISIBLE : View.GONE);
+                            if (hasPendingRequests) {
+                                tvRequestsHeader.setText("Pending Friend Requests (" + requests.size() + ")");
+                            }
+                        }
+                        if (rvRequests != null) {
+                            rvRequests.setVisibility(hasPendingRequests ? View.VISIBLE : View.GONE);
+                        }
                     }
                 }
             }
 
             @Override
             public void onError(Exception e) {
-                if (isAdded() && tvRequestsHeader != null) {
-                    tvRequestsHeader.setText("No pending friend requests");
+                if (!isFinishing() && !isDestroyed()) {
+                    hasPendingRequests = false;
+                    if (tvRequestsHeader != null) tvRequestsHeader.setVisibility(View.GONE);
+                    if (rvRequests != null) rvRequests.setVisibility(View.GONE);
+                }
+            }
+        });
+    }
+
+    private void loadDiscoverableUsers() {
+        FriendRepository.getInstance().getDiscoverableUsers(new FriendRepository.FriendsListCallback() {
+            @Override
+            public void onSuccess(List<UserProfile> users) {
+                if (!isFinishing() && !isDestroyed() && searchAdapter != null) {
+                    discoverableUsers.clear();
+                    if (users != null) {
+                        discoverableUsers.addAll(users);
+                    }
+                    String query = etSearchUsers != null ? etSearchUsers.getText().toString().trim() : "";
+                    if (query.length() < 2) {
+                        searchAdapter.setItems(discoverableUsers);
+                        if (tvDiscoverHeader != null) {
+                            tvDiscoverHeader.setText("Discover Gym Goers");
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isFinishing() && !isDestroyed() && searchAdapter != null) {
+                    discoverableUsers.clear();
                 }
             }
         });
@@ -378,14 +389,23 @@ public class FriendRequestsDialog extends DialogFragment {
 
                     String query = s.toString().trim();
                     if (query.length() >= 2) {
-                        if (rvSearchResults != null) rvSearchResults.setVisibility(View.VISIBLE);
+                        if (tvRequestsHeader != null) tvRequestsHeader.setVisibility(View.GONE);
                         if (rvRequests != null) rvRequests.setVisibility(View.GONE);
+                        if (tvDiscoverHeader != null) tvDiscoverHeader.setText("Search Results");
 
                         searchRunnable = () -> searchUsers(query);
                         searchHandler.postDelayed(searchRunnable, 300); // 300ms debounce
                     } else {
-                        if (rvSearchResults != null) rvSearchResults.setVisibility(View.GONE);
-                        if (rvRequests != null) rvRequests.setVisibility(View.VISIBLE);
+                        if (tvRequestsHeader != null) {
+                            tvRequestsHeader.setVisibility(hasPendingRequests ? View.VISIBLE : View.GONE);
+                        }
+                        if (rvRequests != null) {
+                            rvRequests.setVisibility(hasPendingRequests ? View.VISIBLE : View.GONE);
+                        }
+                        if (tvDiscoverHeader != null) tvDiscoverHeader.setText("Discover Gym Goers");
+                        if (searchAdapter != null) {
+                            searchAdapter.setItems(discoverableUsers);
+                        }
                     }
                 }
 
@@ -399,30 +419,29 @@ public class FriendRequestsDialog extends DialogFragment {
         FriendRepository.getInstance().searchUsersByUsername(query, new FriendRepository.FriendsListCallback() {
             @Override
             public void onSuccess(List<UserProfile> friends) {
-                if (isAdded() && searchAdapter != null) {
+                if (!isFinishing() && !isDestroyed() && searchAdapter != null) {
                     searchAdapter.setItems(friends);
                 }
             }
 
             @Override
             public void onError(Exception e) {
-                if (isAdded() && searchAdapter != null) {
+                if (!isFinishing() && !isDestroyed() && searchAdapter != null) {
                     searchAdapter.setItems(new ArrayList<>());
                 }
             }
         });
     }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
-            dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "GB";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length >= 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
+            return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+        } else if (parts.length == 1 && !parts[0].isEmpty()) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
         }
-        return dialog;
+        return "GB";
     }
 
     // Pending Requests Adapter
@@ -448,23 +467,31 @@ public class FriendRequestsDialog extends DialogFragment {
             String senderUid = req.getSenderUid();
 
             if (senderUid != null) {
-                holder.tvSenderUid.setText("Loading...");
+                holder.tvSenderName.setText("Loading...");
+                holder.tvSenderUsername.setText("");
+                holder.tvSenderAvatar.setText("?");
+
                 UserRepository.getInstance().getUserProfile(senderUid, new UserRepository.ProfileCallback() {
                     @Override
                     public void onSuccess(UserProfile profile) {
-                        if (isAdded() && profile != null) {
+                        if (!isFinishing() && !isDestroyed() && profile != null) {
                             String name = profile.getDisplayName() != null && !profile.getDisplayName().isEmpty()
                                     ? profile.getDisplayName()
                                     : (profile.getUsername() != null ? profile.getUsername() : "Gym Buddy");
                             String handle = profile.getUsername() != null ? "@" + profile.getUsername() : "";
-                            holder.tvSenderUid.setText(name + (handle.isEmpty() ? "" : " (" + handle + ")"));
+                            
+                            holder.tvSenderName.setText(name);
+                            holder.tvSenderUsername.setText(handle);
+                            holder.tvSenderAvatar.setText(getInitials(name));
                         }
                     }
 
                     @Override
                     public void onError(Exception e) {
-                        if (isAdded()) {
-                            holder.tvSenderUid.setText("Gym Buddy (" + senderUid.substring(0, Math.min(6, senderUid.length())) + ")");
+                        if (!isFinishing() && !isDestroyed()) {
+                            holder.tvSenderName.setText("Gym Buddy");
+                            holder.tvSenderUsername.setText("@gymbuddy");
+                            holder.tvSenderAvatar.setText("GB");
                         }
                     }
                 });
@@ -474,13 +501,15 @@ public class FriendRequestsDialog extends DialogFragment {
                 FriendRepository.getInstance().acceptFriendRequest(req.getRequestId(), new FriendRepository.OperationCallback() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(getContext(), "Friend request accepted! 🎉", Toast.LENGTH_SHORT).show();
+                        FriendRepository.getInstance().invalidateFriendsCache();
+                        Toast.makeText(FriendRequestsActivity.this, "Friend request accepted! 🎉", Toast.LENGTH_SHORT).show();
                         loadPendingRequests();
+                        loadDiscoverableUsers();
                     }
 
                     @Override
                     public void onError(Exception e) {
-                        Toast.makeText(getContext(), "Failed: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FriendRequestsActivity.this, "Failed: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             });
@@ -489,13 +518,14 @@ public class FriendRequestsDialog extends DialogFragment {
                 FriendRepository.getInstance().rejectFriendRequest(req.getRequestId(), new FriendRepository.OperationCallback() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(getContext(), "Friend request declined", Toast.LENGTH_SHORT).show();
+                        FriendRepository.getInstance().invalidateFriendsCache();
+                        Toast.makeText(FriendRequestsActivity.this, "Friend request declined", Toast.LENGTH_SHORT).show();
                         loadPendingRequests();
                     }
 
                     @Override
                     public void onError(Exception e) {
-                        Toast.makeText(getContext(), "Failed: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FriendRequestsActivity.this, "Failed: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             });
@@ -507,13 +537,17 @@ public class FriendRequestsDialog extends DialogFragment {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvSenderUid;
-            MaterialButton btnAccept;
-            MaterialButton btnReject;
+            TextView tvSenderAvatar;
+            TextView tvSenderName;
+            TextView tvSenderUsername;
+            ImageButton btnAccept;
+            ImageButton btnReject;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
-                tvSenderUid = itemView.findViewById(R.id.tv_request_sender_name);
+                tvSenderAvatar = itemView.findViewById(R.id.tv_request_sender_avatar);
+                tvSenderName = itemView.findViewById(R.id.tv_request_sender_name);
+                tvSenderUsername = itemView.findViewById(R.id.tv_request_sender_username);
                 btnAccept = itemView.findViewById(R.id.btn_accept_request);
                 btnReject = itemView.findViewById(R.id.btn_reject_request);
             }
@@ -523,6 +557,7 @@ public class FriendRequestsDialog extends DialogFragment {
     // Search Users Adapter
     private class SearchUsersAdapter extends RecyclerView.Adapter<SearchUsersAdapter.ViewHolder> {
         private final List<UserProfile> list = new ArrayList<>();
+        private final Set<String> sentRequestUids = new HashSet<>();
 
         public void setItems(List<UserProfile> items) {
             list.clear();
@@ -544,25 +579,49 @@ public class FriendRequestsDialog extends DialogFragment {
                     ? user.getDisplayName()
                     : (user.getUsername() != null ? user.getUsername() : "Gym Buddy");
             String username = user.getUsername() != null ? user.getUsername() : "";
+
             holder.tvName.setText(name);
             holder.tvUsername.setText("@" + username);
+            holder.tvAvatar.setText(getInitials(name));
+
+            int[] gradients = {
+                    R.drawable.bg_avatar_gradient_1, R.drawable.bg_avatar_gradient_2,
+                    R.drawable.bg_avatar_gradient_3, R.drawable.bg_avatar_gradient_4,
+                    R.drawable.bg_avatar_gradient_5, R.drawable.bg_avatar_gradient_6
+            };
+            holder.tvAvatar.setBackgroundResource(gradients[Math.abs(position % gradients.length)]);
+
+            String uid = user.getUid() != null ? user.getUid() : name;
+            boolean isSent = sentRequestUids.contains(uid);
+
+            if (isSent) {
+                holder.btnAddFriend.setEnabled(false);
+                holder.btnAddFriend.setBackgroundResource(R.drawable.bg_circle_action_dark);
+                holder.btnAddFriend.setImageResource(R.drawable.ic_check);
+            } else {
+                holder.btnAddFriend.setEnabled(true);
+                holder.btnAddFriend.setBackgroundResource(R.drawable.bg_circle_action_white);
+                holder.btnAddFriend.setImageResource(R.drawable.ic_plus);
+            }
 
             holder.btnAddFriend.setOnClickListener(v -> {
                 holder.btnAddFriend.setEnabled(false);
-                holder.btnAddFriend.setText("Sending...");
 
-                FriendRepository.getInstance().sendFriendRequest(user.getUid(), new FriendRepository.OperationCallback() {
+                FriendRepository.getInstance().sendFriendRequest(uid, new FriendRepository.OperationCallback() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(getContext(), "Friend request sent to " + name + "!", Toast.LENGTH_SHORT).show();
-                        holder.btnAddFriend.setText("Sent ✓");
+                        sentRequestUids.add(uid);
+                        Toast.makeText(FriendRequestsActivity.this, "Friend request sent to " + name + "!", Toast.LENGTH_SHORT).show();
+                        holder.btnAddFriend.setBackgroundResource(R.drawable.bg_circle_action_dark);
+                        holder.btnAddFriend.setImageResource(R.drawable.ic_check);
                     }
 
                     @Override
                     public void onError(Exception e) {
                         holder.btnAddFriend.setEnabled(true);
-                        holder.btnAddFriend.setText("Add");
-                        Toast.makeText(getContext(), "Error: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        holder.btnAddFriend.setBackgroundResource(R.drawable.bg_circle_action_white);
+                        holder.btnAddFriend.setImageResource(R.drawable.ic_plus);
+                        Toast.makeText(FriendRequestsActivity.this, "Error: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             });
@@ -574,12 +633,14 @@ public class FriendRequestsDialog extends DialogFragment {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
+            TextView tvAvatar;
             TextView tvName;
             TextView tvUsername;
-            MaterialButton btnAddFriend;
+            ImageButton btnAddFriend;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
+                tvAvatar = itemView.findViewById(R.id.tv_user_search_avatar);
                 tvName = itemView.findViewById(R.id.tv_user_search_name);
                 tvUsername = itemView.findViewById(R.id.tv_user_search_username);
                 btnAddFriend = itemView.findViewById(R.id.btn_user_add_friend);

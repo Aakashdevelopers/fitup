@@ -12,9 +12,11 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -332,6 +334,14 @@ public class IndividualChatActivity extends AppCompatActivity {
 
                     if (tvUserName != null) tvUserName.setText(userName);
                     if (tvAvatarInitials != null) tvAvatarInitials.setText(userInitials);
+
+                    isOnline = profile.isOnline();
+                    if (vOnlineDot != null) {
+                        vOnlineDot.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+                    }
+                    if (tvStatus != null) {
+                        tvStatus.setText(isOnline ? "Online now" : "Active recently");
+                    }
                 }
             }
 
@@ -638,9 +648,34 @@ public class IndividualChatActivity extends AppCompatActivity {
         }
 
         if (btnEmoji != null) {
-            btnEmoji.setOnClickListener(v ->
-                    Toast.makeText(this, "Emoji keyboard ready", Toast.LENGTH_SHORT).show());
+            btnEmoji.setOnClickListener(v -> showEmojiPicker());
         }
+    }
+
+    private void showEmojiPicker() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (imm != null && etInput != null) {
+            imm.hideSoftInputFromWindow(etInput.getWindowToken(), 0);
+        }
+
+        EmojiPickerBottomSheet emojiBottomSheet = new EmojiPickerBottomSheet();
+        emojiBottomSheet.setOnEmojiClickListener(new EmojiPickerBottomSheet.OnEmojiClickListener() {
+            @Override
+            public void onEmojiSelected(String emoji) {
+                if (etInput == null) return;
+                int start = Math.max(etInput.getSelectionStart(), 0);
+                int end = Math.max(etInput.getSelectionEnd(), 0);
+                etInput.getText().replace(Math.min(start, end), Math.max(start, end), emoji, 0, emoji.length());
+            }
+
+            @Override
+            public void onBackspacePressed() {
+                if (etInput == null) return;
+                etInput.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+                etInput.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL));
+            }
+        });
+        emojiBottomSheet.show(getSupportFragmentManager(), "EmojiPickerBottomSheet");
     }
 
     private void sendTextMessage() {
@@ -922,6 +957,9 @@ public class IndividualChatActivity extends AppCompatActivity {
             btnEndCall.setOnClickListener(v -> ActiveCallManager.getInstance().endCall());
         }
 
+        View layoutText = activeCallBanner.findViewById(R.id.layout_banner_text);
+        View layoutAvatar = activeCallBanner.findViewById(R.id.layout_banner_avatar);
+
         View.OnClickListener expandListener = v -> {
             String cId = ActiveCallManager.getInstance().getActiveCallId();
             if (cId != null) {
@@ -933,7 +971,9 @@ public class IndividualChatActivity extends AppCompatActivity {
             }
         };
 
-        activeCallBanner.setOnClickListener(expandListener);
+        if (layoutText != null) layoutText.setOnClickListener(expandListener);
+        if (layoutAvatar != null) layoutAvatar.setOnClickListener(expandListener);
+        activeCallBanner.setOnClickListener(null);
 
 
         activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> {

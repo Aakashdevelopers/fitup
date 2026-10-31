@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment;
 import com.amstudio.fitup.model.StreakStatus;
 import com.amstudio.fitup.model.UserProfile;
 import com.amstudio.fitup.repository.StreakRepository;
+import com.amstudio.fitup.repository.TencentChatManager;
 import com.amstudio.fitup.repository.UserRepository;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
@@ -338,6 +339,8 @@ public class ProfileFragment extends Fragment {
     }
 
     private void performLogout() {
+        UserRepository.getInstance().updateUserOnlineStatus(false);
+        TencentChatManager.getInstance().logout(null);
         FirebaseAuth.getInstance().signOut();
         Context context = getContext();
         if (context != null) {

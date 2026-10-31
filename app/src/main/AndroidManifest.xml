@@ -69,6 +69,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Add Friend and Requests Activity -->
+        <activity
+            android:name=".FriendRequestsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Friends Only Private Snap Delivery Confirmation Activity -->
         <activity
             android:name=".SnapSentConfirmationActivity"

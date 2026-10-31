@@ -1,6 +1,5 @@
 package com.amstudio.fitup;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -15,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,8 +24,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.amstudio.fitup.model.FriendRequest;
 import com.amstudio.fitup.model.UserProfile;
+import com.amstudio.fitup.repository.ActiveCallManager;
 import com.amstudio.fitup.repository.FriendRepository;
 import com.amstudio.fitup.repository.TencentChatManager;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.facebook.shimmer.ShimmerFrameLayout;
 import com.tencent.imsdk.v2.V2TIMConversation;
 import com.tencent.imsdk.v2.V2TIMMessage;
@@ -126,10 +130,69 @@ public class ChatFragment extends Fragment {
         // Vertical Recent Chats & All Friends RecyclerView
         if (rvRecentChats != null) {
             rvRecentChats.setLayoutManager(new LinearLayoutManager(requireContext()));
-            chatListAdapter = new ChatListAdapter(chat ->
-                    openConversation(chat.getId(), chat.getName(), chat.getInitials(), chat.getGradientResId(), chat.isOnline()));
+            chatListAdapter = new ChatListAdapter(new ChatListAdapter.OnChatItemClickListener() {
+                @Override
+                public void onChatItemClick(ChatItem chat) {
+                    openConversation(chat.getId(), chat.getName(), chat.getInitials(), chat.getGradientResId(), chat.isOnline());
+                }
+
+                @Override
+                public void onVoiceCallClick(ChatItem chat) {
+                    initiateCall(chat.getId(), chat.getName(), chat.getInitials(), false);
+                }
+
+                @Override
+                public void onVideoCallClick(ChatItem chat) {
+                    initiateCall(chat.getId(), chat.getName(), chat.getInitials(), true);
+                }
+            });
             rvRecentChats.setAdapter(chatListAdapter);
         }
+    }
+
+    private void initiateCall(String targetUid, String userName, String userInitials, boolean isVideoCall) {
+        if (targetUid == null || targetUid.isEmpty() || "1".equals(targetUid) || "2".equals(targetUid)) {
+            Toast.makeText(requireContext(), "Cannot call dummy users in offline mode", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+
+        if (currentUid == null) {
+            Toast.makeText(requireContext(), "Not authenticated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String callId = "call_" + System.currentTimeMillis();
+
+        ActiveCallManager.getInstance().setActiveCall(
+                callId, targetUid, userName, userInitials, isVideoCall, System.currentTimeMillis()
+        );
+
+        Map<String, Object> callDoc = new HashMap<>();
+        callDoc.put("callId", callId);
+        callDoc.put("callerUid", currentUid);
+        callDoc.put("receiverUid", targetUid);
+        callDoc.put("callType", isVideoCall ? "VIDEO" : "VOICE");
+        callDoc.put("status", "CALLING");
+        callDoc.put("createdAt", FieldValue.serverTimestamp());
+
+        FirebaseFirestore.getInstance().collection("calls").document(callId).set(callDoc)
+                .addOnSuccessListener(aVoid -> {
+                    TencentChatManager.getInstance().sendTrtcCallSignalMessage(
+                            targetUid, callId, isVideoCall ? "VIDEO" : "VOICE", "INVITE", null
+                    );
+
+                    TRTCCallActivity.start(
+                            requireContext(), callId, targetUid, userName, userInitials, isVideoCall, false
+                    );
+                })
+                .addOnFailureListener(e -> {
+                    ActiveCallManager.getInstance().clearActiveCall();
+                    Toast.makeText(requireContext(), "Call failed: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void openConversation(String id, String name, String initials, int gradientResId, boolean isOnline) {
@@ -145,12 +208,14 @@ public class ChatFragment extends Fragment {
     private void showShimmer() {
         isFriendsLoaded = false;
         isChatsLoaded = false;
-        if (shimmerViewContainer != null) {
-            shimmerViewContainer.setVisibility(View.VISIBLE);
-            shimmerViewContainer.startShimmer();
-        }
-        if (layoutContentContainer != null) {
-            layoutContentContainer.setVisibility(View.GONE);
+        if (layoutContentContainer == null || layoutContentContainer.getVisibility() != View.VISIBLE) {
+            if (shimmerViewContainer != null) {
+                shimmerViewContainer.setVisibility(View.VISIBLE);
+                shimmerViewContainer.startShimmer();
+            }
+            if (layoutContentContainer != null) {
+                layoutContentContainer.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -173,6 +238,7 @@ public class ChatFragment extends Fragment {
         loadPendingRequestsBadge();
 
         // 1. Fetch real accepted friends from Firestore
+        FriendRepository.getInstance().invalidateFriendsCache();
         FriendRepository.getInstance().getAcceptedFriends(new FriendRepository.FriendsListCallback() {
             @Override
             public void onSuccess(List<UserProfile> friends) {
@@ -256,7 +322,7 @@ public class ChatFragment extends Fragment {
                     : (user.getUsername() != null ? user.getUsername() : "Gym Buddy");
             String initials = name.length() >= 2 ? name.substring(0, 2).toUpperCase() : "GB";
             int bgRes = gradients[i % gradients.length];
-            allActiveFriends.add(new ActiveFriend(user.getUid(), name, initials, bgRes, true));
+            allActiveFriends.add(new ActiveFriend(user.getUid(), name, initials, bgRes, user.isOnline()));
         }
 
         if (activeFriendsAdapter != null) {
@@ -299,7 +365,7 @@ public class ChatFragment extends Fragment {
                 unread = conv.getUnreadCount();
             }
 
-            allChats.add(new ChatItem(uid, name, initials, bgRes, lastMsg, timeStr, unread, true, 5, true, true, ChatItem.TYPE_TEXT));
+            allChats.add(new ChatItem(uid, name, initials, bgRes, lastMsg, timeStr, unread, user.isOnline(), 5, user.isOnline(), true, ChatItem.TYPE_TEXT));
         }
 
         // Add additional conversations with non-friends
@@ -313,7 +379,7 @@ public class ChatFragment extends Fragment {
                 int bgRes = gradients[(i + rawAcceptedFriends.size()) % gradients.length];
                 int unread = conv.getUnreadCount();
 
-                allChats.add(new ChatItem(convId, name, initials, bgRes, lastMsg, "Just now", unread, true, 5, true, true, ChatItem.TYPE_TEXT));
+                allChats.add(new ChatItem(convId, name, initials, bgRes, lastMsg, "Just now", unread, false, 5, false, true, ChatItem.TYPE_TEXT));
             }
         }
 
@@ -367,19 +433,11 @@ public class ChatFragment extends Fragment {
         }
 
         if (btnHeaderNotification != null) {
-            btnHeaderNotification.setOnClickListener(v -> {
-                FriendRequestsDialog dialog = FriendRequestsDialog.newInstance(false);
-                dialog.setOnDismissListener(this::loadPendingRequestsBadge);
-                dialog.show(getChildFragmentManager(), "FriendRequestsDialog");
-            });
+            btnHeaderNotification.setOnClickListener(v -> openFriendRequestsActivity(false));
         }
 
         if (btnHeaderAddFriend != null) {
-            btnHeaderAddFriend.setOnClickListener(v -> {
-                FriendRequestsDialog dialog = FriendRequestsDialog.newInstance(true);
-                dialog.setOnDismissListener(this::loadPendingRequestsBadge);
-                dialog.show(getChildFragmentManager(), "FriendRequestsDialog");
-            });
+            btnHeaderAddFriend.setOnClickListener(v -> openFriendRequestsActivity(true));
         }
 
         if (btnFindFriends != null) {
@@ -468,6 +526,10 @@ public class ChatFragment extends Fragment {
             if (tvRecentChatsHeader != null) tvRecentChatsHeader.setVisibility(View.VISIBLE);
             layoutEmptyState.setVisibility(View.GONE);
         }
+    }
+
+    private void openFriendRequestsActivity(boolean focusSearch) {
+        FriendRequestsActivity.start(requireContext(), focusSearch);
     }
 
     private void loadPendingRequestsBadge() {

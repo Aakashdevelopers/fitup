@@ -213,6 +213,9 @@ public class MainActivity extends AppCompatActivity {
             btnEndCall.setOnClickListener(v -> ActiveCallManager.getInstance().endCall());
         }
 
+        View layoutText = activeCallBanner.findViewById(R.id.layout_banner_text);
+        View layoutAvatar = activeCallBanner.findViewById(R.id.layout_banner_avatar);
+
         View.OnClickListener expandListener = v -> {
             String cId = ActiveCallManager.getInstance().getActiveCallId();
             if (cId != null) {
@@ -224,7 +227,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        activeCallBanner.setOnClickListener(expandListener);
+        if (layoutText != null) layoutText.setOnClickListener(expandListener);
+        if (layoutAvatar != null) layoutAvatar.setOnClickListener(expandListener);
+        activeCallBanner.setOnClickListener(null);
 
 
         activeCallStateListener = (isActive, callId, name, initials, isVideo, startTime) -> {
@@ -434,6 +439,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        UserRepository.getInstance().updateUserOnlineStatus(true);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        UserRepository.getInstance().updateUserOnlineStatus(false);
+    }
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_SELECTED_TAG, currentTag);
@@ -441,6 +458,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        UserRepository.getInstance().updateUserOnlineStatus(false);
         stopBannerTimer();
         if (activeCallStateListener != null) {
             ActiveCallManager.getInstance().removeListener(activeCallStateListener);

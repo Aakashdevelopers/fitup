@@ -89,8 +89,22 @@ public class UserRepository {
                 });
     }
 
+    public void updateUserOnlineStatus(boolean isOnline) {
+        String uid = getCurrentUid();
+        if (uid == null) return;
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("isOnline", isOnline);
+        updates.put("lastActive", FieldValue.serverTimestamp());
+
+        db.collection("users").document(uid)
+                .update(updates)
+                .addOnFailureListener(e -> Log.w(TAG, "Failed to update online status", e));
+    }
+
     private void saveUserProfile(String uid, String email, String username, String fullName, ProfileCallback callback) {
         UserProfile profile = new UserProfile(uid, email, username, fullName, "Gym enthusiast 💪", null);
+        profile.setOnline(true);
 
         db.runTransaction(transaction -> {
             Map<String, Object> usernameData = new HashMap<>();

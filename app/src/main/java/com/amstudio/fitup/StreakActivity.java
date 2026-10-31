@@ -2,10 +2,14 @@ package com.amstudio.fitup;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,13 +30,16 @@ import com.amstudio.fitup.model.StreakStatus;
 import com.amstudio.fitup.repository.StreakRepository;
 import com.google.android.material.button.MaterialButton;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 public class StreakActivity extends AppCompatActivity implements StreakRewardAdapter.OnRewardClaimListener {
 
     // Top Bar
-    private ImageButton btnBack;
+    private View btnBack;
     private ImageButton btnRefresh;
 
     // States Container
@@ -41,39 +49,46 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
     private TextView tvErrorMessage;
     private MaterialButton btnRetry;
 
-    // Banner Views
+    // Hero Section
+    private View ivStreakFlame;
     private LottieAnimationView lottieFlame;
     private LottieAnimationView lottieSuccess;
     private TextView tvStreakNumber;
     private TextView tvStreakHeadline;
     private TextView tvStreakStatusSub;
+
+    // Card 1: Weekly Streak View
+    private View cardWeeklyStreak;
+    private View vStreakConnectorPill;
+    private TextView tvDaySun, tvDayMon, tvDayTue, tvDayWed, tvDayThu, tvDayFri, tvDaySat;
+    private ImageView ivCheckSun, ivCheckMon, ivCheckTue, ivCheckWed, ivCheckThu, ivCheckFri, ivCheckSat;
+    private TextView tvNumSun, tvNumMon, tvNumTue, tvNumWed, tvNumThu, tvNumFri, tvNumSat;
+
+    // Card 2: Next Reward Milestone View
+    private TextView tvNextRewardHeader;
+    private LinearLayout itemMilestone1, itemMilestone2, itemMilestone3, itemMilestone4;
+    private TextView tvM1Days, tvM1Value;
+    private TextView tvM2Days, tvM2Value;
+    private TextView tvM3Days, tvM3Value;
+    private TextView tvM4Days, tvM4Value;
+
+    // Bottom Action CTA Button
     private MaterialButton btnDailyCheckin;
     private ProgressBar progressCheckin;
 
-    // Stats Overview
-    private TextView tvStatCurrentStreak;
-    private TextView tvStatLongestStreak;
-    private TextView tvStatTotalCheckins;
-
-    // Milestone Section
-    private TextView tvMilestoneTitle;
-    private TextView tvMilestonePercent;
-    private ProgressBar progressMilestone;
-    private TextView tvMilestoneSub;
-
-    // Calendar Section
+    // Optional Expandable Calendar & Rewards
     private ImageButton btnPrevMonth;
     private ImageButton btnNextMonth;
     private TextView tvCalendarMonthTitle;
     private RecyclerView rvCalendarGrid;
     private StreakCalendarAdapter calendarAdapter;
 
-    // Rewards Section
     private RecyclerView rvStreakRewards;
     private StreakRewardAdapter rewardAdapter;
 
     // Data State
     private StreakStatus currentStatus;
+    private Map<String, StreakHistoryItem> latestHistoryMap;
     private int calendarYear;
     private int calendarMonth; // 1-based (1..12)
 
@@ -105,70 +120,125 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
         tvErrorMessage = findViewById(R.id.tv_error_message);
         btnRetry = findViewById(R.id.btn_retry);
 
+        ivStreakFlame = findViewById(R.id.iv_streak_flame);
         lottieFlame = findViewById(R.id.lottie_flame);
         lottieSuccess = findViewById(R.id.lottie_success);
         tvStreakNumber = findViewById(R.id.tv_streak_number);
         tvStreakHeadline = findViewById(R.id.tv_streak_headline);
         tvStreakStatusSub = findViewById(R.id.tv_streak_status_sub);
+
+        // Card 1 Views
+        cardWeeklyStreak = findViewById(R.id.card_weekly_streak);
+        vStreakConnectorPill = findViewById(R.id.v_streak_connector_pill);
+
+        tvDaySun = findViewById(R.id.tv_day_sun);
+        tvDayMon = findViewById(R.id.tv_day_mon);
+        tvDayTue = findViewById(R.id.tv_day_tue);
+        tvDayWed = findViewById(R.id.tv_day_wed);
+        tvDayThu = findViewById(R.id.tv_day_thu);
+        tvDayFri = findViewById(R.id.tv_day_fri);
+        tvDaySat = findViewById(R.id.tv_day_sat);
+
+        ivCheckSun = findViewById(R.id.iv_check_sun);
+        ivCheckMon = findViewById(R.id.iv_check_mon);
+        ivCheckTue = findViewById(R.id.iv_check_tue);
+        ivCheckWed = findViewById(R.id.iv_check_wed);
+        ivCheckThu = findViewById(R.id.iv_check_thu);
+        ivCheckFri = findViewById(R.id.iv_check_fri);
+        ivCheckSat = findViewById(R.id.iv_check_sat);
+
+        tvNumSun = findViewById(R.id.tv_num_sun);
+        tvNumMon = findViewById(R.id.tv_num_mon);
+        tvNumTue = findViewById(R.id.tv_num_tue);
+        tvNumWed = findViewById(R.id.tv_num_wed);
+        tvNumThu = findViewById(R.id.tv_num_thu);
+        tvNumFri = findViewById(R.id.tv_num_fri);
+        tvNumSat = findViewById(R.id.tv_num_sat);
+
+        // Card 2 Views
+        tvNextRewardHeader = findViewById(R.id.tv_next_reward_header);
+        itemMilestone1 = findViewById(R.id.item_milestone_1);
+        itemMilestone2 = findViewById(R.id.item_milestone_2);
+        itemMilestone3 = findViewById(R.id.item_milestone_3);
+        itemMilestone4 = findViewById(R.id.item_milestone_4);
+
+        tvM1Days = findViewById(R.id.tv_m1_days);
+        tvM1Value = findViewById(R.id.tv_m1_value);
+        tvM2Days = findViewById(R.id.tv_m2_days);
+        tvM2Value = findViewById(R.id.tv_m2_value);
+        tvM3Days = findViewById(R.id.tv_m3_days);
+        tvM3Value = findViewById(R.id.tv_m3_value);
+        tvM4Days = findViewById(R.id.tv_m4_days);
+        tvM4Value = findViewById(R.id.tv_m4_value);
+
+        // CTA
         btnDailyCheckin = findViewById(R.id.btn_daily_checkin);
         progressCheckin = findViewById(R.id.progress_checkin);
 
-        tvStatCurrentStreak = findViewById(R.id.tv_stat_current_streak);
-        tvStatLongestStreak = findViewById(R.id.tv_stat_longest_streak);
-        tvStatTotalCheckins = findViewById(R.id.tv_stat_total_checkins);
-
-        tvMilestoneTitle = findViewById(R.id.tv_milestone_title);
-        tvMilestonePercent = findViewById(R.id.tv_milestone_percent);
-        progressMilestone = findViewById(R.id.progress_milestone);
-        tvMilestoneSub = findViewById(R.id.tv_milestone_sub);
-
+        // Optional views
         btnPrevMonth = findViewById(R.id.btn_prev_month);
         btnNextMonth = findViewById(R.id.btn_next_month);
         tvCalendarMonthTitle = findViewById(R.id.tv_calendar_month_title);
         rvCalendarGrid = findViewById(R.id.rv_calendar_grid);
-
         rvStreakRewards = findViewById(R.id.rv_streak_rewards);
     }
 
     private void setupAdapters() {
-        calendarAdapter = new StreakCalendarAdapter();
-        rvCalendarGrid.setLayoutManager(new GridLayoutManager(this, 7));
-        rvCalendarGrid.setAdapter(calendarAdapter);
+        if (rvCalendarGrid != null) {
+            calendarAdapter = new StreakCalendarAdapter();
+            rvCalendarGrid.setLayoutManager(new GridLayoutManager(this, 7));
+            rvCalendarGrid.setAdapter(calendarAdapter);
+        }
 
-        rewardAdapter = new StreakRewardAdapter(this);
-        rvStreakRewards.setLayoutManager(new LinearLayoutManager(this));
-        rvStreakRewards.setAdapter(rewardAdapter);
+        if (rvStreakRewards != null) {
+            rewardAdapter = new StreakRewardAdapter(this);
+            rvStreakRewards.setLayoutManager(new LinearLayoutManager(this));
+            rvStreakRewards.setAdapter(rewardAdapter);
+        }
     }
 
     private void setupClickListeners() {
-        btnBack.setOnClickListener(v -> finish());
-        btnRefresh.setOnClickListener(v -> fetchStreakData());
-        btnRetry.setOnClickListener(v -> fetchStreakData());
+        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnRefresh != null) btnRefresh.setOnClickListener(v -> fetchStreakData());
+        if (btnRetry != null) btnRetry.setOnClickListener(v -> fetchStreakData());
 
-        btnDailyCheckin.setOnClickListener(v -> performDailyCheckIn());
+        if (btnDailyCheckin != null) {
+            btnDailyCheckin.setOnClickListener(v -> {
+                if (currentStatus != null && currentStatus.isCheckedInToday()) {
+                    finish(); // Continue back to main screen
+                } else {
+                    performDailyCheckIn();
+                }
+            });
+        }
 
-        btnPrevMonth.setOnClickListener(v -> {
-            calendarMonth--;
-            if (calendarMonth < 1) {
-                calendarMonth = 12;
-                calendarYear--;
-            }
-            updateCalendarMonthTitle();
-            fetchHistoryData();
-        });
+        if (btnPrevMonth != null) {
+            btnPrevMonth.setOnClickListener(v -> {
+                calendarMonth--;
+                if (calendarMonth < 1) {
+                    calendarMonth = 12;
+                    calendarYear--;
+                }
+                updateCalendarMonthTitle();
+                fetchHistoryData();
+            });
+        }
 
-        btnNextMonth.setOnClickListener(v -> {
-            calendarMonth++;
-            if (calendarMonth > 12) {
-                calendarMonth = 1;
-                calendarYear++;
-            }
-            updateCalendarMonthTitle();
-            fetchHistoryData();
-        });
+        if (btnNextMonth != null) {
+            btnNextMonth.setOnClickListener(v -> {
+                calendarMonth++;
+                if (calendarMonth > 12) {
+                    calendarMonth = 1;
+                    calendarYear++;
+                }
+                updateCalendarMonthTitle();
+                fetchHistoryData();
+            });
+        }
     }
 
     private void updateCalendarMonthTitle() {
+        if (tvCalendarMonthTitle == null) return;
         String[] monthNames = {"January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"};
         String monthName = monthNames[Math.max(0, Math.min(11, calendarMonth - 1))];
@@ -176,22 +246,22 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
     }
 
     private void showLoading() {
-        containerLoading.setVisibility(View.VISIBLE);
-        containerError.setVisibility(View.GONE);
-        scrollContent.setVisibility(View.GONE);
+        if (containerLoading != null) containerLoading.setVisibility(View.VISIBLE);
+        if (containerError != null) containerError.setVisibility(View.GONE);
+        if (scrollContent != null) scrollContent.setVisibility(View.GONE);
     }
 
     private void showContent() {
-        containerLoading.setVisibility(View.GONE);
-        containerError.setVisibility(View.GONE);
-        scrollContent.setVisibility(View.VISIBLE);
+        if (containerLoading != null) containerLoading.setVisibility(View.GONE);
+        if (containerError != null) containerError.setVisibility(View.GONE);
+        if (scrollContent != null) scrollContent.setVisibility(View.VISIBLE);
     }
 
     private void showError(String message) {
-        containerLoading.setVisibility(View.GONE);
-        containerError.setVisibility(View.VISIBLE);
-        scrollContent.setVisibility(View.GONE);
-        if (message != null && !message.isEmpty()) {
+        if (containerLoading != null) containerLoading.setVisibility(View.GONE);
+        if (containerError != null) containerError.setVisibility(View.VISIBLE);
+        if (scrollContent != null) scrollContent.setVisibility(View.GONE);
+        if (message != null && !message.isEmpty() && tvErrorMessage != null) {
             tvErrorMessage.setText(message);
         }
     }
@@ -221,13 +291,18 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
             @Override
             public void onSuccess(Map<String, StreakHistoryItem> historyMap) {
                 if (isFinishing() || isDestroyed()) return;
+                latestHistoryMap = historyMap;
                 String todayStr = currentStatus != null ? currentStatus.getTodayDate() : "";
-                calendarAdapter.setCalendarData(calendarYear, calendarMonth, todayStr, historyMap);
+                if (calendarAdapter != null) {
+                    calendarAdapter.setCalendarData(calendarYear, calendarMonth, todayStr, historyMap);
+                }
+                updateWeeklyStreakView(historyMap);
             }
 
             @Override
             public void onError(Exception e) {
-                // Calendar silent fallback
+                if (isFinishing() || isDestroyed()) return;
+                updateWeeklyStreakView(null);
             }
         });
     }
@@ -236,80 +311,224 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
         if (status == null) return;
 
         int streakVal = status.getCurrentStreak();
-        tvStreakNumber.setText(String.valueOf(streakVal));
-        tvStreakHeadline.setText("You're on a " + streakVal + "-day streak! 🔥");
+        if (tvStreakNumber != null) tvStreakNumber.setText(String.valueOf(streakVal));
+        if (tvStreakHeadline != null) tvStreakHeadline.setText("days streak");
 
-        tvStatCurrentStreak.setText(streakVal + " Days");
-        tvStatLongestStreak.setText(status.getLongestStreak() + " Days");
-        tvStatTotalCheckins.setText(status.getTotalCheckIns() + " Days");
-
-        if (status.isCheckedInToday()) {
-            btnDailyCheckin.setText("Checked In Today ✔");
-            btnDailyCheckin.setEnabled(false);
-            btnDailyCheckin.setBackgroundTintList(getColorStateList(R.color.subtle_border));
-            tvStreakStatusSub.setText("Awesome job! You've already completed today's check-in!");
-        } else {
-            btnDailyCheckin.setText("Daily Check-In 🔥");
-            btnDailyCheckin.setEnabled(true);
-            btnDailyCheckin.setBackgroundTintList(getColorStateList(R.color.primary_blue));
-            tvStreakStatusSub.setText("Check in today to keep your workout streak active!");
+        if (btnDailyCheckin != null && tvStreakStatusSub != null) {
+            if (status.isCheckedInToday()) {
+                btnDailyCheckin.setText("Continue");
+                btnDailyCheckin.setEnabled(true);
+                tvStreakStatusSub.setText("Awesome job! You've already completed today's check-in!");
+            } else {
+                btnDailyCheckin.setText("Daily Check-In 🔥");
+                btnDailyCheckin.setEnabled(true);
+                tvStreakStatusSub.setText("Keep mining daily to increase your rewards.");
+            }
         }
 
-        // Milestone Progress
-        NextMilestoneInfo mInfo = status.getNextMilestoneInfo();
-        if (mInfo != null) {
-            tvMilestoneTitle.setText("Next Milestone: " + mInfo.getNextMilestone() + " Days");
-            tvMilestonePercent.setText(mInfo.getProgressPercent() + "%");
-            progressMilestone.setProgress(mInfo.getProgressPercent());
-            tvMilestoneSub.setText(mInfo.getDaysRemaining() + " days remaining to unlock " + mInfo.getNextMilestoneReward() + "!");
-        }
+        bindMilestonesCard(status);
+        updateWeeklyStreakView(latestHistoryMap);
 
-        // Rewards
-        if (status.getRewards() != null) {
+        if (rewardAdapter != null && status.getRewards() != null) {
             rewardAdapter.setRewards(status.getRewards());
         }
     }
 
-    private void performDailyCheckIn() {
-        // Step 5: Disable button immediately to prevent duplicate taps
-        btnDailyCheckin.setEnabled(false);
-        btnDailyCheckin.setText("");
-        progressCheckin.setVisibility(View.VISIBLE);
+    private void updateWeeklyStreakView(Map<String, StreakHistoryItem> historyMap) {
+        Calendar cal = Calendar.getInstance();
+        int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK); // 1 = Sun, 2 = Mon ... 7 = Sat
 
-        // Step 7: Call dailyCheckIn Cloud Function
+        // Highlight current day header name in orange
+        TextView[] dayHeaderViews = {tvDaySun, tvDayMon, tvDayTue, tvDayWed, tvDayThu, tvDayFri, tvDaySat};
+        for (int i = 0; i < 7; i++) {
+            if (dayHeaderViews[i] != null) {
+                if (i + 1 == currentDayOfWeek) {
+                    dayHeaderViews[i].setTextColor(ContextCompat.getColor(this, R.color.electric_blue));
+                } else {
+                    dayHeaderViews[i].setTextColor(Color.parseColor("#8E8E93"));
+                }
+            }
+        }
+
+        // Move calendar to Sunday of current week
+        cal.add(Calendar.DAY_OF_MONTH, -(currentDayOfWeek - 1));
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        ImageView[] checkViews = {ivCheckSun, ivCheckMon, ivCheckTue, ivCheckWed, ivCheckThu, ivCheckFri, ivCheckSat};
+        TextView[] numViews = {tvNumSun, tvNumMon, tvNumTue, tvNumWed, tvNumThu, tvNumFri, tvNumSat};
+
+        int consecutiveCheckedDays = 0;
+        String todayStr = currentStatus != null && currentStatus.getTodayDate() != null ? currentStatus.getTodayDate() : sdf.format(new Date());
+
+        for (int i = 0; i < 7; i++) {
+            String dateStr = sdf.format(cal.getTime());
+            int dayNum = cal.get(Calendar.DAY_OF_MONTH);
+
+            boolean isChecked = (historyMap != null && historyMap.containsKey(dateStr)) || (dateStr.equals(todayStr) && currentStatus != null && currentStatus.isCheckedInToday());
+            boolean isToday = dateStr.equals(todayStr);
+
+            if (checkViews[i] != null && numViews[i] != null) {
+                if (isChecked) {
+                    consecutiveCheckedDays = i + 1;
+                    checkViews[i].setVisibility(View.VISIBLE);
+                    numViews[i].setVisibility(View.GONE);
+                    if (isToday) {
+                        checkViews[i].setImageResource(R.drawable.ic_check_circle_active);
+                    } else {
+                        checkViews[i].setImageResource(R.drawable.ic_check_circle_filled);
+                    }
+                } else {
+                    numViews[i].setText(String.valueOf(dayNum));
+                    numViews[i].setVisibility(View.VISIBLE);
+                    checkViews[i].setVisibility(View.GONE);
+                }
+            }
+
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        // Adjust streak connector pill width dynamically safely
+        if (vStreakConnectorPill != null) {
+            final int checkedDaysCount = consecutiveCheckedDays;
+            if (checkedDaysCount > 0) {
+                vStreakConnectorPill.setVisibility(View.VISIBLE);
+                vStreakConnectorPill.post(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (cardWeeklyStreak != null && cardWeeklyStreak.getWidth() > 0 && vStreakConnectorPill != null) {
+                        float density = getResources().getDisplayMetrics().density;
+                        int cardPaddingHorizontal = (int) (32 * density); // 16dp * 2
+                        int availableWidth = Math.max(0, cardWeeklyStreak.getWidth() - cardPaddingHorizontal);
+                        int itemWidth = availableWidth / 7;
+                        int pillWidth = Math.max(0, (itemWidth * checkedDaysCount) + (int) (8 * density));
+                        ViewGroup.LayoutParams params = vStreakConnectorPill.getLayoutParams();
+                        if (params != null) {
+                            params.width = pillWidth;
+                            vStreakConnectorPill.setLayoutParams(params);
+                        }
+                    }
+                });
+            } else {
+                vStreakConnectorPill.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
+    private void bindMilestonesCard(StreakStatus status) {
+        if (status == null) return;
+
+        NextMilestoneInfo mInfo = status.getNextMilestoneInfo();
+        if (tvNextRewardHeader != null) {
+            if (mInfo != null && mInfo.getNextMilestoneReward() != null) {
+                tvNextRewardHeader.setText("NEXT REWARD: " + mInfo.getNextMilestoneReward().toUpperCase());
+            } else {
+                tvNextRewardHeader.setText("NEXT REWARD: +200 SP");
+            }
+        }
+
+        int streak = status.getCurrentStreak();
+
+        // Milestone 1 (7 Days)
+        if (tvM1Days != null && tvM1Value != null && itemMilestone1 != null) {
+            if (streak >= 7) {
+                tvM1Days.setTextColor(Color.parseColor("#666666"));
+                tvM1Value.setTextColor(Color.parseColor("#555555"));
+                itemMilestone1.setBackground(null);
+            } else {
+                tvM1Days.setTextColor(Color.WHITE);
+                tvM1Value.setTextColor(Color.WHITE);
+                itemMilestone1.setBackgroundResource(R.drawable.bg_reward_dashed_box);
+            }
+        }
+
+        // Milestone 2 (14 Days)
+        if (tvM2Days != null && tvM2Value != null && itemMilestone2 != null) {
+            if (streak >= 7 && streak < 14) {
+                tvM2Days.setTextColor(Color.WHITE);
+                tvM2Value.setTextColor(Color.WHITE);
+                itemMilestone2.setBackgroundResource(R.drawable.bg_reward_dashed_box);
+            } else if (streak >= 14) {
+                tvM2Days.setTextColor(Color.parseColor("#666666"));
+                tvM2Value.setTextColor(Color.parseColor("#555555"));
+                itemMilestone2.setBackground(null);
+            } else {
+                tvM2Days.setTextColor(Color.parseColor("#8E8E93"));
+                tvM2Value.setTextColor(Color.WHITE);
+                itemMilestone2.setBackground(null);
+            }
+        }
+
+        // Milestone 3 (21 Days)
+        if (tvM3Days != null && tvM3Value != null && itemMilestone3 != null) {
+            if (streak >= 14 && streak < 21) {
+                tvM3Days.setTextColor(Color.WHITE);
+                tvM3Value.setTextColor(Color.WHITE);
+                itemMilestone3.setBackgroundResource(R.drawable.bg_reward_dashed_box);
+            } else if (streak >= 21) {
+                tvM3Days.setTextColor(Color.parseColor("#666666"));
+                tvM3Value.setTextColor(Color.parseColor("#555555"));
+                itemMilestone3.setBackground(null);
+            } else {
+                tvM3Days.setTextColor(Color.parseColor("#8E8E93"));
+                tvM3Value.setTextColor(Color.WHITE);
+                itemMilestone3.setBackground(null);
+            }
+        }
+
+        // Milestone 4 (28 Days)
+        if (tvM4Days != null && tvM4Value != null && itemMilestone4 != null) {
+            if (streak >= 21 && streak < 28) {
+                tvM4Days.setTextColor(Color.WHITE);
+                tvM4Value.setTextColor(Color.WHITE);
+                itemMilestone4.setBackgroundResource(R.drawable.bg_reward_dashed_box);
+            } else if (streak >= 28) {
+                tvM4Days.setTextColor(Color.parseColor("#666666"));
+                tvM4Value.setTextColor(Color.parseColor("#555555"));
+                itemMilestone4.setBackground(null);
+            } else {
+                tvM4Days.setTextColor(Color.parseColor("#8E8E93"));
+                tvM4Value.setTextColor(Color.WHITE);
+                itemMilestone4.setBackground(null);
+            }
+        }
+    }
+
+    private void performDailyCheckIn() {
+        if (btnDailyCheckin != null) {
+            btnDailyCheckin.setEnabled(false);
+            btnDailyCheckin.setText("");
+        }
+        if (progressCheckin != null) {
+            progressCheckin.setVisibility(View.VISIBLE);
+        }
+
         StreakRepository.getInstance().dailyCheckIn(new StreakRepository.CheckInCallback() {
             @Override
             public void onSuccess(StreakRepository.CheckInResult result) {
                 if (isFinishing() || isDestroyed()) return;
 
-                progressCheckin.setVisibility(View.GONE);
+                if (progressCheckin != null) progressCheckin.setVisibility(View.GONE);
 
                 if (result.isNewCheckIn) {
-                    // Smooth counter increase animation
                     int startVal = currentStatus != null ? currentStatus.getCurrentStreak() : 0;
                     int endVal = result.currentStreak;
                     animateStreakNumber(startVal, endVal);
 
-                    // Update button state
-                    btnDailyCheckin.setText("Checked In Today ✔");
-                    btnDailyCheckin.setBackgroundTintList(getColorStateList(R.color.subtle_border));
-                    tvStreakHeadline.setText("You're on a " + result.currentStreak + "-day streak! 🔥");
-                    tvStreakStatusSub.setText("Streak Increased! Great workout commitment today!");
+                    if (btnDailyCheckin != null) {
+                        btnDailyCheckin.setText("Continue");
+                        btnDailyCheckin.setEnabled(true);
+                    }
+                    if (tvStreakHeadline != null) tvStreakHeadline.setText("days streak");
+                    if (tvStreakStatusSub != null) tvStreakStatusSub.setText("Streak Increased! Great workout commitment today!");
 
-                    // Play Lottie Check-In Success Animation
                     playSuccessAnimation();
-
-                    // Refresh history and stats
                     fetchHistoryData();
 
-                    // If milestone unlocked, show celebration dialog
                     if (result.unlockedMilestone != null) {
                         showMilestoneCelebrationDialog(result.unlockedMilestone);
                     } else {
                         Toast.makeText(StreakActivity.this, "Check-in successful! Streak increased!", Toast.LENGTH_SHORT).show();
                     }
 
-                    // Refresh status in background to update milestone progress
                     StreakRepository.getInstance().getStreakStatus(new StreakRepository.StreakStatusCallback() {
                         @Override
                         public void onSuccess(StreakStatus updatedStatus) {
@@ -324,10 +543,10 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
                     });
 
                 } else {
-                    // Already checked in today
-                    btnDailyCheckin.setText("Checked In Today ✔");
-                    btnDailyCheckin.setEnabled(false);
-                    btnDailyCheckin.setBackgroundTintList(getColorStateList(R.color.subtle_border));
+                    if (btnDailyCheckin != null) {
+                        btnDailyCheckin.setText("Continue");
+                        btnDailyCheckin.setEnabled(true);
+                    }
                     Toast.makeText(StreakActivity.this, "Already checked in today!", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -336,10 +555,11 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
             public void onError(Exception e) {
                 if (isFinishing() || isDestroyed()) return;
 
-                progressCheckin.setVisibility(View.GONE);
-                btnDailyCheckin.setEnabled(true);
-                btnDailyCheckin.setText("Daily Check-In 🔥");
-                btnDailyCheckin.setBackgroundTintList(getColorStateList(R.color.primary_blue));
+                if (progressCheckin != null) progressCheckin.setVisibility(View.GONE);
+                if (btnDailyCheckin != null) {
+                    btnDailyCheckin.setEnabled(true);
+                    btnDailyCheckin.setText("Daily Check-In 🔥");
+                }
 
                 Toast.makeText(StreakActivity.this, "Check-in failed: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
@@ -350,40 +570,43 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
         ValueAnimator animator = ValueAnimator.ofInt(from, to);
         animator.setDuration(1200);
         animator.addUpdateListener(animation -> {
+            if (isFinishing() || isDestroyed()) return;
             int animatedValue = (int) animation.getAnimatedValue();
-            tvStreakNumber.setText(String.valueOf(animatedValue));
+            if (tvStreakNumber != null) {
+                tvStreakNumber.setText(String.valueOf(animatedValue));
+            }
         });
         animator.start();
     }
 
     private void playSuccessAnimation() {
-        if (lottieSuccess != null && lottieFlame != null) {
-            lottieFlame.setVisibility(View.GONE);
+        if (lottieSuccess != null) {
+            if (ivStreakFlame != null) ivStreakFlame.setVisibility(View.GONE);
+            if (lottieFlame != null) lottieFlame.setVisibility(View.GONE);
             lottieSuccess.setVisibility(View.VISIBLE);
             lottieSuccess.playAnimation();
 
-            // After animation finishes, restore subtle flame
             lottieSuccess.postDelayed(() -> {
                 if (!isFinishing() && !isDestroyed()) {
                     lottieSuccess.setVisibility(View.GONE);
-                    lottieFlame.setVisibility(View.VISIBLE);
+                    if (ivStreakFlame != null) ivStreakFlame.setVisibility(View.VISIBLE);
                 }
             }, 2500);
         }
     }
 
     private void showMilestoneCelebrationDialog(StreakReward reward) {
+        if (isFinishing() || isDestroyed()) return;
         Context context = this;
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_milestone_celebration, null);
 
-        LottieAnimationView lottieCeleb = dialogView.findViewById(R.id.lottie_celebration);
         TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
         TextView tvSub = dialogView.findViewById(R.id.tv_dialog_sub);
         MaterialButton btnClaim = dialogView.findViewById(R.id.btn_dialog_claim);
 
         if (reward != null) {
-            tvTitle.setText(reward.getTitle());
-            tvSub.setText(reward.getDescription() + "\nUnlocked Reward: " + reward.getRewardValue());
+            if (tvTitle != null) tvTitle.setText(reward.getTitle());
+            if (tvSub != null) tvSub.setText(reward.getDescription() + "\nUnlocked Reward: " + reward.getRewardValue());
         }
 
         AlertDialog dialog = new AlertDialog.Builder(context)
@@ -395,12 +618,14 @@ public class StreakActivity extends AppCompatActivity implements StreakRewardAda
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        btnClaim.setOnClickListener(v -> {
-            dialog.dismiss();
-            if (reward != null) {
-                onClaimClick(reward);
-            }
-        });
+        if (btnClaim != null) {
+            btnClaim.setOnClickListener(v -> {
+                dialog.dismiss();
+                if (reward != null) {
+                    onClaimClick(reward);
+                }
+            });
+        }
 
         dialog.show();
     }

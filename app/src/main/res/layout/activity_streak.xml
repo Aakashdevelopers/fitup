@@ -4,36 +4,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_profile_gradient">
+    android:background="@drawable/bg_streak_screen">
 
-    <!-- 1. TOP APP BAR -->
+    <!-- 1. TOP APP BAR (< Home) -->
     <RelativeLayout
         android:id="@+id/top_app_bar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:paddingHorizontal="16dp">
 
-        <ImageButton
+        <LinearLayout
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerVertical="true"
-            android:background="@drawable/bg_control_circle"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_arrow_back"
-            app:tint="@color/primary_text" />
-
-        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Daily Gym Streak"
-            android:textColor="@color/primary_text"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-bold" />
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingEnd="12dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="Home"
+                android:textColor="@color/white"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/btn_refresh"
@@ -46,7 +51,7 @@
             android:padding="10dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_activity_pulse"
-            app:tint="@color/light_blue" />
+            app:tint="@color/electric_blue" />
     </RelativeLayout>
 
     <!-- LOADING CONTAINER -->
@@ -55,7 +60,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/top_app_bar"
-        android:background="@color/brand_deep_navy"
+        android:background="#08080A"
         android:visibility="gone">
 
         <ProgressBar
@@ -91,7 +96,7 @@
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="Failed to load streak status. Please check your connection."
-            android:textColor="@color/secondary_text"
+            android:textColor="#A0A0A0"
             android:textSize="14sp" />
 
         <com.google.android.material.button.MaterialButton
@@ -102,7 +107,7 @@
             android:backgroundTint="@color/primary_blue"
             android:text="Retry Connection"
             android:textColor="@color/white"
-            app:cornerRadius="12dp" />
+            app:cornerRadius="22dp" />
     </LinearLayout>
 
     <!-- MAIN CONTENT SCROLL VIEW -->
@@ -116,30 +121,48 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="40dp">
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp">
 
-            <!-- STREAK BANNER CARD -->
+            <!-- 2. FLAME & COUNTER HERO CONTAINER (TOP) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_profile_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:paddingTop="12dp"
+                android:paddingBottom="8dp">
 
-                <!-- Flame Lottie Animation -->
+                <!-- Flame Graphic Container with Radial Aura Glow -->
                 <FrameLayout
-                    android:layout_width="140dp"
-                    android:layout_height="140dp">
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:layout_gravity="center">
+
+                    <View
+                        android:layout_width="130dp"
+                        android:layout_height="130dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_flame_aura_glow" />
+
+                    <ImageView
+                        android:id="@+id/iv_streak_flame"
+                        android:layout_width="84dp"
+                        android:layout_height="84dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Streak Flame"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_streak_flame"
+                        app:tint="@color/electric_blue" />
 
                     <com.airbnb.lottie.LottieAnimationView
                         android:id="@+id/lottie_flame"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:visibility="gone"
                         app:lottie_autoPlay="true"
                         app:lottie_loop="true"
                         app:lottie_rawRes="@raw/streak_flame" />
@@ -154,43 +177,313 @@
                         app:lottie_rawRes="@raw/checkin_success" />
                 </FrameLayout>
 
-                <!-- Prominent Streak Number Counter -->
+                <!-- Huge Streak Counter Number -->
                 <TextView
                     android:id="@+id/tv_streak_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="0"
+                    android:layout_marginTop="2dp"
+                    android:text="10"
                     android:textColor="@color/white"
-                    android:textSize="54sp"
+                    android:textSize="64sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-black" />
 
-                <!-- Streak Headline -->
+                <!-- Subtitle: days streak -->
                 <TextView
                     android:id="@+id/tv_streak_headline"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:gravity="center"
-                    android:text="You're on a 0-day streak!"
-                    android:textColor="@color/electric_blue"
+                    android:layout_marginTop="-6dp"
+                    android:text="days streak"
+                    android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif-bold" />
+                    android:fontFamily="sans-serif-medium" />
 
-                <!-- Status Subtitle -->
+                <!-- Slogan Subtitle -->
                 <TextView
                     android:id="@+id/tv_streak_status_sub"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="Check in daily to keep your momentum going!"
-                    android:textColor="@color/secondary_text"
+                    android:text="Keep mining daily to increase your rewards."
+                    android:textColor="#A0A0A0"
                     android:textSize="13sp" />
+            </LinearLayout>
 
-                <!-- Daily Check-In Button -->
+            <!-- FLEXIBLE SPACER (Pushes Calendar, Reward & Continue Button to the Bottom) -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- BOTTOM CONTENT CONTAINER (CARDS + CTA BUTTON) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- 3. CARD 1: WEEKLY STREAK CARD -->
+                <LinearLayout
+                    android:id="@+id/card_weekly_streak"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_streak_card_dark"
+                    android:orientation="vertical"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="16dp">
+
+                    <!-- Day Names Header Row -->
+                    <LinearLayout
+                        android:id="@+id/row_week_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <TextView android:id="@+id/tv_day_sun" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Sun" android:textColor="#8E8E93" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_day_mon" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Mon" android:textColor="#8E8E93" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_day_tue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Tue" android:textColor="#8E8E93" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_day_wed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Wed" android:textColor="@color/electric_blue" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_day_thu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Thur" android:textColor="#8E8E93" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_day_fri" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Fri" android:textColor="#8E8E93" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/tv_day_sat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Sat" android:textColor="#8E8E93" android:textSize="13sp" android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- 7-Day Streak Item Grid with Connector Background -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="14dp">
+
+                        <!-- Dynamic Streak Orange Gradient Connector Bar -->
+                        <View
+                            android:id="@+id/v_streak_connector_pill"
+                            android:layout_width="190dp"
+                            android:layout_height="40dp"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="4dp"
+                            android:background="@drawable/bg_streak_orange_pill_connector" />
+
+                        <!-- 7 Days Row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:baselineAligned="false"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <!-- Sun -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_sun" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_filled" />
+                                <TextView android:id="@+id/tv_num_sun" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="17" android:textColor="#8E8E93" android:textSize="14sp" android:visibility="gone" />
+                            </FrameLayout>
+
+                            <!-- Mon -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_mon" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_filled" />
+                                <TextView android:id="@+id/tv_num_mon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="18" android:textColor="#8E8E93" android:textSize="14sp" android:visibility="gone" />
+                            </FrameLayout>
+
+                            <!-- Tue -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_tue" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_filled" />
+                                <TextView android:id="@+id/tv_num_tue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="19" android:textColor="#8E8E93" android:textSize="14sp" android:visibility="gone" />
+                            </FrameLayout>
+
+                            <!-- Wed (Today) -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_wed" android:layout_width="32dp" android:layout_height="32dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_active" />
+                                <TextView android:id="@+id/tv_num_wed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="20" android:textColor="#8E8E93" android:textSize="14sp" android:visibility="gone" />
+                            </FrameLayout>
+
+                            <!-- Thu -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_thu" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_empty" android:visibility="gone" />
+                                <TextView android:id="@+id/tv_num_thu" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="20" android:textColor="#8E8E93" android:textSize="15sp" android:textStyle="bold" />
+                            </FrameLayout>
+
+                            <!-- Fri -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_fri" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_empty" android:visibility="gone" />
+                                <TextView android:id="@+id/tv_num_fri" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="21" android:textColor="#8E8E93" android:textSize="15sp" android:textStyle="bold" />
+                            </FrameLayout>
+
+                            <!-- Sat -->
+                            <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+                                <ImageView android:id="@+id/iv_check_sat" android:layout_width="28dp" android:layout_height="28dp" android:layout_gravity="center" android:src="@drawable/ic_check_circle_empty" android:visibility="gone" />
+                                <TextView android:id="@+id/tv_num_sat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="22" android:textColor="#8E8E93" android:textSize="15sp" android:textStyle="bold" />
+                            </FrameLayout>
+                        </LinearLayout>
+                    </RelativeLayout>
+                </LinearLayout>
+
+                <!-- 4. CARD 2: NEXT REWARD CARD -->
+                <LinearLayout
+                    android:id="@+id/card_next_reward"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_streak_card_dark"
+                    android:orientation="vertical"
+                    android:paddingVertical="16dp"
+                    android:paddingHorizontal="12dp">
+
+                    <!-- Header Label -->
+                    <TextView
+                        android:id="@+id/tv_next_reward_header"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:text="NEXT REWARD: +200 SP"
+                        android:textColor="#8E8E93"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.04" />
+
+                    <!-- Milestone Horizontal Row -->
+                    <LinearLayout
+                        android:id="@+id/row_milestones"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:baselineAligned="false"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Milestone 1: 7 Days | +50 SP -->
+                        <LinearLayout
+                            android:id="@+id/item_milestone_1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="8dp">
+
+                            <TextView
+                                android:id="@+id/tv_m1_days"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="7 Days"
+                                android:textColor="#666666"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_m1_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="+50 SP"
+                                android:textColor="#555555"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <View android:layout_width="1dp" android:layout_height="28dp" android:background="#26262A" />
+
+                        <!-- Milestone 2: 14 Days | +200 SP (Highlighted with Dashed Orange Border) -->
+                        <LinearLayout
+                            android:id="@+id/item_milestone_2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_reward_dashed_box"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="10dp">
+
+                            <TextView
+                                android:id="@+id/tv_m2_days"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="14 Days"
+                                android:textColor="@color/white"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_m2_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="+200 SP"
+                                android:textColor="@color/white"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <View android:layout_width="1dp" android:layout_height="28dp" android:background="#26262A" />
+
+                        <!-- Milestone 3: 21 Days | +500 SP -->
+                        <LinearLayout
+                            android:id="@+id/item_milestone_3"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="8dp">
+
+                            <TextView
+                                android:id="@+id/tv_m3_days"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="21 Days"
+                                android:textColor="#8E8E93"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_m3_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="+500 SP"
+                                android:textColor="@color/white"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <View android:layout_width="1dp" android:layout_height="28dp" android:background="#26262A" />
+
+                        <!-- Milestone 4: 28 Days | Special -->
+                        <LinearLayout
+                            android:id="@+id/item_milestone_4"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="8dp">
+
+                            <TextView
+                                android:id="@+id/tv_m4_days"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="28 Days"
+                                android:textColor="#8E8E93"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_m4_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Special"
+                                android:textColor="@color/white"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 5. BOTTOM CONTINUOUS ORANGE CTA BUTTON -->
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -199,16 +492,16 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_daily_checkin"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
+                        android:layout_height="56dp"
+                        android:backgroundTint="@color/primary_blue"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
-                        android:backgroundTint="@color/primary_blue"
-                        android:text="Daily Check-In 🔥"
+                        android:text="Continue"
                         android:textAllCaps="false"
                         android:textColor="@color/white"
-                        android:textSize="16sp"
+                        android:textSize="17sp"
                         android:textStyle="bold"
-                        app:cornerRadius="14dp"
+                        app:cornerRadius="28dp"
                         app:elevation="0dp" />
 
                     <ProgressBar
@@ -219,172 +512,33 @@
                         android:indeterminateTint="@color/white"
                         android:visibility="gone" />
                 </FrameLayout>
+
             </LinearLayout>
 
-            <!-- STATS OVERVIEW ROW -->
+            <!-- 6. OPTIONAL EXPANDABLE FULL MONTH & ALL MILESTONE REWARDS (Hidden by default) -->
             <LinearLayout
+                android:id="@+id/container_detailed_views"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:baselineAligned="false"
-                android:orientation="horizontal">
-
-                <!-- Card 1: Current Streak -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/bg_stat_card"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Current"
-                        android:textColor="@color/secondary_text"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_stat_current_streak"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="0 Days"
-                        android:textColor="@color/primary_text"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold" />
-                </LinearLayout>
-
-                <!-- Card 2: Longest Streak -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/bg_stat_card"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Longest"
-                        android:textColor="@color/secondary_text"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_stat_longest_streak"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="0 Days"
-                        android:textColor="@color/electric_blue"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold" />
-                </LinearLayout>
-
-                <!-- Card 3: Total Check-ins -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp"
-                    android:background="@drawable/bg_stat_card"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Total"
-                        android:textColor="@color/secondary_text"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tv_stat_total_checkins"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="0 Check-ins"
-                        android:textColor="@color/light_blue"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- MILESTONE PROGRESS SECTION -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_profile_card"
+                android:layout_marginTop="24dp"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:visibility="gone">
 
+                <!-- Hidden binds for stats & milestone progress to maintain code compatibility -->
+                <TextView android:id="@+id/tv_stat_current_streak" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+                <TextView android:id="@+id/tv_stat_longest_streak" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+                <TextView android:id="@+id/tv_stat_total_checkins" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+
+                <TextView android:id="@+id/tv_milestone_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+                <TextView android:id="@+id/tv_milestone_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+                <ProgressBar android:id="@+id/progress_milestone" android:layout_width="match_parent" android:layout_height="10dp" android:visibility="gone" />
+                <TextView android:id="@+id/tv_milestone_sub" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+
+                <!-- Month View Header -->
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/tv_milestone_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Next Milestone: 3 Days"
-                        android:textColor="@color/primary_text"
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold" />
-
-                    <TextView
-                        android:id="@+id/tv_milestone_percent"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="0%"
-                        android:textColor="@color/electric_blue"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <ProgressBar
-                    android:id="@+id/progress_milestone"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="10dp"
-                    android:layout_marginTop="12dp"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/bg_mode_pill"
-                    android:progressTint="@color/electric_blue" />
-
-                <TextView
-                    android:id="@+id/tv_milestone_sub"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="3 days remaining to unlock Bronze Flame Badge!"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- STREAK CALENDAR SECTION -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_profile_card"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <!-- Calendar Month Header -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_marginBottom="8dp">
 
                     <ImageButton
                         android:id="@+id/btn_prev_month"
@@ -395,18 +549,16 @@
                         android:contentDescription="Previous Month"
                         android:padding="8dp"
                         android:src="@drawable/ic_arrow_back"
-                        app:tint="@color/primary_text" />
+                        app:tint="@color/white" />
 
                     <TextView
                         android:id="@+id/tv_calendar_month_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
-                        android:text="May 2025"
-                        android:textColor="@color/primary_text"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold" />
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <ImageButton
                         android:id="@+id/btn_next_month"
@@ -419,52 +571,23 @@
                         android:padding="8dp"
                         android:rotation="180"
                         android:src="@drawable/ic_arrow_back"
-                        app:tint="@color/primary_text" />
+                        app:tint="@color/white" />
                 </RelativeLayout>
 
-                <!-- Weekday Labels Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="S" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="M" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="W" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="F" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="S" android:textColor="@color/secondary_text" android:textSize="12sp" />
-                </LinearLayout>
-
-                <!-- Calendar Grid RecyclerView -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_calendar_grid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:nestedScrollingEnabled="false" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_streak_rewards"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:nestedScrollingEnabled="false" />
+
             </LinearLayout>
-
-            <!-- MILESTONE REWARDS SECTION -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="12dp"
-                android:text="Streak Milestones &amp; Rewards"
-                android:textColor="@color/primary_text"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-bold" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_streak_rewards"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -16,6 +16,7 @@ public class UserProfile {
     private String dateOfBirth;
     private String location;
     private long friendsCount;
+    private boolean isOnline;
 
     @ServerTimestamp
     private Timestamp createdAt;
@@ -145,6 +146,22 @@ public class UserProfile {
 
     public void setFriendsCount(long friendsCount) {
         this.friendsCount = friendsCount;
+    }
+
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public boolean getIsOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(boolean isOnline) {
+        this.isOnline = isOnline;
+    }
+
+    public void setIsOnline(boolean isOnline) {
+        this.isOnline = isOnline;
     }
 
     public Timestamp getCreatedAt() {

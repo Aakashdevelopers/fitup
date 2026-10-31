@@ -60,15 +60,52 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Call Actions (Voice & Video Call) Container -->
+    <LinearLayout
+        android:id="@+id/layout_item_call_actions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_item_voice_call"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Voice Call"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_phone_call"
+            app:tint="@color/electric_blue" />
+
+        <ImageButton
+            android:id="@+id/btn_item_video_call"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="2dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Video Call"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_video_call"
+            app:tint="@color/electric_blue" />
+
+    </LinearLayout>
+
     <!-- Last Message Timestamp -->
     <TextView
         android:id="@+id/tv_chat_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="6dp"
         android:fontFamily="sans-serif"
         android:textColor="@color/chat_time_text"
         android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/layout_item_call_actions"
         app:layout_constraintTop_toTopOf="@id/avatar_container"
         tools:text="10:42 AM" />
 
@@ -147,7 +184,8 @@
         android:textColor="@color/white"
         android:textSize="11sp"
         app:layout_constraintBottom_toBottomOf="@id/avatar_container"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/layout_item_call_actions"
+        android:layout_marginEnd="6dp"
         tools:text="2" />
 
     <!-- Last Message Preview Container (Supports Text & Snap Badges) -->

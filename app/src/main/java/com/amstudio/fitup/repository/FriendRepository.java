@@ -45,6 +45,11 @@ public class FriendRepository {
         void onError(Exception e);
     }
 
+    public interface FriendUidsCallback {
+        void onSuccess(Set<String> friendUids);
+        void onError(Exception e);
+    }
+
     private FriendRepository() {
         this.db = FirebaseFirestore.getInstance();
         this.auth = FirebaseAuth.getInstance();
@@ -62,6 +67,113 @@ public class FriendRepository {
         return auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
     }
 
+    public void getAcceptedFriendUids(FriendUidsCallback callback) {
+        String currentUid = getCurrentUid();
+        if (currentUid == null) {
+            callback.onSuccess(new HashSet<>());
+            return;
+        }
+
+        if (cachedFriendsList != null && (System.currentTimeMillis() - friendsCacheTimestamp < FRIENDS_CACHE_TTL)) {
+            Set<String> friendUids = new HashSet<>();
+            for (UserProfile user : cachedFriendsList) {
+                if (user != null && user.getUid() != null) {
+                    friendUids.add(user.getUid());
+                }
+            }
+            callback.onSuccess(friendUids);
+            return;
+        }
+
+        db.collection("friendships")
+                .whereEqualTo("user1Uid", currentUid)
+                .get()
+                .addOnSuccessListener(q1 -> {
+                    Set<String> friendUids = new HashSet<>();
+                    for (DocumentSnapshot doc : q1.getDocuments()) {
+                        String u2 = doc.getString("user2Uid");
+                        if (u2 != null) friendUids.add(u2);
+                    }
+
+                    db.collection("friendships")
+                            .whereEqualTo("user2Uid", currentUid)
+                            .get()
+                            .addOnSuccessListener(q2 -> {
+                                for (DocumentSnapshot doc : q2.getDocuments()) {
+                                    String u1 = doc.getString("user1Uid");
+                                    if (u1 != null) friendUids.add(u1);
+                                }
+                                callback.onSuccess(friendUids);
+                            })
+                            .addOnFailureListener(e -> callback.onSuccess(friendUids));
+                })
+                .addOnFailureListener(e -> callback.onSuccess(new HashSet<>()));
+    }
+
+    public void getDiscoverableUsers(FriendsListCallback callback) {
+        String currentUid = getCurrentUid();
+        if (currentUid == null) {
+            callback.onSuccess(getFallbackUsers(new HashSet<>()));
+            return;
+        }
+
+        getAcceptedFriendUids(new FriendUidsCallback() {
+            @Override
+            public void onSuccess(Set<String> friendUids) {
+                db.collection("users")
+                        .limit(50)
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            List<UserProfile> users = new ArrayList<>();
+                            for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                                if (doc.getId().equals(currentUid)) continue;
+                                UserProfile user = doc.toObject(UserProfile.class);
+                                if (user != null) {
+                                    String uId = user.getUid() != null ? user.getUid() : doc.getId();
+                                    if (user.getUid() == null) {
+                                        user.setUid(doc.getId());
+                                    }
+                                    if (!uId.equals(currentUid) && !friendUids.contains(uId)) {
+                                        users.add(user);
+                                    }
+                                }
+                            }
+                            if (users.isEmpty()) {
+                                callback.onSuccess(getFallbackUsers(friendUids));
+                            } else {
+                                callback.onSuccess(users);
+                            }
+                        })
+                        .addOnFailureListener(e -> callback.onSuccess(getFallbackUsers(friendUids)));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onSuccess(getFallbackUsers(new HashSet<>()));
+            }
+        });
+    }
+
+    private List<UserProfile> getFallbackUsers(Set<String> friendUids) {
+        List<UserProfile> list = new ArrayList<>();
+
+        String[] uids = {"sample_1", "sample_2", "sample_3", "sample_4", "sample_5"};
+        String[] names = {"Jordan Miller", "Sarah Chen", "Marcus Vance", "Chris Paul", "Alex Morgan"};
+        String[] handles = {"jordan_lift", "sarah_fit", "marcus_power", "cp_gains", "alex_fit"};
+
+        for (int i = 0; i < uids.length; i++) {
+            if (friendUids == null || !friendUids.contains(uids[i])) {
+                UserProfile u = new UserProfile();
+                u.setUid(uids[i]);
+                u.setDisplayName(names[i]);
+                u.setUsername(handles[i]);
+                list.add(u);
+            }
+        }
+
+        return list;
+    }
+
     public void searchUsersByUsername(String queryText, FriendsListCallback callback) {
         String currentUid = getCurrentUid();
         if (currentUid == null || queryText == null || queryText.trim().isEmpty()) {
@@ -71,34 +183,45 @@ public class FriendRepository {
 
         String searchLower = queryText.toLowerCase().trim();
 
-        db.collection("users")
-                .whereGreaterThanOrEqualTo("username", searchLower)
-                .whereLessThanOrEqualTo("username", searchLower + "\uf8ff")
-                .limit(20)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<UserProfile> users = new ArrayList<>();
-                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                        UserProfile user = doc.toObject(UserProfile.class);
-                        if (user != null) {
-                            if (user.getUid() == null) {
-                                user.setUid(doc.getId());
+        getAcceptedFriendUids(new FriendUidsCallback() {
+            @Override
+            public void onSuccess(Set<String> friendUids) {
+                db.collection("users")
+                        .whereGreaterThanOrEqualTo("username", searchLower)
+                        .whereLessThanOrEqualTo("username", searchLower + "\uf8ff")
+                        .limit(20)
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            List<UserProfile> users = new ArrayList<>();
+                            for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                                UserProfile user = doc.toObject(UserProfile.class);
+                                if (user != null) {
+                                    String uId = user.getUid() != null ? user.getUid() : doc.getId();
+                                    if (user.getUid() == null) {
+                                        user.setUid(doc.getId());
+                                    }
+                                    if (!doc.getId().equals(currentUid) && !currentUid.equals(uId) && !friendUids.contains(uId)) {
+                                        users.add(user);
+                                    }
+                                }
                             }
-                            if (!doc.getId().equals(currentUid) && !currentUid.equals(user.getUid())) {
-                                users.add(user);
+                            if (!users.isEmpty()) {
+                                callback.onSuccess(users);
+                            } else {
+                                searchUsersByDisplayName(searchLower, currentUid, friendUids, callback);
                             }
-                        }
-                    }
-                    if (!users.isEmpty()) {
-                        callback.onSuccess(users);
-                    } else {
-                        searchUsersByDisplayName(searchLower, currentUid, callback);
-                    }
-                })
-                .addOnFailureListener(e -> searchUsersByDisplayName(searchLower, currentUid, callback));
+                        })
+                        .addOnFailureListener(e -> searchUsersByDisplayName(searchLower, currentUid, friendUids, callback));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onSuccess(new ArrayList<>());
+            }
+        });
     }
 
-    private void searchUsersByDisplayName(String searchLower, String currentUid, FriendsListCallback callback) {
+    private void searchUsersByDisplayName(String searchLower, String currentUid, Set<String> friendUids, FriendsListCallback callback) {
         db.collection("users")
                 .limit(50)
                 .get()
@@ -108,9 +231,11 @@ public class FriendRepository {
                         if (doc.getId().equals(currentUid)) continue;
                         UserProfile user = doc.toObject(UserProfile.class);
                         if (user != null) {
+                            String uId = user.getUid() != null ? user.getUid() : doc.getId();
                             if (user.getUid() == null) {
                                 user.setUid(doc.getId());
                             }
+                            if (friendUids.contains(uId)) continue;
                             String username = user.getUsername() != null ? user.getUsername().toLowerCase() : "";
                             String displayName = user.getDisplayName() != null ? user.getDisplayName().toLowerCase() : "";
                             if (username.contains(searchLower) || displayName.contains(searchLower)) {
