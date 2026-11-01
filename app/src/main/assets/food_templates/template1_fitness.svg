@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <!-- CSS Glass Base Fill: rgba(255, 255, 255, 0.15) with subtle blue tint -->
+    <linearGradient id="css_glass_fill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22" />
+      <stop offset="40%" stop-color="#0288D1" stop-opacity="0.18" />
+      <stop offset="80%" stop-color="#0D47A1" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.15" />
+    </linearGradient>
+
+    <!-- CSS Outer Border: rgba(255, 255, 255, 0.3) -->
+    <linearGradient id="css_glass_border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8" />
+      <stop offset="30%" stop-color="#FFFFFF" stop-opacity="0.4" />
+      <stop offset="70%" stop-color="#80D8FF" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.5" />
+    </linearGradient>
+
+    <!-- CSS Before: top edge linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent) -->
+    <linearGradient id="css_top_reflection" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.0" />
+      <stop offset="20%" stop-color="#FFFFFF" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.85" />
+      <stop offset="80%" stop-color="#FFFFFF" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- CSS After: left edge linear-gradient(180deg, rgba(255,255,255,0.8), transparent, rgba(255,255,255,0.3)) -->
+    <linearGradient id="css_left_reflection" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.0" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.35" />
+    </linearGradient>
+
+    <!-- CSS Inner Glow: inset 0 0 10px 5px rgba(255, 255, 255, 0.5) -->
+    <linearGradient id="css_inner_glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#80D8FF" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.3" />
+    </linearGradient>
+
+    <!-- Energy Box Glass -->
+    <linearGradient id="energy_box_glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#0288D1" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Macro Box Glass -->
+    <linearGradient id="macro_box_glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.06" />
+    </linearGradient>
+
+    <!-- Outer Box Shadow: 0 8px 32px rgba(0, 0, 0, 0.1) -->
+    <filter id="glass_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+
+    <!-- Sharp Text Drop Shadow -->
+    <filter id="text_shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000000" flood-opacity="0.85" />
+    </filter>
+
+    <!-- Clip Path for Card Shape (border-radius: 20px in CSS -> rx=72 in 800x1000 viewBox) -->
+    <clipPath id="card_clip">
+      <rect x="30" y="30" width="740" height="940" rx="72" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer Card Main Body (border: 1px solid rgba(255, 255, 255, 0.3) & background: rgba(255, 255, 255, 0.15)) -->
+  <rect x="30" y="30" width="740" height="940" rx="72" fill="url(#css_glass_fill)" stroke="url(#css_glass_border)" stroke-width="2.5" filter="url(#glass_shadow)" />
+
+  <!-- Internal Glass Layers (Inner Glows & Reflection Pseudo-elements) -->
+  <g clip-path="url(#card_clip)">
+    <!-- Inner Perimeter Glow (inset 0 0 10px 5px rgba(255,255,255,0.5)) -->
+    <rect x="30" y="30" width="740" height="940" rx="72" fill="none" stroke="url(#css_inner_glow)" stroke-width="12" opacity="0.6" />
+
+    <!-- Top Reflection Line (.glass-card::before -> linear-gradient 90deg) -->
+    <line x1="30" y1="31" x2="770" y2="31" stroke="url(#css_top_reflection)" stroke-width="4" />
+
+    <!-- Left Reflection Line (.glass-card::after -> linear-gradient 180deg) -->
+    <line x1="31" y1="30" x2="31" y2="970" stroke="url(#css_left_reflection)" stroke-width="4" />
+
+    <!-- Top Section Glass Accent Pill Header -->
+    <rect x="60" y="65" width="220" height="44" rx="22" fill="#FFFFFF" fill-opacity="0.15" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5" />
+
+    <!-- Horizontal Section Divider Lines -->
+    <line x1="30" y1="135" x2="770" y2="135" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5" />
+    <line x1="30" y1="840" x2="770" y2="840" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5" />
+  </g>
+
+  <!-- Header Content -->
+  <!-- Top Left Pill Header Text -->
+  <text id="tv_heading" x="170" y="93" font-family="sans-serif-black, sans-serif" font-size="14" font-weight="900" fill="#E0F7FA" text-anchor="middle" letter-spacing="1.5">NUTRITION SNAP</text>
+
+  <!-- Top Right Year/Date -->
+  <text id="tv_date" x="720" y="94" font-family="sans-serif-bold, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="end" filter="url(#text_shadow)">2026</text>
+
+  <!-- Food Title Section -->
+  <text id="tv_food_name" x="60" y="210" font-family="sans-serif-black, sans-serif" font-size="40" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">Lay's® Classic Potato Chips</text>
+
+  <!-- Hero Energy Card (Calories Box) -->
+  <rect x="60" y="260" width="680" height="150" rx="28" fill="url(#energy_box_glass)" stroke="url(#css_glass_border)" stroke-width="2" />
+  <text x="95" y="305" font-family="sans-serif-black, sans-serif" font-size="14" font-weight="900" fill="#80D8FF" letter-spacing="2">TOTAL ENERGY</text>
+  <text id="tv_calories" x="95" y="375" font-family="sans-serif-black, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">90 kcal</text>
+
+  <!-- Energy Flame Icon Graphic -->
+  <circle cx="680" cy="335" r="32" fill="#FFFFFF" fill-opacity="0.15" stroke="#80D8FF" stroke-width="2" />
+  <path d="M 680 315 C 670 335 670 350 680 355 C 690 350 690 335 680 315 Z" fill="#80D8FF" />
+
+  <!-- Macro Breakdown Grid (Protein, Carbs, Fat Cards) -->
+  <!-- Protein Card -->
+  <rect x="60" y="440" width="210" height="370" rx="24" fill="url(#macro_box_glass)" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5" />
+  <rect x="85" y="465" width="44" height="44" rx="12" fill="#3B82F6" fill-opacity="0.35" />
+  <text x="107" y="493" font-family="sans-serif-black, sans-serif" font-size="20" font-weight="900" fill="#93C5FD" text-anchor="middle">P</text>
+  <text x="85" y="550" font-family="sans-serif-bold, sans-serif" font-size="16" font-weight="700" fill="#E0F7FA">PROTEIN</text>
+  <text id="tv_protein" x="85" y="620" font-family="sans-serif-black, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">16g</text>
+
+  <!-- Carbs Card -->
+  <rect x="295" y="440" width="210" height="370" rx="24" fill="url(#macro_box_glass)" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5" />
+  <rect x="320" y="465" width="44" height="44" rx="12" fill="#10B981" fill-opacity="0.35" />
+  <text x="342" y="493" font-family="sans-serif-black, sans-serif" font-size="20" font-weight="900" fill="#A7F3D0" text-anchor="middle">C</text>
+  <text x="320" y="550" font-family="sans-serif-bold, sans-serif" font-size="16" font-weight="700" fill="#E0F7FA">CARBS</text>
+  <text id="tv_carbs" x="320" y="620" font-family="sans-serif-black, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">6g</text>
+
+  <!-- Fat Card -->
+  <rect x="530" y="440" width="210" height="370" rx="24" fill="url(#macro_box_glass)" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5" />
+  <rect x="555" y="465" width="44" height="44" rx="12" fill="#F59E0B" fill-opacity="0.35" />
+  <text x="577" y="493" font-family="sans-serif-black, sans-serif" font-size="20" font-weight="900" fill="#FDE68A" text-anchor="middle">F</text>
+  <text x="555" y="550" font-family="sans-serif-bold, sans-serif" font-size="16" font-weight="700" fill="#E0F7FA">FAT</text>
+  <text id="tv_fat" x="555" y="620" font-family="sans-serif-black, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">0g</text>
+
+  <!-- Footer Section -->
+  <!-- User Handle Tag Pill -->
+  <rect x="60" y="870" width="180" height="40" rx="20" fill="#FFFFFF" fill-opacity="0.15" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1" />
+  <text x="150" y="896" font-family="sans-serif-bold, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">@fitupapp</text>
+
+  <!-- Verification Badge -->
+  <rect x="560" y="870" width="180" height="40" rx="20" fill="#10B981" fill-opacity="0.25" stroke="#34D399" stroke-opacity="0.5" stroke-width="1" />
+  <text x="650" y="896" font-family="sans-serif-bold, sans-serif" font-size="15" font-weight="800" fill="#34D399" text-anchor="middle">✓ VERIFIED</text>
+</svg>

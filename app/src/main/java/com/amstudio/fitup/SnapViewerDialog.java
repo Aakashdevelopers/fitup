@@ -1,12 +1,14 @@
 package com.amstudio.fitup;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +37,8 @@ import com.bumptech.glide.request.target.Target;
 import java.io.File;
 
 public class SnapViewerDialog extends DialogFragment {
+
+    private static final String TAG = "SnapViewerDialog";
 
     private static final String ARG_NAME = "arg_name";
     private static final String ARG_INITIALS = "arg_initials";
@@ -130,15 +134,16 @@ public class SnapViewerDialog extends DialogFragment {
                 ivSnapIcon.setImageResource(isVideo ? R.drawable.ic_snap_video : R.drawable.ic_nav_camera);
             }
 
-            if (mediaUrl != null && !mediaUrl.isEmpty()) {
+            if (mediaUrl != null && !mediaUrl.trim().isEmpty()) {
                 if (isVideo) {
                     loadVideoSnap(mediaUrl, snapId);
                 } else {
                     loadPhotoSnap(mediaUrl, snapId);
                 }
-            } else if (snapId != null && !snapId.isEmpty()) {
+            } else if (snapId != null && !snapId.trim().isEmpty()) {
                 fetchAndLoadFromFirestore(snapId, isVideo);
             } else {
+                if (pbLoading != null) pbLoading.setVisibility(View.GONE);
                 showError("Snap media not available");
             }
         }
@@ -174,9 +179,30 @@ public class SnapViewerDialog extends DialogFragment {
         if (ivSnapMedia != null) ivSnapMedia.setVisibility(View.GONE);
         if (vvSnapVideo != null) vvSnapVideo.setVisibility(View.GONE);
 
-        Object loadTarget = ChatMessageAdapter.getLocalFileOrTarget(url, getContext());
+        if (url == null || url.trim().isEmpty()) {
+            if (!isFirestoreFallbackAttempted && snapId != null && !snapId.trim().isEmpty()) {
+                isFirestoreFallbackAttempted = true;
+                fetchAndLoadFromFirestore(snapId, false);
+            } else {
+                if (pbLoading != null) pbLoading.setVisibility(View.GONE);
+                showError("Photo URL not available");
+            }
+            return;
+        }
 
-        Glide.with(this)
+        Context ctx = getContext();
+        if (ctx == null && getActivity() != null) {
+            ctx = getActivity().getApplicationContext();
+        }
+        if (ctx == null) {
+            if (pbLoading != null) pbLoading.setVisibility(View.GONE);
+            showError("Unable to load photo");
+            return;
+        }
+
+        Object loadTarget = ChatMessageAdapter.getLocalFileOrTarget(url, ctx);
+
+        Glide.with(ctx)
                 .load(loadTarget)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .priority(Priority.IMMEDIATE)
@@ -184,20 +210,21 @@ public class SnapViewerDialog extends DialogFragment {
                 .listener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        if (!isAdded()) return false;
-                        if (!isFirestoreFallbackAttempted && snapId != null && !snapId.isEmpty()) {
+                        Log.w(TAG, "Glide photo load failed for url: " + url, e);
+                        if (getActivity() == null || getActivity().isFinishing()) return false;
+                        if (!isFirestoreFallbackAttempted && snapId != null && !snapId.trim().isEmpty()) {
                             isFirestoreFallbackAttempted = true;
                             fetchAndLoadFromFirestore(snapId, false);
                         } else {
                             if (pbLoading != null) pbLoading.setVisibility(View.GONE);
-                            showError("Unable to load snap image");
+                            showError("Unable to load photo");
                         }
                         return false;
                     }
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        if (!isAdded()) return false;
+                        if (getActivity() == null || getActivity().isFinishing()) return false;
                         if (pbLoading != null) pbLoading.setVisibility(View.GONE);
                         if (ivSnapMedia != null) ivSnapMedia.setVisibility(View.VISIBLE);
                         startTimer();
@@ -214,7 +241,8 @@ public class SnapViewerDialog extends DialogFragment {
 
         if (vvSnapVideo != null) {
             vvSnapVideo.setVisibility(View.VISIBLE);
-            Object target = ChatMessageAdapter.getLocalFileOrTarget(url, getContext());
+            Context ctx = getContext() != null ? getContext() : (getActivity() != null ? getActivity().getApplicationContext() : null);
+            Object target = ChatMessageAdapter.getLocalFileOrTarget(url, ctx);
             if (target instanceof File) {
                 vvSnapVideo.setVideoPath(((File) target).getAbsolutePath());
             } else if (target instanceof Uri) {
@@ -232,8 +260,9 @@ public class SnapViewerDialog extends DialogFragment {
             });
 
             vvSnapVideo.setOnErrorListener((mp, what, extra) -> {
+                Log.w(TAG, "VideoView playback error: " + what + ", " + extra);
                 if (!isAdded()) return true;
-                if (!isFirestoreFallbackAttempted && snapId != null && !snapId.isEmpty()) {
+                if (!isFirestoreFallbackAttempted && snapId != null && !snapId.trim().isEmpty()) {
                     isFirestoreFallbackAttempted = true;
                     fetchAndLoadFromFirestore(snapId, true);
                 } else {
@@ -255,11 +284,19 @@ public class SnapViewerDialog extends DialogFragment {
         if (pbLoading != null) pbLoading.setVisibility(View.VISIBLE);
         if (tvError != null) tvError.setVisibility(View.GONE);
 
-        SnapRepository.getInstance().getSnapMetadata(snapId, new SnapRepository.SnapDetailsCallback() {
+        if (snapId == null || snapId.trim().isEmpty()) {
+            if (pbLoading != null) pbLoading.setVisibility(View.GONE);
+            showError("Media not available");
+            return;
+        }
+
+        String cleanSnapId = snapId.startsWith("snap_") ? snapId.substring(5) : snapId;
+
+        SnapRepository.getInstance().getSnapMetadata(cleanSnapId, new SnapRepository.SnapDetailsCallback() {
             @Override
             public void onSuccess(SnapMetadata metadata) {
                 if (!isAdded()) return;
-                if (metadata != null && metadata.getMediaUrl() != null && !metadata.getMediaUrl().isEmpty()) {
+                if (metadata != null && metadata.getMediaUrl() != null && !metadata.getMediaUrl().trim().isEmpty()) {
                     boolean isVideo = SnapMetadata.MEDIA_TYPE_VIDEO.equalsIgnoreCase(metadata.getMediaType()) || isVideoHint;
                     String mediaUrl = metadata.getMediaUrl();
                     if (isVideo) {
@@ -276,8 +313,35 @@ public class SnapViewerDialog extends DialogFragment {
             @Override
             public void onError(Exception e) {
                 if (!isAdded()) return;
-                if (pbLoading != null) pbLoading.setVisibility(View.GONE);
-                showError("Unable to fetch snap details");
+                if (!cleanSnapId.equals(snapId)) {
+                    SnapRepository.getInstance().getSnapMetadata(snapId, new SnapRepository.SnapDetailsCallback() {
+                        @Override
+                        public void onSuccess(SnapMetadata metadata) {
+                            if (!isAdded()) return;
+                            if (metadata != null && metadata.getMediaUrl() != null && !metadata.getMediaUrl().trim().isEmpty()) {
+                                boolean isVideo = SnapMetadata.MEDIA_TYPE_VIDEO.equalsIgnoreCase(metadata.getMediaType()) || isVideoHint;
+                                if (isVideo) {
+                                    loadVideoSnap(metadata.getMediaUrl(), null);
+                                } else {
+                                    loadPhotoSnap(metadata.getMediaUrl(), null);
+                                }
+                            } else {
+                                if (pbLoading != null) pbLoading.setVisibility(View.GONE);
+                                showError("Snap media not found");
+                            }
+                        }
+
+                        @Override
+                        public void onError(Exception e2) {
+                            if (!isAdded()) return;
+                            if (pbLoading != null) pbLoading.setVisibility(View.GONE);
+                            showError("Unable to load snap media");
+                        }
+                    });
+                } else {
+                    if (pbLoading != null) pbLoading.setVisibility(View.GONE);
+                    showError("Unable to load snap media");
+                }
             }
         });
     }

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_carousel_root"
+    android:layout_width="290dp"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="16dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="#131C2E"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="12dp"
+    app:strokeColor="#1E293B"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:id="@+id/layout_carousel_card_bg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- SVG / Image Template Preview Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="370dp"
+            app:cardBackgroundColor="#0F172A"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#334155"
+            app:strokeWidth="0.5dp">
+
+            <ImageView
+                android:id="@+id/iv_svg_card_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Template Preview"
+                android:scaleType="centerCrop"
+                tools:src="@drawable/bg_sample_gym_preview" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Template Info & Action Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="6dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_carousel_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                tools:text="Blue Glass Card" />
+
+            <TextView
+                android:id="@+id/tv_carousel_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                tools:text="Translucent blue glass card with specular highlights" />
+
+            <!-- Select Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_card_use_template"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@color/white"
+                android:fontFamily="sans-serif-medium"
+                android:text="Use Template ⚡"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:cornerRadius="24dp" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

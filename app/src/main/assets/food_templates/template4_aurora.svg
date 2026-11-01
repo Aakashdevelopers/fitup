@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <!-- 1. Glorify Aurora Dual-Tone Base Fill (#1D59BB -> #76B9FF -> #FEF3B3 -> #FEBD19) -->
+    <linearGradient id="aurora_glass_base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A1324" stop-opacity="0.78" />
+      <stop offset="35%" stop-color="#1D59BB" stop-opacity="0.52" />
+      <stop offset="70%" stop-color="#76B9FF" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#FEBD19" stop-opacity="0.58" />
+    </linearGradient>
+
+    <!-- 2. Outer Glass Bevel Stroke (#FEF3B3 -> #76B9FF -> #1D59BB -> #FEBD19) -->
+    <linearGradient id="aurora_glass_border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3B3" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#76B9FF" stop-opacity="0.80" />
+      <stop offset="70%" stop-color="#1D59BB" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#FEBD19" stop-opacity="0.90" />
+    </linearGradient>
+
+    <!-- 3. Inner Specular Refraction Highlight -->
+    <linearGradient id="specular_inner_stroke" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FEF3B3" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#76B9FF" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#FEBD19" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- 4. Energy Box Glass Gradient -->
+    <linearGradient id="energy_box_glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D59BB" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#FEBD19" stop-opacity="0.30" />
+    </linearGradient>
+
+    <!-- 5. Macro Box Glass Gradient -->
+    <linearGradient id="macro_box_glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3B3" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#76B9FF" stop-opacity="0.08" />
+    </linearGradient>
+
+    <!-- 6. Bottom-Right Ambient Golden-Sunburst Glow -->
+    <radialGradient id="bottom_aurora_glow" cx="85%" cy="85%" r="60%">
+      <stop offset="0%" stop-color="#FEBD19" stop-opacity="0.65" />
+      <stop offset="50%" stop-color="#1D59BB" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0A1324" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- 7. Glass Soft Drop Shadow -->
+    <filter id="aurora_glass_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#000000" flood-opacity="0.65" />
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#0D1B36" flood-opacity="0.4" />
+    </filter>
+
+    <!-- 8. Sharp Text Drop Shadow -->
+    <filter id="text_shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000000" flood-opacity="0.85" />
+    </filter>
+
+    <!-- Clip Path for Glass Base -->
+    <clipPath id="card_clip">
+      <rect x="30" y="30" width="740" height="940" rx="72" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer Card Glass Shell -->
+  <rect x="30" y="30" width="740" height="940" rx="72" fill="url(#aurora_glass_base)" stroke="url(#aurora_glass_border)" stroke-width="3" filter="url(#aurora_glass_shadow)" />
+
+  <!-- Internal Glass Refraction & Ambient Glows -->
+  <g clip-path="url(#card_clip)">
+    <!-- Bottom Right Ambient Golden Glow -->
+    <rect x="30" y="30" width="740" height="940" fill="url(#bottom_aurora_glow)" />
+
+    <!-- Top-Left Corner Specular Reflection Curve -->
+    <path d="M 30 180 C 30 100 100 30 180 30 L 340 30 C 180 55 55 180 30 340 Z" fill="#FEF3B3" opacity="0.3" />
+
+    <!-- Top Section Glass Accent Pill Header -->
+    <rect x="60" y="65" width="240" height="44" rx="22" fill="#FEF3B3" fill-opacity="0.15" stroke="#FEF3B3" stroke-opacity="0.3" stroke-width="1.5" />
+
+    <!-- Top Horizontal Divider Line -->
+    <line x1="30" y1="135" x2="770" y2="135" stroke="#FEF3B3" stroke-opacity="0.22" stroke-width="1.5" />
+
+    <!-- Bottom Horizontal Divider Line -->
+    <line x1="30" y1="840" x2="770" y2="840" stroke="#FEF3B3" stroke-opacity="0.22" stroke-width="1.5" />
+  </g>
+
+  <!-- Header Content -->
+  <!-- Top Left Pill Header Text -->
+  <text id="tv_heading" x="180" y="93" font-family="sans-serif-black, sans-serif" font-size="14" font-weight="900" fill="#FEF3B3" text-anchor="middle" letter-spacing="1.5">✨ GLORIFY AURORA</text>
+
+  <!-- Top Right Year/Date -->
+  <text id="tv_date" x="720" y="94" font-family="sans-serif-bold, sans-serif" font-size="18" font-weight="700" fill="#FEF3B3" text-anchor="end" filter="url(#text_shadow)">2026</text>
+
+  <!-- Food Title Section -->
+  <text id="tv_food_name" x="60" y="210" font-family="sans-serif-black, sans-serif" font-size="40" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">Salmon &amp; Avocado Bowl</text>
+
+  <!-- Hero Energy Card (Calories Box) -->
+  <rect x="60" y="260" width="680" height="150" rx="28" fill="url(#energy_box_glass)" stroke="url(#specular_inner_stroke)" stroke-width="2" />
+  <text x="95" y="305" font-family="sans-serif-black, sans-serif" font-size="14" font-weight="900" fill="#FEBD19" letter-spacing="2">TOTAL ENERGY</text>
+  <text id="tv_calories" x="95" y="375" font-family="sans-serif-black, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">520 kcal</text>
+
+  <!-- Energy Flame Icon Graphic (#FEBD19) -->
+  <circle cx="680" cy="335" r="32" fill="#FEBD19" fill-opacity="0.25" stroke="#76B9FF" stroke-width="2" />
+  <text x="680" y="343" font-family="sans-serif" font-size="28" text-anchor="middle">⚡</text>
+
+  <!-- Macro Breakdown Grid (Protein, Carbs, Fat Cards) -->
+  <!-- Protein Card (#1D59BB) -->
+  <rect x="60" y="440" width="210" height="370" rx="24" fill="url(#macro_box_glass)" stroke="#1D59BB" stroke-opacity="0.5" stroke-width="1.5" />
+  <circle cx="165" cy="490" r="24" fill="#1D59BB" fill-opacity="0.35" />
+  <text x="165" y="498" font-family="sans-serif" font-size="22" text-anchor="middle">💪</text>
+  <text x="85" y="550" font-family="sans-serif-bold, sans-serif" font-size="16" font-weight="700" fill="#76B9FF">PROTEIN</text>
+  <text id="tv_protein" x="85" y="620" font-family="sans-serif-black, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">42g</text>
+
+  <!-- Carbs Card (#76B9FF) -->
+  <rect x="295" y="440" width="210" height="370" rx="24" fill="url(#macro_box_glass)" stroke="#76B9FF" stroke-opacity="0.5" stroke-width="1.5" />
+  <circle cx="400" cy="490" r="24" fill="#76B9FF" fill-opacity="0.35" />
+  <text x="400" y="498" font-family="sans-serif" font-size="22" text-anchor="middle">⚡</text>
+  <text x="320" y="550" font-family="sans-serif-bold, sans-serif" font-size="16" font-weight="700" fill="#FEF3B3">CARBS</text>
+  <text id="tv_carbs" x="320" y="620" font-family="sans-serif-black, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">55g</text>
+
+  <!-- Fat Card (#FEBD19) -->
+  <rect x="530" y="440" width="210" height="370" rx="24" fill="url(#macro_box_glass)" stroke="#FEBD19" stroke-opacity="0.5" stroke-width="1.5" />
+  <circle cx="635" cy="490" r="24" fill="#FEBD19" fill-opacity="0.35" />
+  <text x="635" y="498" font-family="sans-serif" font-size="22" text-anchor="middle">🥑</text>
+  <text x="555" y="550" font-family="sans-serif-bold, sans-serif" font-size="16" font-weight="700" fill="#FEBD19">FAT</text>
+  <text id="tv_fat" x="555" y="620" font-family="sans-serif-black, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" filter="url(#text_shadow)">12g</text>
+
+  <!-- Footer Section -->
+  <!-- User Handle Tag Pill -->
+  <rect x="60" y="870" width="180" height="40" rx="20" fill="#FEF3B3" fill-opacity="0.15" stroke="#FEF3B3" stroke-opacity="0.3" stroke-width="1" />
+  <text x="150" y="896" font-family="sans-serif-bold, sans-serif" font-size="18" font-weight="700" fill="#FEF3B3" text-anchor="middle">@fitupapp</text>
+
+  <!-- Verification Badge -->
+  <rect x="530" y="870" width="210" height="40" rx="20" fill="#1D59BB" fill-opacity="0.3" stroke="#FEBD19" stroke-opacity="0.6" stroke-width="1" />
+  <text x="635" y="896" font-family="sans-serif-bold, sans-serif" font-size="15" font-weight="800" fill="#FEBD19" text-anchor="middle">✨ GLORIFY SNAP</text>
+</svg>

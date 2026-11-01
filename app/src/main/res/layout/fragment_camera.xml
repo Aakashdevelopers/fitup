@@ -212,6 +212,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- AI Food Scanner Viewfinder & Laser Reticle Overlay -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_food_scan_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottom_capture_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_control_bar"
+        tools:visibility="visible">
+
+        <!-- Custom Animated Reticle View with White Rounded Corners & Laser Sweep Line -->
+        <com.amstudio.fitup.FoodScannerOverlayView
+            android:id="@+id/food_scanner_view"
+            android:layout_width="290dp"
+            android:layout_height="290dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.4" />
+
+        <!-- Guidance Pill Tag -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <!-- Bottom Capture Section -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_capture_container"
@@ -223,7 +250,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- PHOTO / VIDEO Mode Selector -->
+        <!-- PHOTO / VIDEO / FOOD ANALYZE Mode Selector -->
         <LinearLayout
             android:id="@+id/mode_selector_container"
             android:layout_width="wrap_content"
@@ -241,7 +268,7 @@
                 android:id="@+id/btn_mode_photo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="20dp"
+                android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="PHOTO"
                 android:textColor="@color/brand_electric_blue"
@@ -252,9 +279,20 @@
                 android:id="@+id/btn_mode_video"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="20dp"
+                android:paddingHorizontal="14dp"
                 android:paddingVertical="8dp"
                 android:text="VIDEO"
+                android:textColor="@color/text_secondary_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btn_mode_food"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
+                android:text="FOOD ANALYZE"
                 android:textColor="@color/text_secondary_blue"
                 android:textSize="13sp"
                 android:textStyle="bold" />

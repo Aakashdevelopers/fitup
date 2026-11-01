@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.amstudio.fitup.model.FriendRequest;
 import com.amstudio.fitup.model.UserProfile;
 import com.amstudio.fitup.repository.ActiveCallManager;
+import com.amstudio.fitup.repository.ChatCacheManager;
 import com.amstudio.fitup.repository.FriendRepository;
 import com.amstudio.fitup.repository.TencentChatManager;
 import com.google.firebase.auth.FirebaseAuth;
@@ -232,13 +233,35 @@ public class ChatFragment extends Fragment {
     }
 
     private void loadData() {
-        showShimmer();
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+
+        // Load cached recent chats immediately for smooth transition
+        if (currentUid != null && getContext() != null) {
+            List<ChatItem> cachedChats = ChatCacheManager.getCachedRecentChats(requireContext(), currentUid);
+            if (!cachedChats.isEmpty() && allChats.isEmpty()) {
+                allChats.clear();
+                allChats.addAll(cachedChats);
+                if (chatListAdapter != null) {
+                    chatListAdapter.setItems(allChats);
+                }
+                if (shimmerViewContainer != null) {
+                    shimmerViewContainer.stopShimmer();
+                    shimmerViewContainer.setVisibility(View.GONE);
+                }
+                if (layoutContentContainer != null) {
+                    layoutContentContainer.setVisibility(View.VISIBLE);
+                }
+            } else if (allChats.isEmpty()) {
+                showShimmer();
+            }
+        } else if (allChats.isEmpty()) {
+            showShimmer();
+        }
 
         // 0. Check pending friend requests to update notification badge
         loadPendingRequestsBadge();
 
         // 1. Fetch real accepted friends from Firestore
-        FriendRepository.getInstance().invalidateFriendsCache();
         FriendRepository.getInstance().getAcceptedFriends(new FriendRepository.FriendsListCallback() {
             @Override
             public void onSuccess(List<UserProfile> friends) {
@@ -385,6 +408,11 @@ public class ChatFragment extends Fragment {
 
         if (chatListAdapter != null) {
             chatListAdapter.setItems(allChats);
+        }
+
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUid != null && getContext() != null) {
+            ChatCacheManager.saveRecentChats(requireContext(), currentUid, allChats);
         }
 
         updateEmptyState(allChats.isEmpty(), getSearchQuery());

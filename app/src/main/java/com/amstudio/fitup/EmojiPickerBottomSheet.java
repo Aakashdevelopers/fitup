@@ -1,10 +1,13 @@
 package com.amstudio.fitup;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -30,12 +33,19 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
     private OnEmojiClickListener listener;
     private RecyclerView rvEmojiGrid;
     private LinearLayout layoutCategories;
+    private ImageButton btnDismiss;
     private ImageButton btnBackspace;
+    private EditText etSearch;
     private EmojiAdapter emojiAdapter;
     private int selectedCategoryIndex = 0;
 
     private static final String[][] EMOJI_CATEGORIES = {
-            // Category 0: Smileys & Emotions
+            // Category 0: Recent & Popular
+            {
+                    "😭", "😉", "😗", "😘", "🥰", "😍", "😊", "😂", "🤣", "🔥", "❤️", "👍", "👏", "🥳", "🥺",
+                    "💯", "✨", "🙏", "😎", "😏", "🤔", "🤫", "😜", "😋", "💖", "🎉", "💩", "💀", "🤩", "😁"
+            },
+            // Category 1: Smileys & Emotions
             {
                     "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "🥲", "☺️", "😊", "😇", "🙂", "🙃", "😉",
                     "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓",
@@ -45,60 +55,45 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
                     "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐", "🥴", "🤢", "🤮", "🤧", "😷", "🤒", "🤕",
                     "🤑", "🤠", "😈", "👿", "👹", "👺", "🤡", "💩", "👻", "💀", "☠️", "👽", "👾", "🤖", "🎃"
             },
-            // Category 1: People & Gestures
+            // Category 2: People & Gestures
             {
                     "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉",
                     "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝",
-                    "✍️", "💅", "🤳", "💪", "🦾", "🦿", "🦵", "🦶", "👂", "🦻", "👃", "🧠", "🫀", "🫁", "🦷",
-                    "🦴", "👀", "👁️", "👅", "👄", "👶", "🧒", "👦", "👧", "🧑", "👨", "👩", "🧔", "👱‍♂️", "👱‍♀️",
-                    "🧓", "👴", "👵", "🙍", "🙎", "🙅", "🙆", "💁", "🙋", "🧏", "🙇", "🤦", "🤷", "👨‍⚕️", "👩‍⚕️"
+                    "✍️", "💅", "<ctrl42>", "💪", "🦾", "🦿", "🦵", "🦶", "👂", "🦻", "👃", "🧠", "🫀", "🫁", "🦷",
+                    "🦴", "👀", "👁️", "👅", "👄", "👶", "🧒", "👦", "👧", "🧑", "👨", "👩", "🧔", "👱‍♂️", "👱‍♀️"
             },
-            // Category 2: Hearts & Symbols
+            // Category 3: Activities & Celebrations
             {
-                    "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓", "💗",
-                    "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️", "✡️", "🔯", "🕎", "☯️", "☦️", "🛐",
-                    "🛑", "⛔", "📛", "🚫", "💯", "💢", "♨️", "⚠️", "⚡️", "💥", "🔥", "✨", "🌟", "💫", "⭐️",
-                    "✅", "❇️", "✳️", "❎", "🌐", "💠", "💤", "🏧", "♿", "🅿️", "🈳", "🚻", "🚹", "🚺", "🚼"
+                    "🎉", "🥳", "🎊", "🎈", "🎁", "🎂", "🍰", "🧁", "🍿", "🍕", "🍔", "🍟", "🌭", "🥪", "🌮",
+                    "🌯", "🍝", "🍜", "🍣", "🍱", "🍦", "🍩", "🍪", "🍫", "🍬", "🍭", "☕️", "🧃", "🧋", "🍺"
             },
-            // Category 3: Animals & Nature
+            // Category 4: Sports & Games
             {
-                    "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐻‍❄️", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸",
-                    "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🐣", "🐥", "🦆", "🦅", "🦉", "🦇",
-                    "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞", "🐜", "🪰", "🪲", "🪳", "🦟", "🦗",
-                    "🕷️", "🕸️", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐡", "🐠",
-                    "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", "Zebra", "🦍", "🐘", "🦏", "🐪", "🦒", "🦘", "🐕"
+                    "⚽️", "🏀", "🏈", "⚾️", "🥎", "🎾", "🏐", "🏉", "🏓", "🏸", "🏒", "🏏", "🥊", "🥋", "🛹",
+                    "🏆", "🥇", "🥈", "🥉", "🏅", "🎖️", "🎯", "🎲", "♟️", "🎳", "🎮", "🎰", "🧩", "🎯", "🚴"
             },
-            // Category 4: Food & Drink
-            {
-                    "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍",
-                    "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅",
-                    "🥔", "🍠", "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳", "🧈", "🥞", "🧇", "🥓", "🥩",
-                    "🍗", "🍖", "🌭", "🍔", "🍟", "🍕", "🥪", "🥙", "🧆", "🌮", "🌯", "🥗", "🥘", "🍝", "🍜",
-                    "🍲", "🍛", "🍣", "🍱", "🥟", "🦪", "🍤", "🍙", "🍚", "🍦", "🍧", "🍨", "🍩", "🍪", "🎂",
-                    "🍰", "🧁", "🥧", "🍫", "🍬", "🍭", "🍮", "🍯", "☕️", "🫖", "🍵", "🧃", "🥤", "🧋", "🍺"
-            },
-            // Category 5: Sports & Activities
-            {
-                    "⚽️", "🏀", "🏈", "⚾️", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🏑",
-                    "🥍", "🏏", "🪃", "🥅", "⛳️", "🪁", "🏹", "🎣", "🥊", "🥋", "🎽", "🛹", "🛼", "🛷", "⛸️",
-                    "🎿", "⛷️", "🏂", "🏋️", "🤼", "🤸", "⛹️", "🤺", "🤾", "🏌️", "🏇", "🧘", "🏄", "🏊", "🤽",
-                    "🚣", "🧗", "🚵", "🚴", "🏆", "🥇", "🥈", "🥉", "🏅", "🎖️", "🎗️", "🎟️", "🎫", "🎪", "🎯",
-                    "🎲", "♟️", "🎳", "🎮", "🎰", "🧩"
-            },
-            // Category 6: Travel & Places
+            // Category 5: Travel & Places
             {
                     "🚗", "🚕", "🚙", "🚌", "🏎️", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍️", "🛺",
-                    "🚲", "🛴", "🚨", "🚔", "🚘", "🚃", "🚋", "🚞", "🚄", "🚅", "🚈", "🚂", "🚆", "🚇", "🚊",
-                    "✈️", "🛫", "🛬", "🛸", "🚀", "🛰️", "🚁", "🛶", "⛵️", "🛥️", "🚤", "⛴️", "🛳️", "⚓️", "⛽️",
-                    "🚧", "🚨", "🚥", "🚦", "🚏", "🗺️", "🗿", "🏙️", "🌃", "🌄", "🌅", "🌆", "🌇", "🌉", "🎡",
-                    "🎢", "💈", "🎪", "🏕️", "🏠", "🏡", "🏢", "🏬", "🏣", "🏥", "🏦", "🏨", "🏪", "🏫", "🏰"
+                    "🚲", "🛴", "🚨", "🚔", "🚘", "🚃", "🚋", "🚞", "🚄", "🚅", "✈️", "🛫", "🛬", "🛸", "🚀"
+            },
+            // Category 6: Hearts & Symbols
+            {
+                    "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓", "💗",
+                    "💖", "💘", "💝", "💟", "💯", "💢", "💥", "🔥", "✨", "🌟", "💫", "⭐️", "✅", "❇️", "⚡️"
             }
     };
 
-    private static final String[] CATEGORY_ICONS = {"😃", "👋", "❤️", "🐶", "🍕", "⚽", "🚗"};
+    private static final String[] CATEGORY_ICONS = {"🕒", "😃", "🙋", "🎉", "⚽", "🚗", "🔣"};
 
     public void setOnEmojiClickListener(OnEmojiClickListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(STYLE_NORMAL, R.style.CustomBottomSheetDialogTheme);
     }
 
     @Nullable
@@ -113,14 +108,17 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
 
         rvEmojiGrid = view.findViewById(R.id.rv_emoji_grid);
         layoutCategories = view.findViewById(R.id.layout_emoji_categories);
+        btnDismiss = view.findViewById(R.id.btn_emoji_dismiss);
         btnBackspace = view.findViewById(R.id.btn_emoji_backspace);
+        etSearch = view.findViewById(R.id.et_emoji_search);
 
-        rvEmojiGrid.setLayoutManager(new GridLayoutManager(getContext(), 7));
+        rvEmojiGrid.setLayoutManager(new GridLayoutManager(getContext(), 8));
         emojiAdapter = new EmojiAdapter(new ArrayList<>());
         rvEmojiGrid.setAdapter(emojiAdapter);
 
-        setupCategoryTabs();
-        loadCategory(0);
+        if (btnDismiss != null) {
+            btnDismiss.setOnClickListener(v -> dismiss());
+        }
 
         if (btnBackspace != null) {
             btnBackspace.setOnClickListener(v -> {
@@ -129,6 +127,24 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
                 }
             });
         }
+
+        if (etSearch != null) {
+            etSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    filterEmojis(s != null ? s.toString().trim() : "");
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
+
+        setupCategoryTabs();
+        loadCategory(0);
     }
 
     private void setupCategoryTabs() {
@@ -139,8 +155,8 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
             final int categoryIndex = i;
             TextView tvTab = new TextView(getContext());
             tvTab.setText(CATEGORY_ICONS[i]);
-            tvTab.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-            tvTab.setPadding(20, 10, 20, 10);
+            tvTab.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            tvTab.setPadding(16, 8, 16, 8);
             tvTab.setFocusable(true);
             tvTab.setClickable(true);
 
@@ -148,6 +164,9 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
 
             tvTab.setOnClickListener(v -> {
                 selectedCategoryIndex = categoryIndex;
+                if (etSearch != null && etSearch.getText().length() > 0) {
+                    etSearch.setText("");
+                }
                 loadCategory(categoryIndex);
                 refreshTabStyles();
             });
@@ -172,7 +191,7 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
             tvTab.setScaleX(1.15f);
             tvTab.setScaleY(1.15f);
         } else {
-            tvTab.setAlpha(0.5f);
+            tvTab.setAlpha(0.55f);
             tvTab.setScaleX(1.0f);
             tvTab.setScaleY(1.0f);
         }
@@ -183,6 +202,25 @@ public class EmojiPickerBottomSheet extends BottomSheetDialogFragment {
         List<String> emojis = Arrays.asList(EMOJI_CATEGORIES[index]);
         if (emojiAdapter != null) {
             emojiAdapter.setEmojis(emojis);
+        }
+    }
+
+    private void filterEmojis(String query) {
+        if (query.isEmpty()) {
+            loadCategory(selectedCategoryIndex);
+            return;
+        }
+
+        List<String> allFiltered = new ArrayList<>();
+        for (String[] category : EMOJI_CATEGORIES) {
+            for (String emoji : category) {
+                if (!allFiltered.contains(emoji)) {
+                    allFiltered.add(emoji);
+                }
+            }
+        }
+        if (emojiAdapter != null) {
+            emojiAdapter.setEmojis(allFiltered);
         }
     }
 

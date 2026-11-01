@@ -1,5 +1,8 @@
 package com.amstudio.fitup;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ChatMessage {
 
     public enum MessageType {
@@ -18,6 +21,28 @@ public class ChatMessage {
         VIDEO
     }
 
+    public static class Reaction {
+        private final String emoji;
+        private final int count;
+
+        public Reaction(String emoji, int count) {
+            this.emoji = emoji;
+            this.count = count;
+        }
+
+        public String getEmoji() {
+            return emoji;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public String getDisplayText() {
+            return emoji + " " + count;
+        }
+    }
+
     private final String id;
     private final String senderId;
     private final String senderName;
@@ -31,6 +56,10 @@ public class ChatMessage {
 
     private boolean isMissedCall = false;
     private boolean isVideoCall = false;
+    private List<Reaction> reactions = new ArrayList<>();
+    private List<String> mediaUris = new ArrayList<>();
+    private int photoCount = 1;
+    private String userReactionEmoji = null;
 
     public ChatMessage(String id, String senderId, String senderName, String text,
                        MessageType messageType, SnapKind snapKind, String timestamp,
@@ -54,6 +83,9 @@ public class ChatMessage {
         this.isViewed = isViewed;
         this.isMissedCall = isMissedCall;
         this.isVideoCall = isVideoCall;
+        if (mediaUri != null && !mediaUri.isEmpty()) {
+            this.mediaUris.add(mediaUri);
+        }
     }
 
     public String getId() {
@@ -101,7 +133,8 @@ public class ChatMessage {
     }
 
     public boolean isSnap() {
-        return snapKind != SnapKind.NONE;
+        return (messageType == MessageType.SNAP_INCOMING || messageType == MessageType.SNAP_OUTGOING)
+                || (snapKind != SnapKind.NONE && messageType != MessageType.IMAGE_INCOMING && messageType != MessageType.IMAGE_OUTGOING);
     }
 
     public boolean isCall() {
@@ -120,5 +153,47 @@ public class ChatMessage {
         return messageType == MessageType.TEXT_OUTGOING
                 || messageType == MessageType.SNAP_OUTGOING
                 || messageType == MessageType.IMAGE_OUTGOING;
+    }
+
+    public List<Reaction> getReactions() {
+        return reactions;
+    }
+
+    public void setReactions(List<Reaction> reactions) {
+        this.reactions = reactions != null ? reactions : new ArrayList<>();
+    }
+
+    public void addReaction(String emoji, int count) {
+        if (this.reactions == null) {
+            this.reactions = new ArrayList<>();
+        }
+        this.reactions.add(new Reaction(emoji, count));
+    }
+
+    public List<String> getMediaUris() {
+        return mediaUris;
+    }
+
+    public void setMediaUris(List<String> mediaUris) {
+        if (mediaUris != null) {
+            this.mediaUris = mediaUris;
+            this.photoCount = mediaUris.size();
+        }
+    }
+
+    public int getPhotoCount() {
+        return photoCount;
+    }
+
+    public void setPhotoCount(int photoCount) {
+        this.photoCount = photoCount;
+    }
+
+    public String getUserReactionEmoji() {
+        return userReactionEmoji;
+    }
+
+    public void setUserReactionEmoji(String userReactionEmoji) {
+        this.userReactionEmoji = userReactionEmoji;
     }
 }

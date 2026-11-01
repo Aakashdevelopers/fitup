@@ -3,6 +3,7 @@ package com.amstudio.fitup;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,6 +24,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -58,6 +60,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.InputStream;
@@ -74,6 +77,11 @@ public class CameraFragment extends Fragment {
 
     private static final String TAG = "CameraFragment";
     private static final long MAX_RECORDING_MS = 15000; // 15 seconds max
+
+    public static final int MODE_PHOTO = 0;
+    public static final int MODE_VIDEO = 1;
+    public static final int MODE_FOOD_ANALYZE = 2;
+    private int currentMode = MODE_PHOTO;
 
     // Views
     private PreviewView previewView;
@@ -92,6 +100,8 @@ public class CameraFragment extends Fragment {
     private View modeSelectorContainer;
     private TextView btnModePhoto;
     private TextView btnModeVideo;
+    private TextView btnModeFood;
+    private View layoutFoodScanOverlay;
     private FrameLayout btnGallery;
     private ImageView ivGalleryIcon;
     private ImageView ivGalleryThumbnail;
@@ -215,6 +225,8 @@ public class CameraFragment extends Fragment {
         modeSelectorContainer = view.findViewById(R.id.mode_selector_container);
         btnModePhoto = view.findViewById(R.id.btn_mode_photo);
         btnModeVideo = view.findViewById(R.id.btn_mode_video);
+        btnModeFood = view.findViewById(R.id.btn_mode_food);
+        layoutFoodScanOverlay = view.findViewById(R.id.layout_food_scan_overlay);
         btnGallery = view.findViewById(R.id.btn_gallery);
         ivGalleryIcon = view.findViewById(R.id.iv_gallery_icon);
         ivGalleryThumbnail = view.findViewById(R.id.iv_gallery_thumbnail);
@@ -256,14 +268,19 @@ public class CameraFragment extends Fragment {
             btnGrid.setImageResource(isGridVisible ? R.drawable.ic_grid_on : R.drawable.ic_grid_off);
         });
 
-        btnModePhoto.setOnClickListener(v -> setCaptureMode(true));
-        btnModeVideo.setOnClickListener(v -> setCaptureMode(false));
+        btnModePhoto.setOnClickListener(v -> setCaptureMode(MODE_PHOTO));
+        btnModeVideo.setOnClickListener(v -> setCaptureMode(MODE_VIDEO));
+        if (btnModeFood != null) {
+            btnModeFood.setOnClickListener(v -> setCaptureMode(MODE_FOOD_ANALYZE));
+        }
 
         btnShutter.setOnClickListener(v -> {
-            if (isPhotoMode) {
+            if (currentMode == MODE_PHOTO) {
                 takePhoto();
-            } else {
+            } else if (currentMode == MODE_VIDEO) {
                 toggleVideoRecording();
+            } else if (currentMode == MODE_FOOD_ANALYZE) {
+                takeFoodPhotoAndAnalyze();
             }
         });
 
@@ -447,21 +464,39 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private void setCaptureMode(boolean photoMode) {
+    private void setCaptureMode(int mode) {
         if (activeRecording != null) {
             Toast.makeText(getContext(), "Cannot switch mode while recording", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        isPhotoMode = photoMode;
-        if (isPhotoMode) {
+        currentMode = mode;
+        isPhotoMode = (mode == MODE_PHOTO);
+
+        btnModePhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
+        btnModeVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
+        if (btnModeFood != null) {
+            btnModeFood.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
+        }
+
+        if (layoutFoodScanOverlay != null) {
+            layoutFoodScanOverlay.setVisibility(View.GONE);
+        }
+
+        if (mode == MODE_PHOTO) {
             btnModePhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_electric_blue));
-            btnModeVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
             vShutterInner.setBackgroundResource(R.drawable.bg_shutter_inner_photo);
-        } else {
+        } else if (mode == MODE_VIDEO) {
             btnModeVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_electric_blue));
-            btnModePhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
             vShutterInner.setBackgroundResource(R.drawable.bg_shutter_inner_video);
+        } else if (mode == MODE_FOOD_ANALYZE) {
+            if (btnModeFood != null) {
+                btnModeFood.setTextColor(ContextCompat.getColor(requireContext(), R.color.online_green));
+            }
+            vShutterInner.setBackgroundResource(R.drawable.bg_shutter_inner_food);
+            if (layoutFoodScanOverlay != null) {
+                layoutFoodScanOverlay.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -703,6 +738,147 @@ public class CameraFragment extends Fragment {
         } catch (Exception e) {
             Log.e(TAG, "Unable to load gallery thumbnail", e);
         }
+    }
+
+    private void takeFoodPhotoAndAnalyze() {
+        if (imageCapture == null || isCapturing) return;
+
+        isCapturing = true;
+
+        if (getView() != null) {
+            getView().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+        }
+        triggerCaptureFlashAnimation();
+
+        Toast.makeText(getContext(), "Scanning food & analyzing nutrients...", Toast.LENGTH_SHORT).show();
+
+        String filename = "FITUP_FOOD_" + System.currentTimeMillis() + ".jpg";
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+        contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/FitUp");
+
+        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(
+                requireContext().getContentResolver(),
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+        ).build();
+
+        imageCapture.takePicture(
+                outputOptions,
+                ContextCompat.getMainExecutor(requireContext()),
+                new ImageCapture.OnImageSavedCallback() {
+                    @Override
+                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        isCapturing = false;
+                        Uri savedUri = outputFileResults.getSavedUri();
+                        if (savedUri != null) {
+                            updateGalleryThumbnail(savedUri);
+                            mediaRepository.onPhotoCaptured(savedUri, new MediaRepository.MediaSaveCallback() {
+                                @Override
+                                public void onSuccess(Uri savedMediaUri) {
+                                    Log.d(TAG, "Media repository registered food photo: " + savedMediaUri);
+                                }
+
+                                @Override
+                                public void onError(Exception exception) {
+                                    Log.e(TAG, "Media repository food photo error", exception);
+                                }
+                            });
+                        }
+                        showFoodAnalysisDialog(savedUri);
+                    }
+
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exception) {
+                        isCapturing = false;
+                        Log.e(TAG, "Food photo capture failed", exception);
+                        showFoodAnalysisDialog(null);
+                    }
+                }
+        );
+    }
+
+    private void showFoodAnalysisDialog(@Nullable Uri photoUri) {
+        if (getContext() == null) return;
+
+        BottomSheetDialog dialog =
+                new BottomSheetDialog(requireContext());
+        dialog.setContentView(R.layout.dialog_food_analysis_sheet);
+
+        if (dialog.getWindow() != null) {
+            View bottomSheet = dialog.getWindow().findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                bottomSheet.setBackgroundResource(android.R.color.transparent);
+            }
+        }
+
+        ImageView ivFoodImage = dialog.findViewById(R.id.iv_sheet_food_image);
+        TextView tvTitle = dialog.findViewById(R.id.tv_sheet_food_title);
+        TextView tvSubtitle = dialog.findViewById(R.id.tv_sheet_food_subtitle);
+        TextView tvGrade = dialog.findViewById(R.id.tv_sheet_grade_badge);
+
+        TextView tvKcal = dialog.findViewById(R.id.tv_sheet_kcal);
+        TextView tvProtein = dialog.findViewById(R.id.tv_sheet_protein);
+        TextView tvCarbs = dialog.findViewById(R.id.tv_sheet_carbs);
+        TextView tvFat = dialog.findViewById(R.id.tv_sheet_fat);
+
+        if (photoUri != null && ivFoodImage != null) {
+            ivFoodImage.setImageURI(photoUri);
+        }
+
+        String[][] sampleMeals = {
+                {"Lay's® Classic Potato Chips", "FreshMart · 170 g container", "A", "90", "16g", "6g", "0g"},
+                {"Grilled Chicken & Avocado Bowl", "FitUp Kitchen · 350 g portion", "A+", "520", "42g", "55g", "12g"},
+                {"Salmon Quinoa Power Salad", "Healthy Bite · 280 g portion", "A", "450", "36g", "32g", "14g"},
+                {"Oatmeal with Protein Shake", "Breakfast Zone · 220 g portion", "A+", "380", "28g", "48g", "6g"}
+        };
+        int randomIndex = (int) (System.currentTimeMillis() % sampleMeals.length);
+        String[] meal = sampleMeals[randomIndex];
+
+        if (tvTitle != null) tvTitle.setText(meal[0]);
+        if (tvSubtitle != null) tvSubtitle.setText(meal[1]);
+        if (tvGrade != null) tvGrade.setText(meal[2]);
+        if (tvKcal != null) tvKcal.setText(meal[3]);
+        if (tvProtein != null) tvProtein.setText(meal[4]);
+        if (tvCarbs != null) tvCarbs.setText(meal[5]);
+        if (tvFat != null) tvFat.setText(meal[6]);
+
+        View btnAddTempSend = dialog.findViewById(R.id.add_temp_send);
+        if (btnAddTempSend != null) {
+            btnAddTempSend.setOnClickListener(v -> {
+                dialog.dismiss();
+                Intent intent = new Intent(requireContext(), FoodTemplateActivity.class);
+                if (photoUri != null) {
+                    intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_IMAGE_URI, photoUri.toString());
+                }
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_TITLE, meal[0]);
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_SUBTITLE, meal[1]);
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_GRADE, meal[2]);
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_KCAL, meal[3]);
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_PROTEIN, meal[4]);
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_CARBS, meal[5]);
+                intent.putExtra(FoodTemplateActivity.EXTRA_FOOD_FAT, meal[6]);
+                startActivity(intent);
+            });
+        }
+
+        View btnShare = dialog.findViewById(R.id.btn_sheet_send_snap);
+        if (btnShare != null) {
+            btnShare.setOnClickListener(v -> {
+                dialog.dismiss();
+                if (photoUri != null) {
+                    Intent intent = new Intent(requireContext(), SnapPreviewActivity.class);
+                    intent.putExtra(SnapPreviewActivity.EXTRA_MEDIA_URI, photoUri.toString());
+                    intent.putExtra(SnapPreviewActivity.EXTRA_MEDIA_TYPE, SnapPreviewActivity.MEDIA_TYPE_PHOTO);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), "Sharing food snap...", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        dialog.show();
     }
 
 

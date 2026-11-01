@@ -18,11 +18,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -81,15 +85,21 @@ public class FriendRequestsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_friend_requests);
+
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (insetsController != null) {
+            insetsController.setAppearanceLightStatusBars(false);
+            insetsController.setAppearanceLightNavigationBars(false);
+        }
 
         View rootLayout = findViewById(R.id.layout_requests_root);
         if (rootLayout != null) {
             ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
-                int statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                int navBarBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
-                v.setPadding(v.getPaddingLeft(), statusBarTop, v.getPaddingRight(), navBarBottom);
-                return insets;
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(0, systemBars.top, 0, systemBars.bottom);
+                return WindowInsetsCompat.CONSUMED;
             });
         }
 

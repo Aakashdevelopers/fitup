@@ -2,10 +2,25 @@
 <resources>
     <string name="app_name">FitUp</string>
     <string name="welcome_brand_name">FITUP</string>
+    <string name="welcome_headline_top">MEET YOUR</string>
+    <string name="welcome_headline_rainbow">AI TEAMMATES</string>
     <string name="welcome_headline_full">Own Your Fitness,\nFind Your People.</string>
-    <string name="welcome_subtitle">Share your progress, connect with friends, and build stronger habits every day.</string>
+    <string name="welcome_subtitle">A specialized AI for every part of your business.</string>
     <string name="btn_get_started">Get Started</string>
+    <string name="btn_next_arrow">Next  ➔</string>
     <string name="btn_login">Log in</string>
+    <string name="login_prompt_link">Already have an account? Log in</string>
+    <string name="badge_active">Active</string>
+    <string name="card_title_chat">AI Chat Assistant</string>
+    <string name="card_sub_chat">Quick answers &amp; tips</string>
+    <string name="card_title_project">AI Project Manager</string>
+    <string name="card_sub_project">Plans sprints &amp; tracks delivery</string>
+    <string name="card_title_meeting">AI Meeting Assistant</string>
+    <string name="card_sub_meeting">Qualifies leads &amp; writes outreach</string>
+    <string name="card_title_content">AI Content Assistant</string>
+    <string name="card_sub_content">Crafts proposals &amp; reports</string>
+    <string name="card_title_finance">AI Finance Manager</string>
+    <string name="card_sub_finance">Financial planning &amp; forecasts</string>
     <string name="splash_tagline">Stronger Together.</string>
 
     <!-- Navigation Strings -->

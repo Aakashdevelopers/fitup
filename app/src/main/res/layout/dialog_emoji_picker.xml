@@ -4,27 +4,67 @@
     android:layout_width="match_parent"
     android:layout_height="360dp"
     android:background="@drawable/bg_emoji_picker_sheet"
-    android:orientation="vertical"
-    android:paddingTop="12dp">
+    android:orientation="vertical">
 
-    <!-- Bottom sheet drag handle indicator -->
-    <View
-        android:layout_width="40dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="10dp"
-        android:background="@drawable/bg_drag_handle" />
-
-    <!-- Header bar: Categories & Backspace -->
+    <!-- Header bar: Back, Search, Categories, Backspace -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:orientation="horizontal"
+        android:layout_height="48dp"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
 
-        <!-- Category Scroll View -->
+        <!-- Dismiss / Back Action Button -->
+        <ImageButton
+            android:id="@+id/btn_emoji_dismiss"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close Emoji Picker"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="#94A3B8" />
+
+        <!-- Pill Search Bar Container -->
+        <LinearLayout
+            android:id="@+id/layout_emoji_search"
+            android:layout_width="116dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_search_input"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:contentDescription="Search Icon"
+                android:src="@drawable/ic_search"
+                app:tint="#94A3B8" />
+
+            <EditText
+                android:id="@+id/et_emoji_search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:background="@null"
+                android:fontFamily="sans-serif"
+                android:hint="Search"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textColorHint="#64748B"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <!-- Horizontal Scrollable Category Icons Bar -->
         <HorizontalScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -40,33 +80,34 @@
 
         </HorizontalScrollView>
 
-        <!-- Backspace Button -->
+        <!-- Backspace Action Button -->
         <ImageButton
             android:id="@+id/btn_emoji_backspace"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Backspace"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_backspace_emoji"
-            app:tint="@color/secondary_text" />
+            app:tint="#94A3B8" />
 
     </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/divider_line"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="8dp" />
+        android:background="#1E293B" />
 
-    <!-- Emoji Grid -->
+    <!-- High Density Emoji Grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_emoji_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="4dp"
+        android:paddingTop="4dp"
         android:paddingEnd="4dp"
-        android:paddingBottom="16dp" />
+        android:paddingBottom="12dp" />
 
 </LinearLayout>

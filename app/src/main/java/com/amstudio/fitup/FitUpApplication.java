@@ -9,9 +9,12 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 
 public class FitUpApplication extends Application {
 
+    private static FitUpApplication instance;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
 
         // Register application context for Tencent Chat SDK initialization
         TencentChatManager.ContextHolder.setContext(this);
@@ -25,5 +28,9 @@ public class FitUpApplication extends Application {
             firebaseAppCheck.installAppCheckProviderFactory(
                     PlayIntegrityAppCheckProviderFactory.getInstance());
         }
+    }
+
+    public static FitUpApplication getInstance() {
+        return instance;
     }
 }

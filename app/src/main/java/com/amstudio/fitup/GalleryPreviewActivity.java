@@ -1,12 +1,15 @@
 package com.amstudio.fitup;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -14,6 +17,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
@@ -21,9 +25,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.LinearSmoothScroller;
@@ -71,6 +78,31 @@ public class GalleryPreviewActivity extends AppCompatActivity {
     private String pageTitle = "Read at least 10 pages";
 
     private GestureDetector gestureDetector;
+
+    private final ActivityResultLauncher<String[]> mediaPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(),
+            permissions -> {
+                boolean isGranted = false;
+                for (Boolean granted : permissions.values()) {
+                    if (Boolean.TRUE.equals(granted)) {
+                        isGranted = true;
+                        break;
+                    }
+                }
+                if (isGranted) {
+                    List<GalleryItem> loaded = queryDevicePhotos();
+                    if (!loaded.isEmpty()) {
+                        galleryItems.clear();
+                        galleryItems.addAll(loaded);
+                        selectedIndex = 0;
+                        if (thumbnailAdapter != null) {
+                            thumbnailAdapter.notifyDataSetChanged();
+                        }
+                        updateMainPreviewContent(selectedIndex, true);
+                    }
+                }
+            }
+    );
 
     public static void open(Context context, ArrayList<GalleryItem> items, int startIndex, String title) {
         Intent intent = new Intent(context, GalleryPreviewActivity.class);
@@ -170,25 +202,65 @@ public class GalleryPreviewActivity extends AppCompatActivity {
     }
 
     private void loadDeviceOrSamplePhotos() {
-        List<GalleryItem> loaded = queryDevicePhotos();
-        if (!loaded.isEmpty()) {
-            galleryItems.addAll(loaded);
+        if (hasGalleryPermission()) {
+            List<GalleryItem> loaded = queryDevicePhotos();
+            if (!loaded.isEmpty()) {
+                galleryItems.addAll(loaded);
+                return;
+            }
         } else {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyyy", Locale.getDefault());
-            Calendar calendar = Calendar.getInstance();
-
-            String todayStr = dateFormat.format(calendar.getTime());
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-            String yesterdayStr = dateFormat.format(calendar.getTime());
-            calendar.add(Calendar.DAY_OF_MONTH, -2);
-            String prevStr = dateFormat.format(calendar.getTime());
-
-            galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_sample_gym_preview, "18 May, 2025", pageTitle));
-            galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_auth_gradient, todayStr, pageTitle));
-            galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_splash_gradient, yesterdayStr, pageTitle));
-            galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_welcome_gradient, prevStr, pageTitle));
-            galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_profile_gradient, "12 May, 2025", pageTitle));
+            requestGalleryPermission();
+            return;
         }
+
+        loadSamplePhotos();
+    }
+
+    private boolean hasGalleryPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            boolean hasImages = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                boolean hasUserSelected = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED;
+                return hasImages || hasUserSelected;
+            }
+            return hasImages;
+        } else {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void requestGalleryPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            mediaPermissionLauncher.launch(new String[]{
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+            });
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mediaPermissionLauncher.launch(new String[]{
+                    Manifest.permission.READ_MEDIA_IMAGES
+            });
+        } else {
+            mediaPermissionLauncher.launch(new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+            });
+        }
+    }
+
+    private void loadSamplePhotos() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyyy", Locale.getDefault());
+        Calendar calendar = Calendar.getInstance();
+
+        String todayStr = dateFormat.format(calendar.getTime());
+        calendar.add(Calendar.DAY_OF_MONTH, -1);
+        String yesterdayStr = dateFormat.format(calendar.getTime());
+        calendar.add(Calendar.DAY_OF_MONTH, -2);
+        String prevStr = dateFormat.format(calendar.getTime());
+
+        galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_sample_gym_preview, "18 May, 2025", pageTitle));
+        galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_auth_gradient, todayStr, pageTitle));
+        galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_splash_gradient, yesterdayStr, pageTitle));
+        galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_welcome_gradient, prevStr, pageTitle));
+        galleryItems.add(new GalleryItem("android.resource://" + getPackageName() + "/" + R.drawable.bg_profile_gradient, "12 May, 2025", pageTitle));
     }
 
     private List<GalleryItem> queryDevicePhotos() {
@@ -208,8 +280,7 @@ public class GalleryPreviewActivity extends AppCompatActivity {
 
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyyy", Locale.getDefault());
 
-                int count = 0;
-                while (cursor.moveToNext() && count < 30) {
+                while (cursor.moveToNext()) {
                     long id = cursor.getLong(idColumn);
                     long dateAddedSec = cursor.getLong(dateColumn);
 
@@ -217,7 +288,6 @@ public class GalleryPreviewActivity extends AppCompatActivity {
                     String dateStr = dateFormat.format(new Date(dateAddedSec * 1000L));
 
                     items.add(new GalleryItem(contentUri.toString(), dateStr, pageTitle));
-                    count++;
                 }
             }
         } catch (Exception e) {
@@ -262,6 +332,14 @@ public class GalleryPreviewActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         rvThumbnails.setLayoutManager(layoutManager);
+
+        rvThumbnails.setClipChildren(false);
+        rvThumbnails.setClipToPadding(false);
+        if (rvThumbnails.getParent() instanceof ViewGroup) {
+            ViewGroup parentGroup = (ViewGroup) rvThumbnails.getParent();
+            parentGroup.setClipChildren(false);
+            parentGroup.setClipToPadding(false);
+        }
 
         snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(rvThumbnails);
@@ -314,6 +392,7 @@ public class GalleryPreviewActivity extends AppCompatActivity {
 
         float center = rvWidth / 2f;
         float maxDistance = rvWidth / 2f;
+        float circleRadius = rvWidth * 0.60f; // Circle arc radius for curved layout
 
         int closestPos = -1;
         float minDistance = Float.MAX_VALUE;
@@ -323,23 +402,49 @@ public class GalleryPreviewActivity extends AppCompatActivity {
             if (child == null) continue;
 
             float childCenter = (child.getLeft() + child.getRight()) / 2f;
-            float distance = Math.abs(childCenter - center);
+            float deltaX = childCenter - center;
+            float distance = Math.abs(deltaX);
 
             if (distance < minDistance) {
                 minDistance = distance;
                 closestPos = layoutManager.getPosition(child);
             }
 
-            // CoverFlow curve, scale & alpha transformation
+            // Normalized distance ratio [0.0 at center, 1.0 at edge]
             float normDist = Math.min(1.0f, distance / maxDistance);
-            float scale = 1.0f - (normDist * 0.22f); // 1.0 at center -> 0.78 at edges
-            float alpha = 1.0f - (normDist * 0.52f); // 1.0 at center -> 0.48 at edges
-            float translateY = normDist * normDist * (10f * getResources().getDisplayMetrics().density);
 
+            // Circular Arc Equation (Circle Wheel animation)
+            float clampedDelta = Math.max(-circleRadius, Math.min(circleRadius, deltaX));
+            double angleRad = Math.asin(clampedDelta / circleRadius);
+
+            // Vertical position along circle arc (Apex at center, dips downward on sides)
+            float translateY = (float) (circleRadius * (1.0 - Math.cos(angleRad)));
+
+            // Tangential rotation along circle path (degrees)
+            float rotationZ = (float) Math.toDegrees(angleRad) * 0.70f;
+
+            // Subtle 3D Y-axis perspective rotation for depth effect
+            float rotationY = -(deltaX / maxDistance) * 20f;
+
+            // Scale and opacity tapering towards edges
+            float scale = 1.0f - (normDist * 0.22f); // 1.0 at center -> 0.78 at edges
+            float alpha = 1.0f - (normDist * 0.45f); // 1.0 at center -> 0.55 at edges
+
+            // Elevation Z-translation to bring center item to foreground
+            float translationZ = (1.0f - normDist) * 12f;
+
+            // Set pivot to item center
+            child.setPivotX(child.getWidth() / 2f);
+            child.setPivotY(child.getHeight() / 2f);
+
+            // Apply transformations
             child.setScaleX(scale);
             child.setScaleY(scale);
             child.setAlpha(alpha);
             child.setTranslationY(translateY);
+            child.setRotation(rotationZ);
+            child.setRotationY(rotationY);
+            child.setTranslationZ(translationZ);
         }
 
         // Live update main preview image as user scrolls left/right!
@@ -419,6 +524,7 @@ public class GalleryPreviewActivity extends AppCompatActivity {
         // Sync adapter selection state
         if (thumbnailAdapter != null) {
             thumbnailAdapter.setSelectedIndex(index);
+            rvThumbnails.post(this::updateCenterItemAndTransform);
         }
 
         if (scrollStrip) {

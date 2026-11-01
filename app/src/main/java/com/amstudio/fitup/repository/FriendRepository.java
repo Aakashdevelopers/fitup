@@ -1,7 +1,10 @@
 package com.amstudio.fitup.repository;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.amstudio.fitup.FitUpApplication;
 import com.amstudio.fitup.model.FriendRequest;
 import com.amstudio.fitup.model.UserProfile;
 import com.google.android.gms.tasks.Task;
@@ -13,6 +16,9 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.functions.FirebaseFunctions;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -155,23 +161,7 @@ public class FriendRepository {
     }
 
     private List<UserProfile> getFallbackUsers(Set<String> friendUids) {
-        List<UserProfile> list = new ArrayList<>();
-
-        String[] uids = {"sample_1", "sample_2", "sample_3", "sample_4", "sample_5"};
-        String[] names = {"Jordan Miller", "Sarah Chen", "Marcus Vance", "Chris Paul", "Alex Morgan"};
-        String[] handles = {"jordan_lift", "sarah_fit", "marcus_power", "cp_gains", "alex_fit"};
-
-        for (int i = 0; i < uids.length; i++) {
-            if (friendUids == null || !friendUids.contains(uids[i])) {
-                UserProfile u = new UserProfile();
-                u.setUid(uids[i]);
-                u.setDisplayName(names[i]);
-                u.setUsername(handles[i]);
-                list.add(u);
-            }
-        }
-
-        return list;
+        return new ArrayList<>();
     }
 
     public void searchUsersByUsername(String queryText, FriendsListCallback callback) {
@@ -417,6 +407,66 @@ public class FriendRepository {
     private List<UserProfile> cachedFriendsList = null;
     private long friendsCacheTimestamp = 0;
     private static final long FRIENDS_CACHE_TTL = 30000; // 30 seconds TTL
+    private static final String PREF_FRIENDS_CACHE = "friends_cache_pref";
+
+    private void saveFriendsToLocalCache(String currentUid, List<UserProfile> friends) {
+        if (currentUid == null || friends == null) return;
+        try {
+            FitUpApplication app = FitUpApplication.getInstance();
+            if (app == null) return;
+            SharedPreferences prefs = app.getSharedPreferences(PREF_FRIENDS_CACHE, Context.MODE_PRIVATE);
+
+            JSONArray array = new JSONArray();
+            for (UserProfile u : friends) {
+                if (u == null || u.getUid() == null) continue;
+                JSONObject json = new JSONObject();
+                json.put("uid", u.getUid());
+                json.put("email", u.getEmail() != null ? u.getEmail() : "");
+                json.put("username", u.getUsername() != null ? u.getUsername() : "");
+                json.put("displayName", u.getDisplayName() != null ? u.getDisplayName() : "");
+                json.put("bio", u.getBio() != null ? u.getBio() : "");
+                json.put("avatarUrl", u.getAvatarUrl() != null ? u.getAvatarUrl() : "");
+                json.put("isOnline", u.isOnline());
+                json.put("friendsCount", u.getFriendsCount());
+                array.put(json);
+            }
+
+            prefs.edit().putString("friends_" + currentUid, array.toString()).apply();
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to save friends to local cache", e);
+        }
+    }
+
+    private List<UserProfile> loadFriendsFromLocalCache(String currentUid) {
+        List<UserProfile> list = new ArrayList<>();
+        if (currentUid == null) return list;
+        try {
+            FitUpApplication app = FitUpApplication.getInstance();
+            if (app == null) return list;
+            SharedPreferences prefs = app.getSharedPreferences(PREF_FRIENDS_CACHE, Context.MODE_PRIVATE);
+
+            String jsonStr = prefs.getString("friends_" + currentUid, null);
+            if (jsonStr == null || jsonStr.isEmpty()) return list;
+
+            JSONArray array = new JSONArray(jsonStr);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject json = array.getJSONObject(i);
+                UserProfile u = new UserProfile();
+                u.setUid(json.optString("uid"));
+                u.setEmail(json.optString("email"));
+                u.setUsername(json.optString("username"));
+                u.setDisplayName(json.optString("displayName"));
+                u.setBio(json.optString("bio"));
+                u.setAvatarUrl(json.optString("avatarUrl"));
+                u.setOnline(json.optBoolean("isOnline", false));
+                u.setFriendsCount(json.optLong("friendsCount", 0));
+                list.add(u);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to load friends from local cache", e);
+        }
+        return list;
+    }
 
     public void invalidateFriendsCache() {
         cachedFriendsList = null;
@@ -453,6 +503,16 @@ public class FriendRepository {
             return;
         }
 
+        // Return persistent local cache immediately for fast screen loading
+        if (cachedFriendsList == null) {
+            List<UserProfile> localFriends = loadFriendsFromLocalCache(currentUid);
+            if (!localFriends.isEmpty()) {
+                cachedFriendsList = new ArrayList<>(localFriends);
+                friendsCacheTimestamp = System.currentTimeMillis();
+                callback.onSuccess(new ArrayList<>(cachedFriendsList));
+            }
+        }
+
         db.collection("friendships")
                 .whereEqualTo("user1Uid", currentUid)
                 .get()
@@ -475,15 +535,20 @@ public class FriendRepository {
                                 if (friendUids.isEmpty()) {
                                     cachedFriendsList = new ArrayList<>();
                                     friendsCacheTimestamp = System.currentTimeMillis();
+                                    saveFriendsToLocalCache(currentUid, cachedFriendsList);
                                     callback.onSuccess(new ArrayList<>());
                                     return;
                                 }
 
                                 fetchProfilesForUids(new ArrayList<>(friendUids), callback);
                             })
-                            .addOnFailureListener(callback::onError);
+                            .addOnFailureListener(e -> {
+                                if (cachedFriendsList == null) callback.onError(e);
+                            });
                 })
-                .addOnFailureListener(callback::onError);
+                .addOnFailureListener(e -> {
+                    if (cachedFriendsList == null) callback.onError(e);
+                });
     }
 
     private void fetchProfilesForUids(List<String> uids, FriendsListCallback callback) {
@@ -515,6 +580,10 @@ public class FriendRepository {
             }
             cachedFriendsList = new ArrayList<>(profiles);
             friendsCacheTimestamp = System.currentTimeMillis();
+            String currentUid = getCurrentUid();
+            if (currentUid != null) {
+                saveFriendsToLocalCache(currentUid, cachedFriendsList);
+            }
             callback.onSuccess(profiles);
         }).addOnFailureListener(callback::onError);
     }

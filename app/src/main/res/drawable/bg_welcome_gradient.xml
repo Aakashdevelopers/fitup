@@ -1,30 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Base vertical linear gradient: Electric/Luminous Blue -> Deep Navy -> Near-Black Navy -->
+    <!-- Base dark background -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="270"
                 android:type="linear"
-                android:startColor="#1E52A8"
-                android:centerColor="#071933"
-                android:endColor="#05080F" />
+                android:startColor="#0C0717"
+                android:centerColor="#07040E"
+                android:endColor="#040208" />
         </shape>
     </item>
 
-    <!-- Top-Right Soft Light-Blue Luminous Glow -->
+    <!-- Top-Right Luminous Soft Purple Glow -->
     <item
-        android:top="-100dp"
-        android:right="-100dp"
-        android:width="360dp"
-        android:height="360dp"
+        android:top="-60dp"
+        android:right="-80dp"
+        android:width="380dp"
+        android:height="380dp"
         android:gravity="top|end">
         <shape android:shape="oval">
             <gradient
                 android:type="radial"
+                android:gradientRadius="200dp"
+                android:startColor="#507C3AED"
+                android:endColor="#007C3AED" />
+        </shape>
+    </item>
+
+    <!-- Mid-Right Soft Magenta Glow -->
+    <item
+        android:top="160dp"
+        android:right="-60dp"
+        android:width="320dp"
+        android:height="320dp"
+        android:gravity="end">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
                 android:gradientRadius="180dp"
-                android:startColor="#5080AFFF"
-                android:endColor="#0080AFFF" />
+                android:startColor="#55C026D3"
+                android:centerColor="#258B5CF6"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Mid-Left Soft Blue Light Spot -->
+    <item
+        android:top="60dp"
+        android:left="-80dp"
+        android:width="300dp"
+        android:height="300dp"
+        android:gravity="start">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="160dp"
+                android:startColor="#350284C7"
+                android:endColor="#000284C7" />
+        </shape>
+    </item>
+
+    <!-- Bottom Center Ambient Light Shine behind bottom card / sheet curve -->
+    <item
+        android:top="280dp"
+        android:left="20dp"
+        android:right="20dp"
+        android:width="360dp"
+        android:height="260dp"
+        android:gravity="center_horizontal">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="180dp"
+                android:startColor="#60E0F2FE"
+                android:centerColor="#308B5CF6"
+                android:endColor="#00000000" />
         </shape>
     </item>
 </layer-list>

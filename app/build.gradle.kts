@@ -66,6 +66,9 @@ dependencies {
     // Lottie animations
     implementation(libs.lottie)
 
+    // AndroidSVG for SVG rendering
+    implementation("com.caverock:androidsvg-aar:1.4")
+
     // CameraX dependencies
     implementation(libs.camerax.core)
     implementation(libs.camerax.camera2)

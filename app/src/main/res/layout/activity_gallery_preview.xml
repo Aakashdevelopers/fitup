@@ -65,8 +65,10 @@
     <LinearLayout
         android:id="@+id/layout_bottom_strip"
         android:layout_width="match_parent"
-        android:layout_height="90dp"
+        android:layout_height="100dp"
         android:layout_alignParentBottom="true"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingTop="6dp"
@@ -75,7 +77,8 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_thumbnails"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="72dp"
+            android:clipChildren="false"
             android:clipToPadding="false"
             android:orientation="horizontal"
             android:paddingStart="16dp"

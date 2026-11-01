@@ -27,6 +27,17 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public interface OnSnapClickListener {
         void onSnapClick(ChatMessage message);
+        default void onSnapClick(ChatMessage message, int startIndex) {
+            onSnapClick(message);
+        }
+    }
+
+    public interface OnMessageLongClickListener {
+        void onMessageLongClick(ChatMessage message, View anchorView);
+    }
+
+    public interface OnReactionClickListener {
+        void onReactionClick(ChatMessage message, String emoji);
     }
 
     private static final int VIEW_TYPE_TEXT_INCOMING = 0;
@@ -39,9 +50,32 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private final List<ChatMessage> messageList = new ArrayList<>();
     private final OnSnapClickListener snapClickListener;
+    private OnMessageLongClickListener messageLongClickListener;
+    private OnReactionClickListener reactionClickListener;
+
+    private String friendInitials = "GB";
+    private int friendGradientRes = R.drawable.bg_avatar_gradient_3;
 
     public ChatMessageAdapter(OnSnapClickListener snapClickListener) {
         this.snapClickListener = snapClickListener;
+    }
+
+    public void setOnMessageLongClickListener(OnMessageLongClickListener listener) {
+        this.messageLongClickListener = listener;
+    }
+
+    public void setOnReactionClickListener(OnReactionClickListener listener) {
+        this.reactionClickListener = listener;
+    }
+
+    public void setFriendDetails(String initials, int gradientRes) {
+        if (initials != null && !initials.isEmpty()) {
+            this.friendInitials = initials;
+        }
+        if (gradientRes != 0) {
+            this.friendGradientRes = gradientRes;
+        }
+        notifyDataSetChanged();
     }
 
     public static Object getLocalFileOrTarget(String mediaUriStr, Context context) {
@@ -153,6 +187,52 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             TextMessageViewHolder vh = (TextMessageViewHolder) holder;
             vh.tvMessageText.setText(message.getText());
             vh.tvMessageTime.setText(message.getTimestamp());
+
+            if (vh.tvIncomingAvatar != null) {
+                vh.tvIncomingAvatar.setText(friendInitials);
+                vh.tvIncomingAvatar.setBackgroundResource(friendGradientRes);
+            }
+
+            if (vh.ivMessageStatus != null) {
+                vh.ivMessageStatus.setImageResource(R.drawable.ic_double_check);
+                int tintColor = message.isOutgoing() ? Color.parseColor("#7E7E80") : Color.parseColor("#8E8E93");
+                ImageViewCompat.setImageTintList(vh.ivMessageStatus, ColorStateList.valueOf(tintColor));
+            }
+
+            View bubbleView = vh.layoutBubble != null ? vh.layoutBubble : vh.itemView;
+            bubbleView.setOnLongClickListener(v -> {
+                if (messageLongClickListener != null) {
+                    messageLongClickListener.onMessageLongClick(message, v);
+                    return true;
+                }
+                return false;
+            });
+
+            if (vh.layoutReactions != null) {
+                vh.layoutReactions.removeAllViews();
+                List<ChatMessage.Reaction> reactions = message.getReactions();
+                if (reactions != null && !reactions.isEmpty()) {
+                    vh.layoutReactions.setVisibility(View.VISIBLE);
+                    LayoutInflater inflater = LayoutInflater.from(holder.itemView.getContext());
+                    for (ChatMessage.Reaction r : reactions) {
+                        View pillView = inflater.inflate(R.layout.item_reaction_pill, vh.layoutReactions, false);
+                        TextView tvReaction = pillView.findViewById(R.id.tv_reaction_text);
+                        if (tvReaction != null) {
+                            tvReaction.setText(r.getDisplayText());
+                            boolean isMyReaction = message.getUserReactionEmoji() != null && message.getUserReactionEmoji().equals(r.getEmoji());
+                            tvReaction.setBackgroundResource(isMyReaction ? R.drawable.bg_reaction_pill_active : R.drawable.bg_reaction_pill);
+                        }
+                        pillView.setOnClickListener(v -> {
+                            if (reactionClickListener != null) {
+                                reactionClickListener.onReactionClick(message, r.getEmoji());
+                            }
+                        });
+                        vh.layoutReactions.addView(pillView);
+                    }
+                } else {
+                    vh.layoutReactions.setVisibility(View.GONE);
+                }
+            }
         } else if (holder instanceof SnapMessageViewHolder) {
             SnapMessageViewHolder vh = (SnapMessageViewHolder) holder;
 
@@ -168,6 +248,11 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             vh.tvMessageTime.setText(message.getTimestamp());
 
+            if (vh.tvIncomingAvatar != null) {
+                vh.tvIncomingAvatar.setText(friendInitials);
+                vh.tvIncomingAvatar.setBackgroundResource(friendGradientRes);
+            }
+
             // Preload snap image silently for instant playback on click
             if (!isVideo && message.getMediaUri() != null && !message.getMediaUri().isEmpty()) {
                 Glide.with(holder.itemView.getContext())
@@ -181,24 +266,193 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     snapClickListener.onSnapClick(message);
                 }
             });
+
+            vh.cardSnapBubble.setOnLongClickListener(v -> {
+                if (messageLongClickListener != null) {
+                    messageLongClickListener.onMessageLongClick(message, v);
+                    return true;
+                }
+                return false;
+            });
         } else if (holder instanceof ImageMessageViewHolder) {
             ImageMessageViewHolder vh = (ImageMessageViewHolder) holder;
             vh.tvMessageTime.setText(message.getTimestamp());
 
-            if (message.getMediaUri() != null && !message.getMediaUri().isEmpty()) {
-                Object loadTarget = getLocalFileOrTarget(message.getMediaUri(), holder.itemView.getContext());
+            if (vh.tvIncomingAvatar != null) {
+                vh.tvIncomingAvatar.setText(friendInitials);
+                vh.tvIncomingAvatar.setBackgroundResource(friendGradientRes);
+            }
+
+            if (vh.ivMessageStatus != null) {
+                vh.ivMessageStatus.setImageResource(R.drawable.ic_double_check);
+                ImageViewCompat.setImageTintList(vh.ivMessageStatus, ColorStateList.valueOf(Color.WHITE));
+            }
+
+            List<String> uris = message.getMediaUris();
+            int totalPhotos = message.getPhotoCount();
+            if (uris != null && uris.size() > totalPhotos) {
+                totalPhotos = uris.size();
+            }
+            if (totalPhotos < 1) {
+                totalPhotos = 1;
+            }
+
+            String mainUri = (uris != null && !uris.isEmpty()) ? uris.get(0) : message.getMediaUri();
+
+            if (mainUri != null && !mainUri.isEmpty()) {
+                Object centerTarget = getLocalFileOrTarget(mainUri, holder.itemView.getContext());
                 Glide.with(holder.itemView.getContext())
-                        .load(loadTarget)
+                        .load(centerTarget)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .placeholder(R.drawable.bg_avatar_gradient_3)
                         .into(vh.ivMessageImage);
             }
 
-            vh.cardImageBubble.setOnClickListener(v -> {
-                if (snapClickListener != null) {
-                    snapClickListener.onSnapClick(message);
+            if (totalPhotos == 1) {
+                // 1 Image -> Only 1 CardView
+                if (vh.cardImageLeft != null) vh.cardImageLeft.setVisibility(View.GONE);
+                if (vh.cardImageRight != null) vh.cardImageRight.setVisibility(View.GONE);
+                if (vh.tvPhotoCountBadge != null) vh.tvPhotoCountBadge.setVisibility(View.GONE);
+
+            } else if (totalPhotos == 2) {
+                // 2 Images -> 2 CardViews
+                if (vh.cardImageLeft != null) {
+                    vh.cardImageLeft.setVisibility(View.VISIBLE);
+                    String secondUri = (uris != null && uris.size() > 1) ? uris.get(1) : mainUri;
+                    Object leftTarget = getLocalFileOrTarget(secondUri, holder.itemView.getContext());
+                    Glide.with(holder.itemView.getContext())
+                            .load(leftTarget)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .placeholder(R.drawable.bg_avatar_gradient_3)
+                            .into(vh.ivImageLeft);
                 }
-            });
+                if (vh.cardImageRight != null) vh.cardImageRight.setVisibility(View.GONE);
+                if (vh.tvPhotoCountBadge != null) vh.tvPhotoCountBadge.setVisibility(View.GONE);
+
+            } else if (totalPhotos == 3) {
+                // 3 Images -> 3 CardViews
+                if (vh.cardImageLeft != null) {
+                    vh.cardImageLeft.setVisibility(View.VISIBLE);
+                    String secondUri = (uris != null && uris.size() > 1) ? uris.get(1) : mainUri;
+                    Object leftTarget = getLocalFileOrTarget(secondUri, holder.itemView.getContext());
+                    Glide.with(holder.itemView.getContext())
+                            .load(leftTarget)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .placeholder(R.drawable.bg_avatar_gradient_3)
+                            .into(vh.ivImageLeft);
+                }
+                if (vh.cardImageRight != null) {
+                    vh.cardImageRight.setVisibility(View.VISIBLE);
+                    String thirdUri = (uris != null && uris.size() > 2) ? uris.get(2) : mainUri;
+                    Object rightTarget = getLocalFileOrTarget(thirdUri, holder.itemView.getContext());
+                    Glide.with(holder.itemView.getContext())
+                            .load(rightTarget)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .placeholder(R.drawable.bg_avatar_gradient_3)
+                            .into(vh.ivImageRight);
+                }
+                if (vh.tvPhotoCountBadge != null) vh.tvPhotoCountBadge.setVisibility(View.GONE);
+
+            } else {
+                // > 3 Images -> 3 CardViews + Photo Count Badge (+X photo)
+                if (vh.cardImageLeft != null) {
+                    vh.cardImageLeft.setVisibility(View.VISIBLE);
+                    String secondUri = (uris != null && uris.size() > 1) ? uris.get(1) : mainUri;
+                    Object leftTarget = getLocalFileOrTarget(secondUri, holder.itemView.getContext());
+                    Glide.with(holder.itemView.getContext())
+                            .load(leftTarget)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .placeholder(R.drawable.bg_avatar_gradient_3)
+                            .into(vh.ivImageLeft);
+                }
+                if (vh.cardImageRight != null) {
+                    vh.cardImageRight.setVisibility(View.VISIBLE);
+                    String thirdUri = (uris != null && uris.size() > 2) ? uris.get(2) : mainUri;
+                    Object rightTarget = getLocalFileOrTarget(thirdUri, holder.itemView.getContext());
+                    Glide.with(holder.itemView.getContext())
+                            .load(rightTarget)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .placeholder(R.drawable.bg_avatar_gradient_3)
+                            .into(vh.ivImageRight);
+                }
+                if (vh.tvPhotoCountBadge != null) {
+                    vh.tvPhotoCountBadge.setText("+" + totalPhotos + " photo");
+                    vh.tvPhotoCountBadge.setVisibility(View.VISIBLE);
+                }
+            }
+
+            // Reactions Binding
+            if (vh.layoutReactions != null) {
+                vh.layoutReactions.removeAllViews();
+                List<ChatMessage.Reaction> reactions = message.getReactions();
+                if (reactions != null && !reactions.isEmpty()) {
+                    vh.layoutReactions.setVisibility(View.VISIBLE);
+                    LayoutInflater inflater = LayoutInflater.from(holder.itemView.getContext());
+                    for (ChatMessage.Reaction r : reactions) {
+                        View pillView = inflater.inflate(R.layout.item_reaction_pill, vh.layoutReactions, false);
+                        TextView tvReaction = pillView.findViewById(R.id.tv_reaction_text);
+                        if (tvReaction != null) {
+                            tvReaction.setText(r.getDisplayText());
+                            boolean isMyReaction = message.getUserReactionEmoji() != null && message.getUserReactionEmoji().equals(r.getEmoji());
+                            tvReaction.setBackgroundResource(isMyReaction ? R.drawable.bg_reaction_pill_active : R.drawable.bg_reaction_pill);
+                        }
+                        pillView.setOnClickListener(v -> {
+                            if (reactionClickListener != null) {
+                                reactionClickListener.onReactionClick(message, r.getEmoji());
+                            }
+                        });
+                        vh.layoutReactions.addView(pillView);
+                    }
+                } else {
+                    vh.layoutReactions.setVisibility(View.GONE);
+                }
+            }
+
+            View.OnClickListener centerClickListener = v -> {
+                if (snapClickListener != null) {
+                    snapClickListener.onSnapClick(message, 0);
+                }
+            };
+
+            View.OnClickListener leftClickListener = v -> {
+                if (snapClickListener != null) {
+                    int idx = (uris != null && uris.size() > 1) ? 1 : 0;
+                    snapClickListener.onSnapClick(message, idx);
+                }
+            };
+
+            View.OnClickListener rightClickListener = v -> {
+                if (snapClickListener != null) {
+                    int idx = (uris != null && uris.size() > 2) ? 2 : 0;
+                    snapClickListener.onSnapClick(message, idx);
+                }
+            };
+
+            vh.cardImageBubble.setOnClickListener(centerClickListener);
+            if (vh.cardImageCenter != null) vh.cardImageCenter.setOnClickListener(centerClickListener);
+            if (vh.ivMessageImage != null) vh.ivMessageImage.setOnClickListener(centerClickListener);
+
+            if (vh.cardImageLeft != null) vh.cardImageLeft.setOnClickListener(leftClickListener);
+            if (vh.ivImageLeft != null) vh.ivImageLeft.setOnClickListener(leftClickListener);
+
+            if (vh.cardImageRight != null) vh.cardImageRight.setOnClickListener(rightClickListener);
+            if (vh.ivImageRight != null) vh.ivImageRight.setOnClickListener(rightClickListener);
+
+            View.OnLongClickListener longClickListener = v -> {
+                if (messageLongClickListener != null) {
+                    messageLongClickListener.onMessageLongClick(message, v);
+                    return true;
+                }
+                return false;
+            };
+
+            vh.cardImageBubble.setOnLongClickListener(longClickListener);
+            if (vh.cardImageCenter != null) vh.cardImageCenter.setOnLongClickListener(longClickListener);
+            if (vh.ivMessageImage != null) vh.ivMessageImage.setOnLongClickListener(longClickListener);
+            if (vh.cardImageLeft != null) vh.cardImageLeft.setOnLongClickListener(longClickListener);
+            if (vh.ivImageLeft != null) vh.ivImageLeft.setOnLongClickListener(longClickListener);
+            if (vh.cardImageRight != null) vh.cardImageRight.setOnLongClickListener(longClickListener);
+            if (vh.ivImageRight != null) vh.ivImageRight.setOnLongClickListener(longClickListener);
         } else if (holder instanceof CallMessageViewHolder) {
             CallMessageViewHolder vh = (CallMessageViewHolder) holder;
             vh.tvCallText.setText(message.getText());
@@ -222,13 +476,21 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class TextMessageViewHolder extends RecyclerView.ViewHolder {
+        final View layoutBubble;
         final TextView tvMessageText;
         final TextView tvMessageTime;
+        final TextView tvIncomingAvatar;
+        final ImageView ivMessageStatus;
+        final ViewGroup layoutReactions;
 
         TextMessageViewHolder(@NonNull View itemView) {
             super(itemView);
+            layoutBubble = itemView.findViewById(R.id.layout_bubble);
             tvMessageText = itemView.findViewById(R.id.tv_message_text);
             tvMessageTime = itemView.findViewById(R.id.tv_message_time);
+            tvIncomingAvatar = itemView.findViewById(R.id.tv_incoming_avatar);
+            ivMessageStatus = itemView.findViewById(R.id.iv_message_status);
+            layoutReactions = itemView.findViewById(R.id.layout_reactions);
         }
     }
 
@@ -238,6 +500,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         final TextView tvSnapLabel;
         final TextView tvSnapSubtext;
         final TextView tvMessageTime;
+        final TextView tvIncomingAvatar;
 
         SnapMessageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -246,19 +509,38 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             tvSnapLabel = itemView.findViewById(R.id.tv_snap_label);
             tvSnapSubtext = itemView.findViewById(R.id.tv_snap_subtext);
             tvMessageTime = itemView.findViewById(R.id.tv_message_time);
+            tvIncomingAvatar = itemView.findViewById(R.id.tv_incoming_avatar);
         }
     }
 
     static class ImageMessageViewHolder extends RecyclerView.ViewHolder {
         final View cardImageBubble;
+        final View cardImageLeft;
+        final View cardImageRight;
+        final View cardImageCenter;
         final ImageView ivMessageImage;
+        final ImageView ivImageLeft;
+        final ImageView ivImageRight;
+        final TextView tvPhotoCountBadge;
         final TextView tvMessageTime;
+        final ImageView ivMessageStatus;
+        final TextView tvIncomingAvatar;
+        final ViewGroup layoutReactions;
 
         ImageMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             cardImageBubble = itemView.findViewById(R.id.card_image_bubble);
+            cardImageLeft = itemView.findViewById(R.id.card_image_left);
+            cardImageRight = itemView.findViewById(R.id.card_image_right);
+            cardImageCenter = itemView.findViewById(R.id.card_image_center);
             ivMessageImage = itemView.findViewById(R.id.iv_message_image);
+            ivImageLeft = itemView.findViewById(R.id.iv_image_left);
+            ivImageRight = itemView.findViewById(R.id.iv_image_right);
+            tvPhotoCountBadge = itemView.findViewById(R.id.tv_photo_count_badge);
             tvMessageTime = itemView.findViewById(R.id.tv_message_time);
+            ivMessageStatus = itemView.findViewById(R.id.iv_message_status);
+            tvIncomingAvatar = itemView.findViewById(R.id.tv_incoming_avatar);
+            layoutReactions = itemView.findViewById(R.id.layout_reactions);
         }
     }
 

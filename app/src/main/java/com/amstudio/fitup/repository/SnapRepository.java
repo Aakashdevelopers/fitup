@@ -143,23 +143,28 @@ public class SnapRepository {
                     .addOnFailureListener(callback::onError);
 
         }).addOnFailureListener(callback::onError)).addOnFailureListener(e -> {
-            Log.w(TAG, "Snap storage upload fallback to local URI: " + e.getLocalizedMessage());
-            String localUrl = localMediaUri != null ? localMediaUri.toString() : "";
+            Log.w(TAG, "Firebase storage upload failed, uploading via ImgBB fallback: " + e.getLocalizedMessage());
+            if (context != null && localMediaUri != null) {
+                ImgBBUploader.uploadImage(context, localMediaUri, new ImgBBUploader.UploadCallback() {
+                    @Override
+                    public void onSuccess(String imgBbUrl) {
+                        SnapMetadata meta = new SnapMetadata(snapId, senderUid, recipientUids, mediaType.toUpperCase(), imgBbUrl, durationSeconds);
+                        db.collection("snaps").document(snapId).set(meta);
+                        for (String recipientUid : recipientUids) {
+                            saveSnapChatMessageToFirestore(senderUid, recipientUid, snapId, mediaType, imgBbUrl, durationSeconds);
+                        }
+                        callback.onSuccess(meta);
+                    }
 
-            SnapMetadata fallbackMeta = new SnapMetadata(
-                    snapId,
-                    senderUid,
-                    recipientUids,
-                    mediaType.toUpperCase(),
-                    localUrl,
-                    durationSeconds
-            );
-
-            for (String recipientUid : recipientUids) {
-                saveSnapChatMessageToFirestore(senderUid, recipientUid, snapId, mediaType, localUrl, durationSeconds);
+                    @Override
+                    public void onError(Exception ex) {
+                        Log.e(TAG, "ImgBB snap upload fallback error: " + ex.getLocalizedMessage());
+                        callback.onError(ex);
+                    }
+                });
+            } else {
+                callback.onError(e);
             }
-
-            callback.onSuccess(fallbackMeta);
         });
     }
 

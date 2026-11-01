@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="400dp"
+    android:viewportWidth="360"
+    android:viewportHeight="400">
+
+    <!-- Glowing Top Curve Stroke -->
+    <path
+        android:strokeColor="#50FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M 0,40 L 100,40 C 130,40 145,65 180,65 C 215,65 230,40 260,40 L 360,40" />
+
+    <!-- Dark Sheet Body Fill -->
+    <path
+        android:fillColor="#090512"
+        android:pathData="M 0,40 L 100,40 C 130,40 145,65 180,65 C 215,65 230,40 260,40 L 360,40 L 360,400 L 0,400 Z" />
+</vector>

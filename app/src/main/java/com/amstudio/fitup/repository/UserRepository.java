@@ -1,17 +1,22 @@
 package com.amstudio.fitup.repository;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.amstudio.fitup.FitUpApplication;
 import com.amstudio.fitup.model.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.functions.FirebaseFunctions;
+
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
@@ -117,6 +122,11 @@ public class UserRepository {
             return profile;
         }).addOnSuccessListener(resultProfile -> {
             Log.d(TAG, "UserProfile created in Firestore: " + uid);
+            if (uid.equals(getCurrentUid())) {
+                cachedProfile = resultProfile;
+                profileCacheTimestamp = System.currentTimeMillis();
+                saveProfileToLocalCache(resultProfile);
+            }
             callback.onSuccess(resultProfile);
         }).addOnFailureListener(e -> {
             Log.e(TAG, "Failed to create UserProfile in Firestore", e);
@@ -127,6 +137,65 @@ public class UserRepository {
     private UserProfile cachedProfile;
     private long profileCacheTimestamp = 0;
     private static final long PROFILE_CACHE_TTL = 60000; // 60 seconds TTL
+    private static final String PREF_PROFILE_CACHE = "user_profile_cache_pref";
+
+    private void saveProfileToLocalCache(UserProfile profile) {
+        if (profile == null || profile.getUid() == null) return;
+        try {
+            FitUpApplication app = FitUpApplication.getInstance();
+            if (app == null) return;
+            SharedPreferences prefs = app.getSharedPreferences(PREF_PROFILE_CACHE, Context.MODE_PRIVATE);
+
+            JSONObject json = new JSONObject();
+            json.put("uid", profile.getUid());
+            json.put("email", profile.getEmail() != null ? profile.getEmail() : "");
+            json.put("username", profile.getUsername() != null ? profile.getUsername() : "");
+            json.put("normalizedUsername", profile.getNormalizedUsername() != null ? profile.getNormalizedUsername() : "");
+            json.put("displayName", profile.getDisplayName() != null ? profile.getDisplayName() : "");
+            json.put("bio", profile.getBio() != null ? profile.getBio() : "");
+            json.put("avatarUrl", profile.getAvatarUrl() != null ? profile.getAvatarUrl() : "");
+            json.put("gender", profile.getGender() != null ? profile.getGender() : "");
+            json.put("dateOfBirth", profile.getDateOfBirth() != null ? profile.getDateOfBirth() : "");
+            json.put("location", profile.getLocation() != null ? profile.getLocation() : "");
+            json.put("friendsCount", profile.getFriendsCount());
+            json.put("isOnline", profile.isOnline());
+
+            prefs.edit().putString("profile_" + profile.getUid(), json.toString()).apply();
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to save profile to local cache", e);
+        }
+    }
+
+    private UserProfile loadProfileFromLocalCache(String uid) {
+        if (uid == null) return null;
+        try {
+            FitUpApplication app = FitUpApplication.getInstance();
+            if (app == null) return null;
+            SharedPreferences prefs = app.getSharedPreferences(PREF_PROFILE_CACHE, Context.MODE_PRIVATE);
+
+            String jsonStr = prefs.getString("profile_" + uid, null);
+            if (jsonStr == null || jsonStr.isEmpty()) return null;
+
+            JSONObject json = new JSONObject(jsonStr);
+            UserProfile profile = new UserProfile();
+            profile.setUid(json.optString("uid"));
+            profile.setEmail(json.optString("email"));
+            profile.setUsername(json.optString("username"));
+            profile.setNormalizedUsername(json.optString("normalizedUsername"));
+            profile.setDisplayName(json.optString("displayName"));
+            profile.setBio(json.optString("bio"));
+            profile.setAvatarUrl(json.optString("avatarUrl"));
+            profile.setGender(json.optString("gender"));
+            profile.setDateOfBirth(json.optString("dateOfBirth"));
+            profile.setLocation(json.optString("location"));
+            profile.setFriendsCount(json.optLong("friendsCount", 0));
+            profile.setOnline(json.optBoolean("isOnline", false));
+            return profile;
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to load profile from local cache", e);
+            return null;
+        }
+    }
 
     public void invalidateCache() {
         cachedProfile = null;
@@ -139,25 +208,51 @@ public class UserRepository {
             return;
         }
 
-        if (uid.equals(getCurrentUid()) && cachedProfile != null && (System.currentTimeMillis() - profileCacheTimestamp < PROFILE_CACHE_TTL)) {
+        boolean isCurrent = uid.equals(getCurrentUid());
+
+        // 1. Check in-memory cache
+        if (isCurrent && cachedProfile != null) {
             callback.onSuccess(cachedProfile);
-            return;
+            if (System.currentTimeMillis() - profileCacheTimestamp < PROFILE_CACHE_TTL) {
+                return;
+            }
         }
 
+        // 2. Check persistent SharedPreferences cache
+        if (isCurrent && cachedProfile == null) {
+            UserProfile localProfile = loadProfileFromLocalCache(uid);
+            if (localProfile != null) {
+                cachedProfile = localProfile;
+                profileCacheTimestamp = System.currentTimeMillis();
+                callback.onSuccess(localProfile);
+            }
+        }
+
+        // 3. Query Firestore in background
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists()) {
                         UserProfile profile = doc.toObject(UserProfile.class);
-                        if (uid.equals(getCurrentUid())) {
-                            cachedProfile = profile;
-                            profileCacheTimestamp = System.currentTimeMillis();
+                        if (profile != null) {
+                            if (profile.getUid() == null) profile.setUid(uid);
+                            if (isCurrent) {
+                                cachedProfile = profile;
+                                profileCacheTimestamp = System.currentTimeMillis();
+                                saveProfileToLocalCache(profile);
+                            }
+                            callback.onSuccess(profile);
+                        } else {
+                            callback.onError(new Exception("Failed to parse profile"));
                         }
-                        callback.onSuccess(profile);
                     } else {
                         callback.onError(new Exception("Profile not found"));
                     }
                 })
-                .addOnFailureListener(callback::onError);
+                .addOnFailureListener(e -> {
+                    if (!isCurrent || cachedProfile == null) {
+                        callback.onError(e);
+                    }
+                });
     }
 
     public void checkUsernameAvailability(String rawUsername, UsernameAvailabilityCallback callback) {

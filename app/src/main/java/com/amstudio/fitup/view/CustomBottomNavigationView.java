@@ -2,10 +2,12 @@ package com.amstudio.fitup.view;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.transition.TransitionManager;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -15,7 +17,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 import com.amstudio.fitup.R;
 
@@ -29,10 +30,14 @@ public class CustomBottomNavigationView extends FrameLayout {
         void onNavigationItemReselected(@NonNull MenuItem item);
     }
 
-    private View indicatorLine;
-    private LinearLayout tabChat;
-    private LinearLayout tabCamera;
-    private LinearLayout tabProfile;
+    private ViewGroup tabsContainer;
+    private View tabChat;
+    private View tabCamera;
+    private View tabProfile;
+
+    private LinearLayout pillChat;
+    private LinearLayout pillCamera;
+    private LinearLayout pillProfile;
 
     private ImageView ivChatIcon;
     private TextView tvChatLabel;
@@ -73,10 +78,15 @@ public class CustomBottomNavigationView extends FrameLayout {
         selectedColor = ContextCompat.getColor(context, R.color.nav_selected_item);
         inactiveColor = ContextCompat.getColor(context, R.color.nav_inactive_item);
 
-        indicatorLine = findViewById(R.id.indicator_line);
+        tabsContainer = findViewById(R.id.tabs_container);
+
         tabChat = findViewById(R.id.tab_chat);
         tabCamera = findViewById(R.id.tab_camera);
         tabProfile = findViewById(R.id.tab_profile);
+
+        pillChat = findViewById(R.id.pill_chat);
+        pillCamera = findViewById(R.id.pill_camera);
+        pillProfile = findViewById(R.id.pill_profile);
 
         ivChatIcon = findViewById(R.id.iv_chat_icon);
         tvChatLabel = findViewById(R.id.tv_chat_label);
@@ -90,9 +100,15 @@ public class CustomBottomNavigationView extends FrameLayout {
         itemCamera = popupMenu.getMenu().add(0, R.id.nav_camera, 1, R.string.nav_camera);
         itemProfile = popupMenu.getMenu().add(0, R.id.nav_profile, 2, R.string.nav_profile);
 
-        tabChat.setOnClickListener(v -> handleTabClick(R.id.nav_chat, itemChat));
-        tabCamera.setOnClickListener(v -> handleTabClick(R.id.nav_camera, itemCamera));
-        tabProfile.setOnClickListener(v -> handleTabClick(R.id.nav_profile, itemProfile));
+        if (tabChat != null) {
+            tabChat.setOnClickListener(v -> handleTabClick(R.id.nav_chat, itemChat));
+        }
+        if (tabCamera != null) {
+            tabCamera.setOnClickListener(v -> handleTabClick(R.id.nav_camera, itemCamera));
+        }
+        if (tabProfile != null) {
+            tabProfile.setOnClickListener(v -> handleTabClick(R.id.nav_profile, itemProfile));
+        }
 
         post(() -> updateUI(false));
     }
@@ -139,56 +155,41 @@ public class CustomBottomNavigationView extends FrameLayout {
     }
 
     private void updateUI(boolean animate) {
+        if (animate && tabsContainer != null) {
+            TransitionManager.beginDelayedTransition(tabsContainer);
+        }
+
         boolean isChat = (selectedItemId == R.id.nav_chat);
         boolean isCamera = (selectedItemId == R.id.nav_camera);
         boolean isProfile = (selectedItemId == R.id.nav_profile);
 
-        setTabState(ivChatIcon, tvChatLabel, isChat);
-        setTabState(ivCameraIcon, tvCameraLabel, isCamera);
-        setTabState(ivProfileIcon, tvProfileLabel, isProfile);
-
-        int targetIndex = 1; // Default middle (camera)
-        if (isChat) targetIndex = 0;
-        else if (isProfile) targetIndex = 2;
-
-        updateIndicatorPosition(targetIndex, animate);
+        setTabSelected(pillChat, ivChatIcon, tvChatLabel, isChat);
+        setTabSelected(pillCamera, ivCameraIcon, tvCameraLabel, isCamera);
+        setTabSelected(pillProfile, ivProfileIcon, tvProfileLabel, isProfile);
     }
 
-    private void setTabState(ImageView icon, TextView label, boolean active) {
-        int color = active ? selectedColor : inactiveColor;
-        icon.setImageTintList(ColorStateList.valueOf(color));
-        label.setTextColor(color);
-        label.setAlpha(active ? 1.0f : 0.75f);
-        icon.setAlpha(active ? 1.0f : 0.75f);
-    }
-
-    private void updateIndicatorPosition(int index, boolean animate) {
-        int totalWidth = getWidth();
-        if (totalWidth <= 0) return;
-
-        int tabWidth = totalWidth / 3;
-        int indicatorWidth = indicatorLine.getWidth();
-        if (indicatorWidth <= 0) {
-            indicatorWidth = (int) (48 * getResources().getDisplayMetrics().density);
-        }
-
-        float centerX = (index + 0.5f) * tabWidth;
-        float targetX = centerX - (indicatorWidth / 2.0f);
-
-        if (animate) {
-            indicatorLine.animate()
-                    .translationX(targetX)
-                    .setDuration(220)
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .start();
+    private void setTabSelected(LinearLayout pill, ImageView icon, TextView label, boolean active) {
+        if (active) {
+            if (pill != null) {
+                pill.setBackgroundResource(R.drawable.bg_nav_selected_pill);
+            }
+            if (icon != null) {
+                icon.setImageTintList(ColorStateList.valueOf(selectedColor));
+            }
+            if (label != null) {
+                label.setVisibility(View.VISIBLE);
+                label.setTextColor(selectedColor);
+            }
         } else {
-            indicatorLine.setTranslationX(targetX);
+            if (pill != null) {
+                pill.setBackground(null);
+            }
+            if (icon != null) {
+                icon.setImageTintList(ColorStateList.valueOf(inactiveColor));
+            }
+            if (label != null) {
+                label.setVisibility(View.GONE);
+            }
         }
-    }
-
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        post(() -> updateUI(false));
     }
 }

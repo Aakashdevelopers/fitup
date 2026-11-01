@@ -36,9 +36,10 @@
     <color name="brand_accent_light_blue">#60A5FA</color>
 
     <!-- App Shell & Navigation Color Tokens -->
-    <color name="app_bg">#05080F</color>
-    <color name="nav_bg">#09182B</color>
-    <color name="nav_selected_item">#38B6FF</color>
+    <color name="app_bg">#0B141B</color>
+    <color name="nav_bg">#0B141B</color>
+    <color name="nav_selected_item">#FFFFFF</color>
+    <color name="nav_selected_pill">#16283E</color>
     <color name="nav_inactive_item">#8397B2</color>
     <color name="nav_divider">#16283E</color>
 

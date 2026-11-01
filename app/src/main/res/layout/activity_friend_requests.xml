@@ -5,7 +5,7 @@
     android:id="@+id/layout_requests_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_deep_navy"
+    android:background="@drawable/bg_friend_requests_screen"
     android:orientation="vertical">
 
     <!-- Active Call Banner Overlay (Shown when a call is active) -->
@@ -45,10 +45,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-bold"
                 android:text="Add Friends &amp; Requests"
                 android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textSize="20sp" />
 
             <ImageButton
                 android:id="@+id/btn_requests_close"
@@ -61,20 +61,23 @@
                 app:tint="@color/white" />
         </LinearLayout>
 
-        <!-- Search input -->
+        <!-- Search input styled like composer input box -->
         <EditText
             android:id="@+id/et_search_users"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/bg_search_input"
+            android:background="@drawable/bg_composer_input"
+            android:drawableStart="@drawable/ic_search"
             android:drawablePadding="10dp"
+            android:drawableTint="#64748B"
+            android:fontFamily="sans-serif"
             android:hint="Search gym goers by username..."
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:textColor="@color/white"
-            android:textColorHint="@color/secondary_text"
+            android:textColorHint="#64748B"
             android:textSize="14sp" />
 
         <TextView
@@ -83,10 +86,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
+            android:fontFamily="sans-serif-bold"
             android:text="Pending Friend Requests"
-            android:textColor="@color/brand_electric_blue"
+            android:textColor="#38B6FF"
             android:textSize="14sp"
-            android:textStyle="bold"
             android:visibility="gone" />
 
         <!-- Pending Requests List -->
@@ -103,11 +106,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="sans-serif-bold"
             android:text="Discover Gym Goers"
-            android:textColor="@color/brand_electric_blue"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textColor="#38B6FF"
+            android:textSize="14sp" />
 
         <!-- Search / Discover Results List -->
         <androidx.recyclerview.widget.RecyclerView
