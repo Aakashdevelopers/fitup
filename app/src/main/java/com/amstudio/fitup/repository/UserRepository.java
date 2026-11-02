@@ -3,6 +3,7 @@ package com.amstudio.fitup.repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
@@ -12,9 +13,12 @@ import com.amstudio.fitup.FitUpApplication;
 import com.amstudio.fitup.model.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONObject;
 
@@ -308,6 +312,26 @@ public class UserRepository {
                 .addOnFailureListener(callback::onError);
     }
 
+    private void syncFirebaseAuthProfile(UserProfile updatedProfile) {
+        invalidateCache();
+        FirebaseUser user = getCurrentUser();
+        if (user != null && updatedProfile != null) {
+            UserProfileChangeRequest.Builder builder = new UserProfileChangeRequest.Builder();
+            boolean hasChanges = false;
+            if (updatedProfile.getDisplayName() != null) {
+                builder.setDisplayName(updatedProfile.getDisplayName());
+                hasChanges = true;
+            }
+            if (updatedProfile.getAvatarUrl() != null) {
+                builder.setPhotoUri(Uri.parse(updatedProfile.getAvatarUrl()));
+                hasChanges = true;
+            }
+            if (hasChanges) {
+                user.updateProfile(builder.build());
+            }
+        }
+    }
+
     public void updateMyProfile(UserProfile updatedProfile, ActionCallback callback) {
         String uid = getCurrentUid();
         if (uid == null) {
@@ -330,6 +354,7 @@ public class UserRepository {
                     try {
                         Map<String, Object> resMap = (Map<String, Object>) result.getData();
                         if (resMap != null && Boolean.TRUE.equals(resMap.get("success"))) {
+                            syncFirebaseAuthProfile(updatedProfile);
                             callback.onSuccess();
                         } else {
                             fallbackUpdateProfile(updatedProfile, callback);
@@ -378,8 +403,10 @@ public class UserRepository {
 
                             transaction.update(db.collection("users").document(uid), updates);
                             return null;
-                        }).addOnSuccessListener(aVoid -> callback.onSuccess())
-                          .addOnFailureListener(callback::onError);
+                        }).addOnSuccessListener(aVoid -> {
+                            syncFirebaseAuthProfile(profile);
+                            callback.onSuccess();
+                        }).addOnFailureListener(callback::onError);
                     })
                     .addOnFailureListener(callback::onError);
         } else {
@@ -394,7 +421,10 @@ public class UserRepository {
 
             db.collection("users").document(uid)
                     .update(updates)
-                    .addOnSuccessListener(aVoid -> callback.onSuccess())
+                    .addOnSuccessListener(aVoid -> {
+                        syncFirebaseAuthProfile(profile);
+                        callback.onSuccess();
+                    })
                     .addOnFailureListener(callback::onError);
         }
     }
@@ -418,9 +448,11 @@ public class UserRepository {
             return;
         }
 
+        Bitmap avatarBitmap = scaleBitmapForAvatar(bitmap, 400);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-        String base64Image = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
+        avatarBitmap.compress(Bitmap.CompressFormat.JPEG, 75, baos);
+        byte[] imageBytes = baos.toByteArray();
+        String base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
 
         Map<String, Object> data = new HashMap<>();
         data.put("imageBase64", base64Image);
@@ -434,18 +466,71 @@ public class UserRepository {
                         Map<String, Object> resMap = (Map<String, Object>) result.getData();
                         if (resMap != null && Boolean.TRUE.equals(resMap.get("success"))) {
                             String imgUrl = (String) resMap.get("url");
-
-                            db.collection("users").document(uid)
-                                    .update("avatarUrl", imgUrl, "updatedAt", FieldValue.serverTimestamp())
-                                    .addOnSuccessListener(aVoid -> getUserProfile(uid, callback))
-                                    .addOnFailureListener(callback::onError);
+                            saveAvatarUrlToFirestore(uid, imgUrl, callback);
                         } else {
-                            callback.onError(new Exception("Proxy upload failed"));
+                            fallbackUploadAvatarToStorage(uid, imageBytes, callback);
                         }
                     } catch (Exception e) {
-                        callback.onError(e);
+                        fallbackUploadAvatarToStorage(uid, imageBytes, callback);
                     }
                 })
+                .addOnFailureListener(e -> fallbackUploadAvatarToStorage(uid, imageBytes, callback));
+    }
+
+    private void fallbackUploadAvatarToStorage(String uid, byte[] imageBytes, ProfileCallback callback) {
+        try {
+            StorageReference avatarRef = FirebaseStorage.getInstance().getReference().child("avatars/" + uid + ".jpg");
+            avatarRef.putBytes(imageBytes)
+                    .addOnSuccessListener(taskSnapshot -> avatarRef.getDownloadUrl().addOnSuccessListener(downloadUrl -> {
+                        String imgUrl = downloadUrl.toString();
+                        saveAvatarUrlToFirestore(uid, imgUrl, callback);
+                    }).addOnFailureListener(e -> saveBase64AvatarToFirestore(uid, imageBytes, callback)))
+                    .addOnFailureListener(e -> saveBase64AvatarToFirestore(uid, imageBytes, callback));
+        } catch (Exception e) {
+            Log.w(TAG, "Storage fallback error, using Base64 Data URL fallback", e);
+            saveBase64AvatarToFirestore(uid, imageBytes, callback);
+        }
+    }
+
+    private void saveBase64AvatarToFirestore(String uid, byte[] imageBytes, ProfileCallback callback) {
+        String dataUrl = "data:image/jpeg;base64," + Base64.encodeToString(imageBytes, Base64.NO_WRAP);
+        saveAvatarUrlToFirestore(uid, dataUrl, callback);
+    }
+
+    private void saveAvatarUrlToFirestore(String uid, String avatarUrl, ProfileCallback callback) {
+        db.collection("users").document(uid)
+                .update("avatarUrl", avatarUrl, "updatedAt", FieldValue.serverTimestamp())
+                .addOnSuccessListener(aVoid -> {
+                    invalidateCache();
+                    UserProfile p = new UserProfile();
+                    p.setAvatarUrl(avatarUrl);
+                    syncFirebaseAuthProfile(p);
+                    getUserProfile(uid, callback);
+                })
                 .addOnFailureListener(callback::onError);
+    }
+
+    private Bitmap scaleBitmapForAvatar(Bitmap original, int maxDimension) {
+        if (original == null) return null;
+        int width = original.getWidth();
+        int height = original.getHeight();
+
+        if (width <= maxDimension && height <= maxDimension) {
+            return original;
+        }
+
+        float ratio = (float) width / (float) height;
+        int newWidth;
+        int newHeight;
+
+        if (width > height) {
+            newWidth = maxDimension;
+            newHeight = Math.round(maxDimension / ratio);
+        } else {
+            newHeight = maxDimension;
+            newWidth = Math.round(maxDimension * ratio);
+        }
+
+        return Bitmap.createScaledBitmap(original, newWidth, newHeight, true);
     }
 }

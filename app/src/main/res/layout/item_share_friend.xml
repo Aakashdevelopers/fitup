@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="10dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_share_friend_avatar"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_avatar_placeholder"
+        app:shapeAppearanceOverlay="@style/CircularImageView" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_share_friend_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/primary_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Sarah Chen" />
+
+        <TextView
+            android:id="@+id/tv_share_friend_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/secondary_text"
+            android:textSize="12sp"
+            tools:text="sarah_fit" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_send_post_to_friend"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginStart="8dp"
+        android:paddingHorizontal="16dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:backgroundTint="@color/electric_blue"
+        android:text="Send"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:cornerRadius="8dp"
+        app:elevation="0dp" />
+
+</LinearLayout>

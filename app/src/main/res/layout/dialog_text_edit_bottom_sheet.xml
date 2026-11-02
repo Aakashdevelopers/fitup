@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_profile_card"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Top Drag Handle & Done Action Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/bg_tab_indicator" />
+
+        <TextView
+            android:id="@+id/btn_done_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:padding="6dp"
+            android:text="Done"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Text Formatting Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <!-- Keyboard Tool -->
+        <FrameLayout
+            android:id="@+id/btn_text_keyboard"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_control_circle"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_dialpad"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Font Style (Aa) -->
+        <TextView
+            android:id="@+id/btn_text_font"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="Aa"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Color Wheel -->
+        <FrameLayout
+            android:id="@+id/btn_text_color"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/bg_avatar_ring"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/view_active_color"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_control_circle" />
+        </FrameLayout>
+
+        <!-- Background Fill ([A]) -->
+        <TextView
+            android:id="@+id/btn_text_fill"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/bg_control_circle"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:gravity="center"
+            android:text="A"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <!-- Text Alignment -->
+        <FrameLayout
+            android:id="@+id/btn_text_align"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="20dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_tool_text"
+                app:tint="@color/white" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Text Input EditText -->
+    <EditText
+        android:id="@+id/et_text_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_composer_input"
+        android:fontFamily="sans-serif-bold"
+        android:hint="Type text overlay..."
+        android:gravity="center"
+        android:imeOptions="actionDone"
+        android:inputType="textMultiLine"
+        android:maxLines="3"
+        android:padding="12dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/secondary_text"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

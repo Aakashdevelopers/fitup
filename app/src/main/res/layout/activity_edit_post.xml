@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_edit_post"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_deep_navy"
+    android:orientation="vertical"
+    tools:context=".EditPostActivity">
+
+    <!-- Status Bar Spacer -->
+    <View
+        android:id="@+id/view_status_bar_spacer"
+        android:layout_width="match_parent"
+        android:layout_height="24dp" />
+
+    <!-- Top App Bar -->
+    <RelativeLayout
+        android:id="@+id/top_nav_bar"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <!-- Back Button -->
+        <ImageButton
+            android:id="@+id/btn_back_edit_post"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/primary_text" />
+
+        <!-- Suggested Audio Pill Badge -->
+        <LinearLayout
+            android:id="@+id/layout_audio_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/bg_pill_surface"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/bg_sample_gym_preview"
+                app:tint="@color/light_blue" />
+
+            <TextView
+                android:id="@+id/tv_audio_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLength="20"
+                android:singleLine="true"
+                android:text="Hyper Feelings • Music"
+                android:textColor="@color/primary_text"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_add_plus"
+                app:tint="@color/white" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Main Image Preview Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#050C19">
+
+        <ImageView
+            android:id="@+id/iv_edit_main_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_avatar_placeholder" />
+
+        <!-- 3x3 Composition Grid Overlay -->
+        <com.amstudio.fitup.GridOverlayView
+            android:id="@+id/grid_overlay_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Floating Image Overlay -->
+        <FrameLayout
+            android:id="@+id/container_image_overlay"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center"
+            android:visibility="gone">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_overlay_picture"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_avatar_placeholder"
+                app:strokeColor="@color/white"
+                app:strokeWidth="2dp" />
+
+            <!-- Delete Overlay Button (Top Right) -->
+            <ImageButton
+                android:id="@+id/btn_delete_overlay"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="4dp"
+                android:background="@drawable/bg_control_circle"
+                android:contentDescription="@null"
+                android:padding="6dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_close"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Text Caption Overlay -->
+        <TextView
+            android:id="@+id/tv_text_overlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#80000000"
+            android:fontFamily="sans-serif-bold"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <!-- Left Vertical Font Size / Zoom Slider Bar -->
+        <SeekBar
+            android:id="@+id/sb_vertical_font_size"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="-80dp"
+            android:max="50"
+            android:progress="22"
+            android:progressTint="@color/white"
+            android:rotation="270"
+            android:thumbTint="@color/white"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Horizontal Editing Tools Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/brand_deep_navy"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <!-- Tool 1: Audio -->
+        <LinearLayout
+            android:id="@+id/btn_tool_audio"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_dumbbell"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Audio"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tool 2: Text -->
+        <LinearLayout
+            android:id="@+id/btn_tool_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_tool_text"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Text"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tool 3: Overlay -->
+        <LinearLayout
+            android:id="@+id/btn_tool_overlay"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_posts_grid"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Overlay"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tool 4: Filter -->
+        <LinearLayout
+            android:id="@+id/btn_tool_filter"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_security"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Filter"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tool 5: Edit -->
+        <LinearLayout
+            android:id="@+id/btn_tool_edit"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_tool_crop"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Edit"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Tool 6: Ratio -->
+        <LinearLayout
+            android:id="@+id/btn_tool_ratio"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_expand"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Ratio"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Bottom Dock Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/brand_deep_navy"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Selected Photo Thumbnail with Blue Ring -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_bottom_thumbnail"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_avatar_ring"
+                android:contentDescription="@null"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_avatar_placeholder"
+                app:shapeAppearanceOverlay="@style/CircularImageView" />
+
+            <!-- Add More Button -->
+            <FrameLayout
+                android:id="@+id/btn_add_more"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_control_circle"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_add_plus"
+                    app:tint="@color/white" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Next Button (Electric Blue Pill) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_next_share"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:backgroundTint="@color/primary_blue"
+            android:text="Next"
+            android:textAllCaps="false"
+            android:textColor="@color/primary_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="20dp"
+            app:elevation="0dp" />
+
+    </RelativeLayout>
+
+</LinearLayout>

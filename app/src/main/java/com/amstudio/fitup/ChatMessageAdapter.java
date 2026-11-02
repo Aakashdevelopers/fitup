@@ -47,6 +47,8 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private static final int VIEW_TYPE_CALL_EVENT = 4;
     private static final int VIEW_TYPE_IMAGE_INCOMING = 5;
     private static final int VIEW_TYPE_IMAGE_OUTGOING = 6;
+    private static final int VIEW_TYPE_POST_SHARE_INCOMING = 7;
+    private static final int VIEW_TYPE_POST_SHARE_OUTGOING = 8;
 
     private final List<ChatMessage> messageList = new ArrayList<>();
     private final OnSnapClickListener snapClickListener;
@@ -141,6 +143,10 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 return VIEW_TYPE_IMAGE_INCOMING;
             case IMAGE_OUTGOING:
                 return VIEW_TYPE_IMAGE_OUTGOING;
+            case POST_SHARE_OUTGOING:
+                return VIEW_TYPE_POST_SHARE_OUTGOING;
+            case POST_SHARE_INCOMING:
+                return VIEW_TYPE_POST_SHARE_INCOMING;
             case CALL_EVENT:
                 return VIEW_TYPE_CALL_EVENT;
             case TEXT_INCOMING:
@@ -169,6 +175,12 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case VIEW_TYPE_IMAGE_INCOMING:
                 View imgIn = inflater.inflate(R.layout.item_message_image_incoming, parent, false);
                 return new ImageMessageViewHolder(imgIn);
+            case VIEW_TYPE_POST_SHARE_OUTGOING:
+                View postOut = inflater.inflate(R.layout.item_message_post_share_outgoing, parent, false);
+                return new PostShareMessageViewHolder(postOut);
+            case VIEW_TYPE_POST_SHARE_INCOMING:
+                View postIn = inflater.inflate(R.layout.item_message_post_share_incoming, parent, false);
+                return new PostShareMessageViewHolder(postIn);
             case VIEW_TYPE_CALL_EVENT:
                 View callView = inflater.inflate(R.layout.item_message_call, parent, false);
                 return new CallMessageViewHolder(callView);
@@ -453,6 +465,33 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (vh.ivImageLeft != null) vh.ivImageLeft.setOnLongClickListener(longClickListener);
             if (vh.cardImageRight != null) vh.cardImageRight.setOnLongClickListener(longClickListener);
             if (vh.ivImageRight != null) vh.ivImageRight.setOnLongClickListener(longClickListener);
+        } else if (holder instanceof PostShareMessageViewHolder) {
+            PostShareMessageViewHolder vh = (PostShareMessageViewHolder) holder;
+            vh.tvMessageTime.setText(message.getTimestamp());
+            if (vh.tvPostShareCaption != null) {
+                vh.tvPostShareCaption.setText(message.getText());
+            }
+
+            if (message.getMediaUri() != null && !message.getMediaUri().isEmpty()) {
+                Object loadTarget = getLocalFileOrTarget(message.getMediaUri(), holder.itemView.getContext());
+                Glide.with(holder.itemView.getContext())
+                        .load(loadTarget)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .placeholder(R.drawable.bg_sample_gym_preview)
+                        .into(vh.ivPostShareImage);
+            }
+
+            vh.cardPostShareBubble.setOnClickListener(v -> {
+                Context ctx = holder.itemView.getContext();
+                PostDetailActivity.open(
+                        ctx,
+                        message.getPostId() != null ? message.getPostId() : "",
+                        message.getMediaUri(),
+                        "",
+                        message.getText(),
+                        message.getSenderId()
+                );
+            });
         } else if (holder instanceof CallMessageViewHolder) {
             CallMessageViewHolder vh = (CallMessageViewHolder) holder;
             vh.tvCallText.setText(message.getText());
@@ -552,6 +591,21 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             super(itemView);
             ivCallIcon = itemView.findViewById(R.id.iv_call_icon);
             tvCallText = itemView.findViewById(R.id.tv_call_text);
+        }
+    }
+
+    static class PostShareMessageViewHolder extends RecyclerView.ViewHolder {
+        final View cardPostShareBubble;
+        final ImageView ivPostShareImage;
+        final TextView tvPostShareCaption;
+        final TextView tvMessageTime;
+
+        PostShareMessageViewHolder(@NonNull View itemView) {
+            super(itemView);
+            cardPostShareBubble = itemView.findViewById(R.id.card_post_share_bubble);
+            ivPostShareImage = itemView.findViewById(R.id.iv_post_share_image);
+            tvPostShareCaption = itemView.findViewById(R.id.tv_post_share_caption);
+            tvMessageTime = itemView.findViewById(R.id.tv_message_time);
         }
     }
 }

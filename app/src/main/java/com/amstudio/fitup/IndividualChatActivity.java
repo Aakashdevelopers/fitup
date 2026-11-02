@@ -839,6 +839,34 @@ public class IndividualChatActivity extends AppCompatActivity {
                                     adapter.addMessage(snapMsg);
                                     scrollToBottom();
                                 }
+                            } else if ("POST_SHARE".equalsIgnoreCase(type)) {
+                                String mediaUrl = doc.getString("mediaUrl");
+                                String postId = doc.getString("postId");
+                                String postTitle = text != null ? text : "Shared Post";
+
+                                ChatMessage.MessageType msgType = isSelf ?
+                                        ChatMessage.MessageType.POST_SHARE_OUTGOING :
+                                        ChatMessage.MessageType.POST_SHARE_INCOMING;
+
+                                ChatMessage postMsg = new ChatMessage(
+                                        mId,
+                                        isSelf ? "me" : chatId,
+                                        isSelf ? "You" : userName,
+                                        postTitle,
+                                        msgType,
+                                        ChatMessage.SnapKind.NONE,
+                                        getCurrentFormattedTime(),
+                                        "",
+                                        mediaUrl,
+                                        postId,
+                                        false,
+                                        false,
+                                        false
+                                );
+                                if (adapter != null) {
+                                    adapter.addMessage(postMsg);
+                                    scrollToBottom();
+                                }
                             } else if ("CALL".equalsIgnoreCase(type)) {
                                 Boolean isMissed = doc.getBoolean("isMissed");
                                 String callType = doc.getString("callType");

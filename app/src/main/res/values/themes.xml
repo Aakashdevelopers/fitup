@@ -6,6 +6,7 @@
         <item name="android:windowBackground">@color/brand_deep_navy</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
     <style name="Theme.FitUp" parent="Base.Theme.FitUp" />

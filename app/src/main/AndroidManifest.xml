@@ -13,6 +13,12 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
+    <!-- Storage & Media Access Permissions -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
     <!-- Optional features for device hardware capabilities -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
@@ -125,6 +131,30 @@
             android:name=".ImageViewerActivity"
             android:exported="false"
             android:theme="@style/Theme.FitUp" />
+
+        <!-- Instagram-Style New Post Gallery Picker Activity -->
+        <activity
+            android:name=".NewPostActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Instagram-Style Post Editing Activity -->
+        <activity
+            android:name=".EditPostActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Instagram-Style Share Post Activity -->
+        <activity
+            android:name=".SharePostActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Instagram-Style Post Detail View Activity -->
+        <activity
+            android:name=".PostDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Real-Time Audio & Video Call Activity -->
         <activity

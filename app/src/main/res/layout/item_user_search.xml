@@ -13,17 +13,14 @@
     android:paddingEnd="14dp"
     android:paddingBottom="12dp">
 
-    <!-- Avatar Initials Badge -->
-    <TextView
-        android:id="@+id/tv_user_search_avatar"
+    <!-- Avatar Image -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_user_search_avatar"
         android:layout_width="46dp"
         android:layout_height="46dp"
-        android:background="@drawable/bg_avatar_gradient_2"
-        android:fontFamily="sans-serif-bold"
-        android:gravity="center"
-        android:textColor="@color/white"
-        android:textSize="17sp"
-        tools:text="FL" />
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_avatar_placeholder"
+        app:shapeAppearanceOverlay="@style/CircularImageView" />
 
     <!-- Name & Username -->
     <LinearLayout

@@ -36,10 +36,18 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG_CAMERA = "camera";
-    private static final String TAG_CHAT = "chat";
-    private static final String TAG_PROFILE = "profile";
+    public static final String TAG_CAMERA = "camera";
+    public static final String TAG_CHAT = "chat";
+    public static final String TAG_PROFILE = "profile";
     private static final String KEY_SELECTED_TAG = "selected_tag";
+
+    public void navigateToTab(String tag) {
+        CustomBottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        if (bottomNav != null) {
+            syncSelectedNavMenuItem(bottomNav, tag);
+        }
+        switchFragment(tag);
+    }
 
     private String currentTag = TAG_CAMERA;
     private ListenerRegistration incomingCallListener;
@@ -57,6 +65,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_main);
 
         // Register application context for Tencent IM Chat Manager
@@ -141,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             // Non-Camera Fragments (Chat, Profile, etc.): Banner floats safely below status bar icons
-            int topOffset = cachedStatusBarTop > 0 ? cachedStatusBarTop + Math.round(20 * density) : Math.round(52 * density);
+            int topOffset = cachedStatusBarTop > 0 ? cachedStatusBarTop : Math.round(24 * density);
             if (banner != null) {
                 ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) banner.getLayoutParams();
                 if (lp != null) {
@@ -152,10 +163,9 @@ public class MainActivity extends AppCompatActivity {
             if (container != null) {
                 if (isBannerVisible) {
                     int bannerHeight = (banner != null && banner.getHeight() > 0) ? banner.getHeight() : Math.round(64 * density);
-                    container.setPadding(0, topOffset + bannerHeight + Math.round(8 * density), 0, 0);
+                    container.setPadding(0, topOffset + bannerHeight, 0, 0);
                 } else {
-                    int topPad = cachedStatusBarTop > 0 ? cachedStatusBarTop : Math.round(28 * density);
-                    container.setPadding(0, topPad, 0, 0);
+                    container.setPadding(0, 0, 0, 0);
                 }
             }
         }

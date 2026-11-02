@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_profile_card"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_tab_indicator" />
+
+    <!-- Slider Container for Active Adjustment -->
+    <LinearLayout
+        android:id="@+id/layout_slider_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/tv_active_tool_label"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:text="Brightness"
+            android:textColor="@color/primary_text"
+            android:textSize="13sp" />
+
+        <SeekBar
+            android:id="@+id/sb_adjust_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="200"
+            android:progress="100"
+            android:progressTint="@color/electric_blue"
+            android:thumbTint="@color/electric_blue" />
+
+        <TextView
+            android:id="@+id/tv_active_tool_value"
+            android:layout_width="36dp"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:fontFamily="sans-serif-medium"
+            android:text="0"
+            android:textColor="@color/electric_blue"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Horizontal Scrollable Adjustment Tools List -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp">
+
+            <!-- Tool 1: Adjust / Crop Grid -->
+            <LinearLayout
+                android:id="@+id/btn_adjust_grid"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Adjust"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_tool_crop"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Tool 2: Lux -->
+            <LinearLayout
+                android:id="@+id/btn_adjust_lux"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Lux"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_streak_flame"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Tool 3: Brightness -->
+            <LinearLayout
+                android:id="@+id/btn_adjust_brightness"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Brightness"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_flash_on"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Tool 4: Contrast -->
+            <LinearLayout
+                android:id="@+id/btn_adjust_contrast"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Contrast"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_security"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Tool 5: Saturation -->
+            <LinearLayout
+                android:id="@+id/btn_adjust_saturation"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Saturation"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_posts_grid"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Bottom Action Row (Cancel - Edit - Done) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <TextView
+            android:id="@+id/btn_cancel_adjust"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:padding="8dp"
+            android:text="Cancel"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_adjust_mode_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-bold"
+            android:text="Edit"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btn_done_adjust"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:padding="8dp"
+            android:text="Done"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+</LinearLayout>

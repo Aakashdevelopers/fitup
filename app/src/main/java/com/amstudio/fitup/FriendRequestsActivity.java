@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.amstudio.fitup.model.FriendRequest;
 import com.amstudio.fitup.model.UserProfile;
 import com.amstudio.fitup.repository.ActiveCallManager;
+import com.amstudio.fitup.util.AvatarLoader;
 import com.amstudio.fitup.repository.FriendRepository;
 import com.amstudio.fitup.repository.UserRepository;
 
@@ -592,14 +593,9 @@ public class FriendRequestsActivity extends AppCompatActivity {
 
             holder.tvName.setText(name);
             holder.tvUsername.setText("@" + username);
-            holder.tvAvatar.setText(getInitials(name));
-
-            int[] gradients = {
-                    R.drawable.bg_avatar_gradient_1, R.drawable.bg_avatar_gradient_2,
-                    R.drawable.bg_avatar_gradient_3, R.drawable.bg_avatar_gradient_4,
-                    R.drawable.bg_avatar_gradient_5, R.drawable.bg_avatar_gradient_6
-            };
-            holder.tvAvatar.setBackgroundResource(gradients[Math.abs(position % gradients.length)]);
+            if (holder.ivAvatar != null) {
+                AvatarLoader.loadAvatar(FriendRequestsActivity.this, user.getAvatarUrl(), holder.ivAvatar);
+            }
 
             String uid = user.getUid() != null ? user.getUid() : name;
             boolean isSent = sentRequestUids.contains(uid);
@@ -643,14 +639,14 @@ public class FriendRequestsActivity extends AppCompatActivity {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvAvatar;
+            ImageView ivAvatar;
             TextView tvName;
             TextView tvUsername;
             ImageButton btnAddFriend;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
-                tvAvatar = itemView.findViewById(R.id.tv_user_search_avatar);
+                ivAvatar = itemView.findViewById(R.id.iv_user_search_avatar);
                 tvName = itemView.findViewById(R.id.tv_user_search_name);
                 tvUsername = itemView.findViewById(R.id.tv_user_search_username);
                 btnAddFriend = itemView.findViewById(R.id.btn_user_add_friend);

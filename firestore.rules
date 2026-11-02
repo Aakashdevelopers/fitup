@@ -79,13 +79,20 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && resource.data.blockerUid == request.auth.uid;
     }
 
-    // 6. Private Snaps Metadata
+    // 6. Snaps & Posts Metadata, Likes & Comments
     match /snaps/{snapId} {
-      allow read: if isAuthenticated() &&
-        (request.auth.uid in resource.data.recipientUids || resource.data.senderUid == request.auth.uid) &&
-        !isBlocked(resource.data.senderUid);
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
+
+      match /likes/{likeId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /comments/{commentId} {
+        allow read, write: if isAuthenticated();
+      }
     }
 
     // 7. Realtime Chats & Messages

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_surface"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Top Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <!-- Sheet Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Comments"
+        android:textColor="@color/primary_text"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/profile_divider" />
+
+    <!-- Comments List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_comments_list"
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_comment" />
+
+    <!-- Empty Comments Text -->
+    <TextView
+        android:id="@+id/tv_empty_comments"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:gravity="center"
+        android:text="No comments yet. Start the conversation!"
+        android:textColor="@color/secondary_text"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <!-- Add Comment Box -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp">
+
+        <EditText
+            android:id="@+id/et_comment_input"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_search_input"
+            android:hint="Add a comment..."
+            android:inputType="textCapSentences"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/primary_text"
+            android:textColorHint="@color/secondary_text"
+            android:textSize="14sp" />
+
+        <ImageButton
+            android:id="@+id/btn_send_comment"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_send"
+            app:tint="@color/electric_blue" />
+    </LinearLayout>
+
+</LinearLayout>

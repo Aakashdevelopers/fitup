@@ -12,6 +12,8 @@ public class ChatMessage {
         SNAP_OUTGOING,
         IMAGE_INCOMING,
         IMAGE_OUTGOING,
+        POST_SHARE_INCOMING,
+        POST_SHARE_OUTGOING,
         CALL_EVENT
     }
 
@@ -52,6 +54,7 @@ public class ChatMessage {
     private final String timestamp;
     private final String durationText;
     private final String mediaUri;
+    private final String postId;
     private boolean isViewed;
 
     private boolean isMissedCall = false;
@@ -64,12 +67,19 @@ public class ChatMessage {
     public ChatMessage(String id, String senderId, String senderName, String text,
                        MessageType messageType, SnapKind snapKind, String timestamp,
                        String durationText, String mediaUri, boolean isViewed) {
-        this(id, senderId, senderName, text, messageType, snapKind, timestamp, durationText, mediaUri, isViewed, false, false);
+        this(id, senderId, senderName, text, messageType, snapKind, timestamp, durationText, mediaUri, null, isViewed, false, false);
     }
 
     public ChatMessage(String id, String senderId, String senderName, String text,
                        MessageType messageType, SnapKind snapKind, String timestamp,
                        String durationText, String mediaUri, boolean isViewed,
+                       boolean isMissedCall, boolean isVideoCall) {
+        this(id, senderId, senderName, text, messageType, snapKind, timestamp, durationText, mediaUri, null, isViewed, isMissedCall, isVideoCall);
+    }
+
+    public ChatMessage(String id, String senderId, String senderName, String text,
+                       MessageType messageType, SnapKind snapKind, String timestamp,
+                       String durationText, String mediaUri, String postId, boolean isViewed,
                        boolean isMissedCall, boolean isVideoCall) {
         this.id = id;
         this.senderId = senderId;
@@ -80,6 +90,7 @@ public class ChatMessage {
         this.timestamp = timestamp;
         this.durationText = durationText;
         this.mediaUri = mediaUri;
+        this.postId = postId;
         this.isViewed = isViewed;
         this.isMissedCall = isMissedCall;
         this.isVideoCall = isVideoCall;
@@ -124,6 +135,10 @@ public class ChatMessage {
         return mediaUri;
     }
 
+    public String getPostId() {
+        return postId;
+    }
+
     public boolean isViewed() {
         return isViewed;
     }
@@ -152,7 +167,8 @@ public class ChatMessage {
     public boolean isOutgoing() {
         return messageType == MessageType.TEXT_OUTGOING
                 || messageType == MessageType.SNAP_OUTGOING
-                || messageType == MessageType.IMAGE_OUTGOING;
+                || messageType == MessageType.IMAGE_OUTGOING
+                || messageType == MessageType.POST_SHARE_OUTGOING;
     }
 
     public List<Reaction> getReactions() {

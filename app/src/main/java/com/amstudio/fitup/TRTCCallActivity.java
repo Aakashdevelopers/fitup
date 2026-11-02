@@ -573,6 +573,7 @@ public class TRTCCallActivity extends AppCompatActivity {
                             Glide.with(TRTCCallActivity.this)
                                     .load(myAvatar)
                                     .placeholder(R.drawable.ic_avatar_placeholder)
+                                    .error(R.drawable.ic_avatar_placeholder)
                                     .into(ivCallVideoPreview);
                         }
                     }

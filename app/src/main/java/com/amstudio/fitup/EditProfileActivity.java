@@ -2,6 +2,10 @@ package com.amstudio.fitup;
 
 import android.app.DatePickerDialog;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -34,6 +38,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.amstudio.fitup.model.UserProfile;
 import com.amstudio.fitup.repository.UserRepository;
+import com.amstudio.fitup.util.AvatarLoader;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
@@ -112,29 +117,61 @@ public class EditProfileActivity extends AppCompatActivity {
         loadProfileData();
     }
 
+    private ActivityResultLauncher<String> getContentLauncher;
+
     private void initPhotoPickerLauncher() {
         photoPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.PickVisualMedia(),
-                uri -> {
-                    if (uri != null) {
-                        try {
-                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                            if (bitmap != null) {
-                                pendingAvatarBitmap = compressBitmapIfNeeded(bitmap);
-                                isPhotoChanged = true;
-                                isPhotoRemoved = false;
-
-                                ivEditAvatar.setImageBitmap(pendingAvatarBitmap);
-                                updatePhotoActionButtons(true);
-                                Toast.makeText(this, "New profile photo selected", Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Failed to load selected image", e);
-                            Toast.makeText(this, "Failed to load selected image", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
+                this::handleSelectedImageUri
         );
+
+        getContentLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                this::handleSelectedImageUri
+        );
+    }
+
+    private void handleSelectedImageUri(Uri uri) {
+        if (uri != null) {
+            Bitmap bitmap = loadBitmapFromUri(uri);
+            if (bitmap != null) {
+                pendingAvatarBitmap = compressBitmapIfNeeded(bitmap);
+                isPhotoChanged = true;
+                isPhotoRemoved = false;
+
+                ivEditAvatar.setImageBitmap(pendingAvatarBitmap);
+                updatePhotoActionButtons(true);
+                Toast.makeText(this, "New profile photo selected", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Could not load selected image", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private Bitmap loadBitmapFromUri(Uri uri) {
+        if (uri == null) return null;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), uri);
+                return ImageDecoder.decodeBitmap(source, (decoder, info, s) -> decoder.setTargetColorSpace(android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB)));
+            } else {
+                java.io.InputStream inputStream = getContentResolver().openInputStream(uri);
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                if (inputStream != null) inputStream.close();
+                return bitmap;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "ImageDecoder failed, attempting InputStream fallback", e);
+            try {
+                java.io.InputStream inputStream = getContentResolver().openInputStream(uri);
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                if (inputStream != null) inputStream.close();
+                return bitmap;
+            } catch (Exception ex) {
+                Log.e(TAG, "InputStream fallback failed", ex);
+                return null;
+            }
+        }
     }
 
     private Bitmap compressBitmapIfNeeded(Bitmap original) {
@@ -229,11 +266,20 @@ public class EditProfileActivity extends AppCompatActivity {
     private void setupClickListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        View.OnClickListener photoClickListener = v -> photoPickerLauncher.launch(
-                new PickVisualMediaRequest.Builder()
-                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                        .build()
-        );
+        View.OnClickListener photoClickListener = v -> {
+            try {
+                photoPickerLauncher.launch(
+                        new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build()
+                );
+            } catch (Exception e) {
+                Log.w(TAG, "PickVisualMedia launcher failed, trying GetContent", e);
+                if (getContentLauncher != null) {
+                    getContentLauncher.launch("image/*");
+                }
+            }
+        };
 
         btnChangePhoto.setOnClickListener(photoClickListener);
         btnEditPhotoBadge.setOnClickListener(photoClickListener);
@@ -382,10 +428,7 @@ public class EditProfileActivity extends AppCompatActivity {
         }
 
         if (!TextUtils.isEmpty(profile.getAvatarUrl())) {
-            Glide.with(this)
-                    .load(profile.getAvatarUrl())
-                    .placeholder(R.drawable.ic_avatar_placeholder)
-                    .into(ivEditAvatar);
+            AvatarLoader.loadAvatar(this, profile.getAvatarUrl(), ivEditAvatar);
             updatePhotoActionButtons(true);
         } else {
             updatePhotoActionButtons(false);
@@ -464,6 +507,7 @@ public class EditProfileActivity extends AppCompatActivity {
             @Override
             public void onSuccess() {
                 hideLoadingOverlay();
+                UserRepository.getInstance().invalidateCache();
                 Toast.makeText(EditProfileActivity.this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
                 setResult(RESULT_OK);
                 finish();

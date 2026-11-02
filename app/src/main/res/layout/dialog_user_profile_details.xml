@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_profile_card"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Top Close Button & Title Row -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="36dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:fontFamily="sans-serif-bold"
+                android:text="User Profile"
+                android:textColor="@color/primary_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btn_close_user_details"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_control_circle"
+                android:contentDescription="@null"
+                android:padding="6dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_close"
+                app:tint="@color/primary_text" />
+        </RelativeLayout>
+
+        <!-- Avatar Image -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_dialog_avatar"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_avatar_ring"
+            android:contentDescription="@null"
+            android:padding="3dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_avatar_placeholder"
+            app:shapeAppearanceOverlay="@style/CircularImageView" />
+
+        <!-- Display Name -->
+        <TextView
+            android:id="@+id/tv_dialog_display_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:fontFamily="sans-serif-bold"
+            android:text="User Name"
+            android:textColor="@color/primary_text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Username -->
+        <TextView
+            android:id="@+id/tv_dialog_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="2dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="\@username"
+            android:textColor="@color/electric_blue"
+            android:textSize="14sp" />
+
+        <!-- Bio -->
+        <TextView
+            android:id="@+id/tv_dialog_bio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="Gym enthusiast 💪"
+            android:textColor="@color/secondary_text"
+            android:textSize="13sp" />
+
+        <!-- Location Pill -->
+        <LinearLayout
+            android:id="@+id/layout_dialog_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_pill_surface"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="4dp">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_location"
+                app:tint="@color/light_blue" />
+
+            <TextView
+                android:id="@+id/tv_dialog_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Fitness Enthusiast"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Action Buttons Row (Follow + Send Message) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_dialog_follow"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Follow"
+                android:textAllCaps="false"
+                android:textColor="@color/primary_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/primary_blue"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_dialog_chat"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/primary_blue"
+                android:text="Message"
+                android:textAllCaps="false"
+                android:textColor="@color/primary_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:elevation="0dp"
+                app:icon="@drawable/ic_send"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                app:iconTint="@color/primary_text" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>

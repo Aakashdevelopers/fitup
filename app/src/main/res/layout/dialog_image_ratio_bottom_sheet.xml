@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_profile_card"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Top Drag Handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_tab_indicator" />
+
+    <!-- Horizontal Scrollable Ratio Options -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp">
+
+            <!-- Card 1: Square 1:1 -->
+            <LinearLayout
+                android:id="@+id/card_ratio_square"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Square"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_icon_square"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_posts_grid"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Card 2: Original -->
+            <LinearLayout
+                android:id="@+id/card_ratio_original"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Original"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_icon_original"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_expand"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Card 3: Portrait 4:5 -->
+            <LinearLayout
+                android:id="@+id/card_ratio_portrait"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Portrait 4:5"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_icon_portrait"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_tool_crop"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Card 4: Landscape 16:9 -->
+            <LinearLayout
+                android:id="@+id/card_ratio_landscape"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="Landscape"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_icon_landscape"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_expand"
+                        app:tint="@color/white" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Bottom Action Row (Cancel - Ratio - Done) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <TextView
+            android:id="@+id/btn_cancel_ratio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:padding="8dp"
+            android:text="Cancel"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_ratio_mode_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="sans-serif-bold"
+            android:text="Ratio"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btn_done_ratio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-bold"
+            android:padding="8dp"
+            android:text="Done"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+</LinearLayout>

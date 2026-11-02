@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:background="@drawable/bg_settings_row_selector"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <!-- Album Art Thumbnail -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_track_art"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_profile_card"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_sample_gym_preview"
+        app:shapeAppearanceOverlay="@style/CircularImageView" />
+
+    <!-- Track Details (Title & Artist) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_track_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-bold"
+            android:singleLine="true"
+            android:text="Poser"
+            android:textColor="@color/primary_text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_track_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:text="Deville • 2:42"
+            android:textColor="@color/secondary_text"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Select / Bookmark Icon -->
+    <ImageView
+        android:id="@+id/btn_select_track"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_dumbbell"
+        app:tint="@color/primary_text" />
+
+</LinearLayout>

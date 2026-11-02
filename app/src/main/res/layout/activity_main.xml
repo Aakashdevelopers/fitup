@@ -6,7 +6,7 @@
     android:id="@+id/main_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_bg"
+    android:background="@drawable/bg_profile_gradient"
     tools:context=".MainActivity">
 
     <!-- Fragment Container occupying space above bottom navigation -->
