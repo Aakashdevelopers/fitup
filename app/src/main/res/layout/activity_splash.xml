@@ -27,13 +27,27 @@
         app:layout_constraintVertical_bias="0.45"
         app:layout_constraintVertical_chainStyle="packed">
 
-        <!-- Gym Social Center Logo -->
-        <ImageView
-            android:id="@+id/img_splash_logo"
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_splash_logo" />
+        <!-- Gym Social Center Logo in CardView -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_splash_logo"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            app:cardBackgroundColor="@color/profile_surface"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="12dp"
+            app:cardPreventCornerOverlap="false"
+            app:strokeColor="@color/profile_card_border"
+            app:strokeWidth="2dp">
+
+            <ImageView
+                android:id="@+id/img_splash_logo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="0dp"
+                android:scaleType="fitCenter"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/logo" />
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- App Name -->
         <TextView

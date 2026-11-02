@@ -137,7 +137,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:lineSpacingExtra="2dp"
-                android:text="FitUp Kitchen · Freshly prepared high protein meal portion."
+                android:text="FitBond Kitchen · Freshly prepared high protein meal portion."
                 android:textColor="#A0B0C0"
                 android:textSize="13sp" />
 
@@ -328,7 +328,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="FitUp Kitchen · 350g portion"
+                        android:text="FitBond Kitchen · 350g portion"
                         android:textColor="#C8B8AA"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -497,7 +497,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:lineSpacingExtra="2dp"
-                    android:text="520 KCAL • 42g Protein • 55g Carbs • 12g Fat\nFitUp Kitchen · Freshly prepared portion."
+                    android:text="520 KCAL • 42g Protein • 55g Carbs • 12g Fat\nFitBond Kitchen · Freshly prepared portion."
                     android:textColor="#475569"
                     android:textSize="12sp" />
             </LinearLayout>

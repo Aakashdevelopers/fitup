@@ -10,7 +10,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header_bar"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
+        android:minHeight="56dp"
         android:paddingStart="16dp"
         android:paddingEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"

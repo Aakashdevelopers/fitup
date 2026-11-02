@@ -7,7 +7,7 @@
     android:background="@color/black">
 
     <!-- Interactive Zoomable Image Viewer -->
-    <com.amstudio.fitup.ZoomableImageView
+    <com.amstudio.fitbond.ZoomableImageView
         android:id="@+id/zoomable_food_viewer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

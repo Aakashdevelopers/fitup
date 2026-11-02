@@ -9,25 +9,6 @@
       "client_info": {
         "mobilesdk_app_id": "1:86510177345:android:c2dbb13c5ca4cb9c848ac0",
         "android_client_info": {
-          "package_name": "com.amstudio.fitup"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyB4Y-V33jUJg23ygThBKyT_sqtaDhlEzes"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:86510177345:android:c2dbb13c5ca4cb9c848ac0",
-        "android_client_info": {
           "package_name": "com.amstudio.fitbond"
         }
       },

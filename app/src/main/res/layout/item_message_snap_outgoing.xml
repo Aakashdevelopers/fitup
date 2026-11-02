@@ -92,17 +92,35 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Message Timestamp Below Card -->
-    <TextView
-        android:id="@+id/tv_message_time"
+    <!-- Message Timestamp & Read Status Container -->
+    <LinearLayout
+        android:id="@+id/layout_time_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:fontFamily="sans-serif"
-        android:textColor="@color/chat_time_text"
-        android:textSize="11sp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="@id/card_snap_bubble"
-        app:layout_constraintTop_toBottomOf="@id/card_snap_bubble"
-        tools:text="10:45 AM" />
+        app:layout_constraintTop_toBottomOf="@id/card_snap_bubble">
+
+        <TextView
+            android:id="@+id/tv_message_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
+            android:textColor="@color/chat_time_text"
+            android:textSize="11sp"
+            tools:text="10:45 AM" />
+
+        <ImageView
+            android:id="@+id/iv_message_status"
+            android:layout_width="14dp"
+            android:layout_height="11dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_single_check"
+            app:tint="@color/chat_time_text" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

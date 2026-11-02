@@ -3,18 +3,32 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
+val oneSignalRestApiKey: String = localProperties.getProperty("ONESIGNAL_REST_API_KEY") ?: ""
+val openRouterApiKey: String = localProperties.getProperty("OPENROUTER_API_KEY") ?: ""
+
 android {
-    namespace = "com.amstudio.fitup"
+    namespace = "com.amstudio.fitbond"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.amstudio.fitup"
-        minSdk = 24
+        applicationId = "com.amstudio.fitbond"
+        minSdk = 32
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "ONESIGNAL_REST_API_KEY", "\"$oneSignalRestApiKey\"")
+        buildConfigField("String", "OPENROUTER_API_KEY", "\"$openRouterApiKey\"")
     }
 
     buildFeatures {
@@ -76,6 +90,12 @@ dependencies {
     implementation(libs.camerax.video)
     implementation(libs.camerax.view)
     implementation(libs.concurrent.futures)
+
+    // Google Play In-App Updates
+    implementation(libs.play.app.update)
+
+    // OneSignal Push Notification SDK
+    implementation("com.onesignal:OneSignal:[5.0.0, 5.99.99]")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)

@@ -9,7 +9,7 @@
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
-    <!-- 3 Navigation Tabs Container -->
+    <!-- 4 Navigation Tabs Container -->
     <LinearLayout
         android:id="@+id/tabs_container"
         android:layout_width="match_parent"
@@ -61,7 +61,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Tab 2: Camera (Middle) -->
+        <!-- Tab 2: Camera -->
         <FrameLayout
             android:id="@+id/tab_camera"
             android:layout_width="0dp"
@@ -105,7 +105,51 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Tab 3: Profile -->
+        <!-- Tab 3: Post (Between Camera & Profile) -->
+        <FrameLayout
+            android:id="@+id/tab_post"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <LinearLayout
+                android:id="@+id/pill_post"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <ImageView
+                    android:id="@+id/iv_post_icon"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_nav_post"
+                    android:contentDescription="@null"
+                    app:tint="@color/nav_inactive_item" />
+
+                <TextView
+                    android:id="@+id/tv_post_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/nav_post"
+                    android:textColor="@color/nav_inactive_item"
+                    android:textSize="13sp"
+                    android:singleLine="true"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:visibility="gone"
+                    android:fontFamily="sans-serif-bold" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Tab 4: Profile -->
         <FrameLayout
             android:id="@+id/tab_profile"
             android:layout_width="0dp"

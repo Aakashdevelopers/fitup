@@ -18,7 +18,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 3x3 Composition Grid Overlay -->
-    <com.amstudio.fitup.GridOverlayView
+    <com.amstudio.fitbond.GridOverlayView
         android:id="@+id/grid_overlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -29,7 +29,7 @@
         app:layout_constraintTop_toTopOf="@id/preview_view" />
 
     <!-- Tap-to-Focus Ring Overlay -->
-    <com.amstudio.fitup.FocusRingView
+    <com.amstudio.fitbond.FocusRingView
         android:id="@+id/focus_ring"
         android:layout_width="80dp"
         android:layout_height="80dp"
@@ -122,7 +122,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:letterSpacing="0.15"
-            android:text="FITUP"
+            android:text="FITBOND"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -225,7 +225,7 @@
         tools:visibility="visible">
 
         <!-- Custom Animated Reticle View with White Rounded Corners & Laser Sweep Line -->
-        <com.amstudio.fitup.FoodScannerOverlayView
+        <com.amstudio.fitbond.FoodScannerOverlayView
             android:id="@+id/food_scanner_view"
             android:layout_width="290dp"
             android:layout_height="290dp"

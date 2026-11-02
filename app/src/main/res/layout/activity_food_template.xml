@@ -5,7 +5,7 @@
     android:id="@+id/root_food_template"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0B0F17">
+    android:background="@color/app_bg">
 
     <!-- Top Header Bar -->
     <RelativeLayout
@@ -18,8 +18,8 @@
 
         <ImageButton
             android:id="@+id/btn_back_templates"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:layout_centerVertical="true"
             android:background="@drawable/bg_circle_action_dark"
             android:contentDescription="Back"
@@ -46,8 +46,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Swipe to browse card styles"
-                android:textColor="#94A3B8"
+                android:text="Swipe to browse card styles 🎨"
+                android:textColor="@color/secondary_text"
                 android:textSize="12sp" />
         </LinearLayout>
     </RelativeLayout>
@@ -73,35 +73,36 @@
             tools:listitem="@layout/item_template_carousel_card" />
     </RelativeLayout>
 
-    <!-- Bottom Sticky Info & Indicator Bar -->
+    <!-- Bottom Sticky Info & Action Bar -->
     <LinearLayout
         android:id="@+id/bottom_action_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#131B2E"
+        android:background="@drawable/bg_template_bottom_bar"
         android:elevation="12dp"
         android:gravity="center"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp">
+        android:paddingVertical="18dp">
 
+        <!-- Template Indicator Badge -->
         <TextView
             android:id="@+id/tv_carousel_indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Template 1 of 4: Blue Glass Card"
-            android:textColor="#38BDF8"
+            android:textColor="@color/electric_blue"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:text="Template 1 of 4: Blue Glass Card" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Tap any card to select template ✨"
-            android:textColor="#94A3B8"
+            android:text="Tap any card or button to select template ✨"
+            android:textColor="@color/text_secondary_muted"
             android:textSize="12sp" />
     </LinearLayout>
 

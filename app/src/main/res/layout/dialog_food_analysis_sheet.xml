@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_profile_card"
+    android:background="@drawable/bg_food_sheet_surface"
     android:paddingBottom="24dp">
 
     <LinearLayout
@@ -16,13 +16,13 @@
 
         <!-- Bottom Sheet Drag Handle Bar -->
         <View
-            android:layout_width="36dp"
-            android:layout_height="4dp"
+            android:layout_width="40dp"
+            android:layout_height="5dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="18dp"
             android:background="@drawable/bg_drag_handle" />
 
-        <!-- Header Card Row: Thumbnail + Title/Subtitle + Score Badge -->
+        <!-- Header Row: Food Thumbnail + Title & Metadata + Health Grade Badge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,13 +31,13 @@
 
             <!-- Food Thumbnail Image Frame -->
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                app:cardBackgroundColor="#1A2433"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="2dp"
-                app:strokeColor="#30FFFFFF"
-                app:strokeWidth="1dp">
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                app:cardBackgroundColor="#10233D"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp"
+                app:strokeColor="#3338B6FF"
+                app:strokeWidth="1.5dp">
 
                 <ImageView
                     android:id="@+id/iv_sheet_food_image"
@@ -45,10 +45,10 @@
                     android:layout_height="match_parent"
                     android:contentDescription="Food Thumbnail"
                     android:scaleType="centerCrop"
-                    tools:src="@drawable/bg_sample_gym_preview" />
+                    tools:src="@drawable/logo" />
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Title & Subtitle -->
+            <!-- Title & Subtitle Info -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -60,33 +60,91 @@
                     android:id="@+id/tv_sheet_food_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lay's® Classic Potato Chips"
+                    android:ellipsize="end"
+                    android:maxLines="2"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="Lay's® Classic Potato Chips" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:background="@drawable/bg_online_badge" />
+
+                    <TextView
+                        android:id="@+id/tv_sheet_food_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="13sp"
+                        tools:text="FreshMart · 170 g container" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Health Grade Score Badge Container -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tv_sheet_food_subtitle"
+                    android:id="@+id/tv_sheet_grade_badge"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_grade_badge"
+                    android:gravity="center"
+                    android:textColor="@color/online_green"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    tools:text="A" />
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="FreshMart · 170 g container"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="13sp" />
+                    android:letterSpacing="0.05"
+                    android:text="GRADE"
+                    android:textColor="#6010B981"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
             </LinearLayout>
+        </LinearLayout>
 
-            <!-- Health Grade Score Badge (e.g. A, A+, B) -->
+        <!-- OpenRouter AI Analysis Loading Bar -->
+        <LinearLayout
+            android:id="@+id/layout_sheet_loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:indeterminateTint="@color/electric_blue" />
+
             <TextView
-                android:id="@+id/tv_sheet_grade_badge"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
+                android:id="@+id/tv_sheet_loading_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_control_circle"
-                android:backgroundTint="#2610B981"
-                android:gravity="center"
-                android:text="A"
-                android:textColor="@color/online_green"
-                android:textSize="20sp"
+                android:text="Loading..."
+                android:textColor="@color/electric_blue"
+                android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -95,27 +153,35 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
+            android:baselineAligned="false"
             android:orientation="horizontal">
 
-            <!-- Calories -->
+            <!-- Calories Card -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="4dp"
                 android:background="@drawable/bg_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="12dp">
+
+                <View
+                    android:layout_width="20dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/bg_macro_kcal_indicator" />
 
                 <TextView
                     android:id="@+id/tv_sheet_kcal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="90"
+                    android:layout_marginTop="8dp"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="90" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -123,29 +189,36 @@
                     android:layout_marginTop="2dp"
                     android:text="kcal"
                     android:textColor="@color/text_secondary_muted"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
 
-            <!-- Protein -->
+            <!-- Protein Card -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="3dp"
-                android:layout_marginEnd="3dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
                 android:background="@drawable/bg_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="12dp">
+
+                <View
+                    android:layout_width="20dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/bg_macro_protein_indicator" />
 
                 <TextView
                     android:id="@+id/tv_sheet_protein"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="16g"
+                    android:layout_marginTop="8dp"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="16g" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -153,29 +226,36 @@
                     android:layout_marginTop="2dp"
                     android:text="protein"
                     android:textColor="@color/text_secondary_muted"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
 
-            <!-- Carbs -->
+            <!-- Carbs Card -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="3dp"
-                android:layout_marginEnd="3dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
                 android:background="@drawable/bg_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="12dp">
+
+                <View
+                    android:layout_width="20dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/bg_macro_carbs_indicator" />
 
                 <TextView
                     android:id="@+id/tv_sheet_carbs"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="6g"
+                    android:layout_marginTop="8dp"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="6g" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -183,28 +263,35 @@
                     android:layout_marginTop="2dp"
                     android:text="carbs"
                     android:textColor="@color/text_secondary_muted"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
 
-            <!-- Fat -->
+            <!-- Fat Card -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="5dp"
+                android:layout_marginStart="4dp"
                 android:background="@drawable/bg_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="12dp">
+
+                <View
+                    android:layout_width="20dp"
+                    android:layout_height="3dp"
+                    android:background="@drawable/bg_macro_fat_indicator" />
 
                 <TextView
                     android:id="@+id/tv_sheet_fat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0g"
+                    android:layout_marginTop="8dp"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="0g" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -212,26 +299,132 @@
                     android:layout_marginTop="2dp"
                     android:text="fat"
                     android:textColor="@color/text_secondary_muted"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Divider Line -->
+        <!-- FitBond AI Health Analysis Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_ai_insight_card"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_ai_badge"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:text="✦ AI HEALTH INSIGHT"
+                    android:textColor="@color/electric_blue"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="Food Scan Analysis"
+                    android:textColor="@color/text_secondary_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_sheet_ai_insight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="2dp"
+                android:text="High protein &amp; optimal macro balance detected. Excellent fuel for muscle recovery and workout energy!"
+                android:textColor="#E2E8F0"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Full Scene Detected Items Section -->
+        <LinearLayout
+            android:id="@+id/layout_sheet_detected_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔍 Full-Scene Detected Objects"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_sheet_detected_count"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:textColor="@color/electric_blue"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    tools:text="3 Items Found" />
+            </LinearLayout>
+
+            <!-- Container for dynamically added item views -->
+            <LinearLayout
+                android:id="@+id/ll_sheet_detected_items_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+        <!-- Section Separator Line -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="18dp"
             android:layout_marginBottom="16dp"
             android:background="@color/divider_line" />
 
-        <!-- Detailed Nutritional Breakdown Section Header -->
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Detailed Nutritional Breakdown Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Detailed Nutritional Breakdown"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="Info Icon"
+                android:src="@drawable/ic_info_circle"
+                app:tint="@color/electric_blue" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Detailed Nutritional Breakdown"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- Detailed Nutrients Card List -->
         <LinearLayout
@@ -242,16 +435,22 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Fiber -->
+            <!-- Fiber Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_macro_protein_indicator" />
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:text="Dietary Fiber"
                     android:textColor="@color/secondary_text"
@@ -261,10 +460,10 @@
                     android:id="@+id/tv_sheet_fiber"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4.2 g"
                     android:textColor="@color/white"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="4.2 g" />
             </LinearLayout>
 
             <View
@@ -274,16 +473,22 @@
                 android:layout_marginBottom="10dp"
                 android:background="@color/divider_line" />
 
-            <!-- Sugar -->
+            <!-- Sugar Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_macro_carbs_indicator" />
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:text="Total Sugars"
                     android:textColor="@color/secondary_text"
@@ -293,10 +498,10 @@
                     android:id="@+id/tv_sheet_sugar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1.5 g"
                     android:textColor="@color/white"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="1.5 g" />
             </LinearLayout>
 
             <View
@@ -306,16 +511,22 @@
                 android:layout_marginBottom="10dp"
                 android:background="@color/divider_line" />
 
-            <!-- Sodium -->
+            <!-- Sodium Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_macro_fat_indicator" />
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:text="Sodium"
                     android:textColor="@color/secondary_text"
@@ -325,10 +536,10 @@
                     android:id="@+id/tv_sheet_sodium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="140 mg"
                     android:textColor="@color/white"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="140 mg" />
             </LinearLayout>
 
             <View
@@ -338,16 +549,22 @@
                 android:layout_marginBottom="10dp"
                 android:background="@color/divider_line" />
 
-            <!-- Saturated Fat -->
+            <!-- Saturated Fat Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_macro_kcal_indicator" />
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:text="Saturated Fat"
                     android:textColor="@color/secondary_text"
@@ -357,33 +574,37 @@
                     android:id="@+id/tv_sheet_sat_fat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0.5 g"
                     android:textColor="@color/white"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="0.5 g" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- FitUp AI Health Analysis Note Card -->
-
-        <!-- Action Buttons -->
+        <!-- Action Buttons Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:orientation="vertical">
 
+            <!-- Primary Action Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/add_temp_send"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:backgroundTint="@color/online_green"
-                android:text="Use template and send to friends"
+                android:backgroundTint="@color/primary_blue"
+                android:text="Use Template &amp; Share Snap"
                 android:textColor="@color/white"
                 android:textSize="15sp"
                 android:textStyle="bold"
-                app:cornerRadius="14dp" />
+                app:cornerRadius="16dp"
+                app:icon="@drawable/ic_send"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@color/white" />
 
+            <!-- Secondary Action Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_sheet_send_snap"
                 style="@style/Widget.Material3.Button.OutlinedButton"
@@ -392,8 +613,10 @@
                 android:layout_marginTop="10dp"
                 android:text="Cancel"
                 android:textColor="@color/electric_blue"
-                app:strokeColor="@color/electric_blue"
-                app:cornerRadius="14dp" />
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/electric_blue" />
         </LinearLayout>
 
     </LinearLayout>

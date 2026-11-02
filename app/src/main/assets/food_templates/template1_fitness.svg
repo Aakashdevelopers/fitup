@@ -133,7 +133,7 @@
   <!-- Footer Section -->
   <!-- User Handle Tag Pill -->
   <rect x="60" y="870" width="180" height="40" rx="20" fill="#FFFFFF" fill-opacity="0.15" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1" />
-  <text x="150" y="896" font-family="sans-serif-bold, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">@fitupapp</text>
+  <text x="150" y="896" font-family="sans-serif-bold, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">@fitbondapp</text>
 
   <!-- Verification Badge -->
   <rect x="560" y="870" width="180" height="40" rx="20" fill="#10B981" fill-opacity="0.25" stroke="#34D399" stroke-opacity="0.5" stroke-width="1" />

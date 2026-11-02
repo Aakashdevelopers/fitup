@@ -11,6 +11,11 @@
         android:title="@string/nav_camera" />
 
     <item
+        android:id="@+id/nav_post"
+        android:icon="@drawable/ic_nav_post"
+        android:title="@string/nav_post" />
+
+    <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_nav_profile"
         android:title="@string/nav_profile" />

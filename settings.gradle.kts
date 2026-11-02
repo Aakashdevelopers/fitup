@@ -26,5 +26,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FitUp"
+rootProject.name = "FitBond"
 include(":app")

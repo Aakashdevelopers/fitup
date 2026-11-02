@@ -1,35 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FitUp</string>
-    <string name="welcome_brand_name">FITUP</string>
-    <string name="welcome_headline_top">MEET YOUR</string>
-    <string name="welcome_headline_rainbow">AI TEAMMATES</string>
+    <string name="app_name">FitBond</string>
+    <string name="welcome_brand_name">FITBOND</string>
+    <string name="brand_version_tag">2.0</string>
+    <string name="welcome_headline_top">OWN YOUR FITNESS,</string>
+    <string name="welcome_headline_rainbow">FIND YOUR SQUAD</string>
     <string name="welcome_headline_full">Own Your Fitness,\nFind Your People.</string>
-    <string name="welcome_subtitle">A specialized AI for every part of your business.</string>
+    <string name="welcome_subtitle">Train. Connect. Share.</string>
+    <string name="welcome_tagline">Train. Connect. Share.</string>
+
+    <string name="welcome_slide_0_headline_top">OWN YOUR FITNESS,</string>
+    <string name="welcome_slide_0_headline_rainbow">AI POWERED COACH</string>
+    <string name="welcome_slide_0_subtitle">Personalized AI workout plans, real-time form feedback &amp; instant photo macros.</string>
+    <string name="welcome_slide_0_chip1">⚡ AI Coach</string>
+    <string name="welcome_slide_0_chip2">🥗 Photo Macros</string>
+    <string name="welcome_slide_0_chip3">📈 Form Tracking</string>
+
+    <string name="welcome_slide_1_headline_top">FIND YOUR SQUAD,</string>
+    <string name="welcome_slide_1_headline_rainbow">WORKOUT TOGETHER</string>
+    <string name="welcome_slide_1_subtitle">Connect with gym partners, share daily food snaps &amp; stay accountable on HD calls.</string>
+    <string name="welcome_slide_1_chip1">📸 Food Snaps</string>
+    <string name="welcome_slide_1_chip2">🤙 HD Video Calls</string>
+    <string name="welcome_slide_1_chip3">👥 Gym Partners</string>
+
+    <string name="welcome_slide_2_headline_top">BUILD HABITS,</string>
+    <string name="welcome_slide_2_headline_rainbow">STAY UNSTOPPABLE</string>
+    <string name="welcome_slide_2_subtitle">Keep daily streaks alive, level up your fitness rank, and celebrate every milestone.</string>
+    <string name="welcome_slide_2_chip1">🔥 Streak Flame</string>
+    <string name="welcome_slide_2_chip2">🏆 XP Rewards</string>
+    <string name="welcome_slide_2_chip3">📅 Habit Tracker</string>
+
     <string name="btn_get_started">Get Started</string>
     <string name="btn_next_arrow">Next  ➔</string>
+    <string name="btn_get_started_now">Get Started  ⚡</string>
+    <string name="btn_skip">Skip</string>
     <string name="btn_login">Log in</string>
     <string name="login_prompt_link">Already have an account? Log in</string>
     <string name="badge_active">Active</string>
-    <string name="card_title_chat">AI Chat Assistant</string>
-    <string name="card_sub_chat">Quick answers &amp; tips</string>
-    <string name="card_title_project">AI Project Manager</string>
-    <string name="card_sub_project">Plans sprints &amp; tracks delivery</string>
-    <string name="card_title_meeting">AI Meeting Assistant</string>
-    <string name="card_sub_meeting">Qualifies leads &amp; writes outreach</string>
-    <string name="card_title_content">AI Content Assistant</string>
-    <string name="card_sub_content">Crafts proposals &amp; reports</string>
-    <string name="card_title_finance">AI Finance Manager</string>
-    <string name="card_sub_finance">Financial planning &amp; forecasts</string>
+    <string name="card_title_chat">AI Fitness Chat</string>
+    <string name="card_sub_chat">Instant workout &amp; form tips</string>
+    <string name="card_title_project">AI Workout Coach</string>
+    <string name="card_sub_project">Personalized routines &amp; goals</string>
+    <string name="card_title_meeting">AI Nutrition Guide</string>
+    <string name="card_sub_meeting">Meal plans &amp; macro guidance</string>
+    <string name="card_title_content">AI Recovery Tracker</string>
+    <string name="card_sub_content">Rest optimization &amp; strain</string>
+    <string name="card_title_finance">AI Streak &amp; Progress</string>
+    <string name="card_sub_finance">Habit tracking &amp; milestones</string>
     <string name="splash_tagline">Stronger Together.</string>
 
     <!-- Navigation Strings -->
     <string name="nav_camera">Camera</string>
     <string name="nav_chat">Chat</string>
+    <string name="nav_post">Post</string>
     <string name="nav_profile">Profile</string>
 
     <!-- Auth Screen Strings -->
-    <string name="auth_welcome_title">Welcome to FitUp</string>
+    <string name="auth_welcome_title">Welcome to FitBond</string>
     <string name="auth_welcome_subtitle">Your fitness journey starts here.</string>
     <string name="tab_login">Login</string>
     <string name="tab_signup">Sign Up</string>
@@ -79,7 +106,7 @@
     <!-- Profile UI Strings -->
     <string name="profile_title">My Profile</string>
     <string name="profile_default_name">Alex Rivers</string>
-    <string name="profile_default_username">\@alex_fitup</string>
+    <string name="profile_default_username">\@alex_fitbond</string>
     <string name="profile_default_bio">Building strength, one day at a time. 🏋️‍♂️\nConsistency over perfection.</string>
     <string name="profile_default_location">San Francisco, CA • Hypertrophy Goal</string>
     <string name="profile_stat_posts">Posts</string>
@@ -115,7 +142,7 @@
     <string name="content_desc_settings">Settings</string>
     <string name="content_desc_edit_avatar">Edit avatar</string>
     <string name="content_desc_profile_avatar">Profile avatar</string>
-    <string name="profile_version_footer">FitUp v1.0.0 • Profile UI</string>
+    <string name="profile_version_footer">FitBond v1.0.0 • Profile UI</string>
 
     <!-- Edit Profile Strings -->
     <string name="edit_profile_title">Edit Profile</string>

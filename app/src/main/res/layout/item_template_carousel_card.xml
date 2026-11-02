@@ -9,11 +9,11 @@
     android:layout_marginVertical="16dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="#131C2E"
+    app:cardBackgroundColor="@color/profile_surface"
     app:cardCornerRadius="28dp"
-    app:cardElevation="12dp"
-    app:strokeColor="#1E293B"
-    app:strokeWidth="1dp">
+    app:cardElevation="14dp"
+    app:strokeColor="@color/profile_card_border"
+    app:strokeWidth="1.5dp">
 
     <LinearLayout
         android:id="@+id/layout_carousel_card_bg"
@@ -26,11 +26,11 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="370dp"
-            app:cardBackgroundColor="#0F172A"
+            app:cardBackgroundColor="#0D1A2B"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
-            app:strokeColor="#334155"
-            app:strokeWidth="0.5dp">
+            app:strokeColor="#263E5C"
+            app:strokeWidth="1dp">
 
             <ImageView
                 android:id="@+id/iv_svg_card_preview"
@@ -69,7 +69,7 @@
                 android:layout_marginTop="3dp"
                 android:ellipsize="end"
                 android:maxLines="2"
-                android:textColor="#94A3B8"
+                android:textColor="@color/secondary_text"
                 android:textSize="12sp"
                 tools:text="Translucent blue glass card with specular highlights" />
 
@@ -79,10 +79,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="12dp"
-                android:backgroundTint="@color/white"
+                android:backgroundTint="@color/primary_blue"
                 android:fontFamily="sans-serif-medium"
                 android:text="Use Template ⚡"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 app:cornerRadius="24dp" />

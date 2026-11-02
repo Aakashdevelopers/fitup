@@ -100,7 +100,7 @@
                     android:fontFamily="sans-serif"
                     android:textColor="#94A3B8"
                     android:textSize="12sp"
-                    tools:text="FitUp Video • 00:07" />
+                    tools:text="FitBond Video • 00:07" />
 
             </LinearLayout>
 

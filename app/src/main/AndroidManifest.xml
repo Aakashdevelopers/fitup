@@ -12,6 +12,15 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Foreground Service Permissions for Ongoing Calls -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
     <!-- Storage & Media Access Permissions -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
@@ -47,12 +56,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- Welcome Screen Onboarding Activity -->
-        <activity
-            android:name=".WelcomeActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
 
         <!-- Main Shell Activity -->
         <activity
@@ -174,6 +177,32 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- Direct Inline Reply Receiver (WhatsApp/Instagram Style) -->
+        <receiver
+            android:name=".service.DirectReplyReceiver"
+            android:exported="false" />
+
+        <!-- Notification Action Receiver (Mark as Read, Mute) -->
+        <receiver
+            android:name=".service.NotificationActionReceiver"
+            android:exported="false" />
+
+        <!-- Call Action Receiver (Accept, Decline) -->
+        <receiver
+            android:name=".service.CallActionReceiver"
+            android:exported="false" />
+
+        <!-- Native Ongoing Call Foreground Service -->
+        <service
+            android:name=".service.CallForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="phoneCall|microphone|camera" />
+
+        <!-- OneSignal Background Notification Service Extension -->
+        <meta-data
+            android:name="com.onesignal.NotificationServiceExtension"
+            android:value="com.amstudio.fitbond.service.CustomNotificationServiceExtension" />
     </application>
 
 </manifest>
