@@ -12,7 +12,12 @@
           "package_name": "com.amstudio.fitbond"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "86510177345-hqt64l5nu64n4p5bfhadq13b7p02q048.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB4Y-V33jUJg23ygThBKyT_sqtaDhlEzes"

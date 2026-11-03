@@ -320,7 +320,6 @@ public class FoodAnalyzerRepository {
                 "    {\n" +
                 "      \"name\": \"Banana\",\n" +
                 "      \"common_name\": \"Banana\",\n" +
-                "      \"hindi_name\": \"केला\",\n" +
                 "      \"category\": \"fruit\",\n" +
                 "      \"food_type\": \"vegan\",\n" +
                 "      \"preparation\": \"raw\",\n" +

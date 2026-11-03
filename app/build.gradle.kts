@@ -1,9 +1,9 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.services)
 }
-
-import java.util.Properties
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
@@ -20,15 +20,25 @@ android {
 
     defaultConfig {
         applicationId = "com.amstudio.fitbond"
-        minSdk = 32
+        minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "ONESIGNAL_REST_API_KEY", "\"$oneSignalRestApiKey\"")
         buildConfigField("String", "OPENROUTER_API_KEY", "\"$openRouterApiKey\"")
+
+        // Retain only English resources to strip unused third-party translations
+        androidResources {
+            localeFilters += listOf("en")
+        }
+
+        // Limit ABIs to ARM architectures (strips emulator x86/x86_64 native binaries)
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     buildFeatures {
@@ -37,9 +47,52 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+
+    // ABI splitting for APK generation (disabled for App Bundles to allow resource shrinking)
+    splits {
+        abi {
+            isEnable = false
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = false
+        }
+    }
+
+    // Enable App Bundle (AAB) configuration splits
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+
+    // Exclude redundant META-INF metadata files
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/*.kotlin_module"
+            )
         }
     }
     compileOptions {
@@ -63,10 +116,10 @@ dependencies {
     implementation(libs.firebase.appcheck.playintegrity)
     implementation(libs.firebase.appcheck.debug)
     implementation("com.google.firebase:firebase-functions")
+    implementation(libs.play.services.auth)
 
-    // Tencent IM & TRTC SDK
+    // Tencent IM Chat SDK
     implementation(libs.tencent.imsdk)
-    implementation(libs.tencent.trtc)
 
     // ZegoCloud Express Video/Audio SDK
     implementation("im.zego:express-video:3.21.0")

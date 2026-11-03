@@ -14,6 +14,7 @@ concurrentFutures = "1.2.0"
 shimmer = "0.5.0"
 lottie = "6.6.2"
 playAppUpdate = "2.1.0"
+playServicesAuth = "21.3.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -33,7 +34,6 @@ firebase-appcheck-playintegrity = { group = "com.google.firebase", name = "fireb
 firebase-appcheck-debug = { group = "com.google.firebase", name = "firebase-appcheck-debug" }
 
 tencent-imsdk = { group = "com.tencent.imsdk", name = "imsdk-plus", version = "8.4.6667" }
-tencent-trtc = { group = "com.tencent.liteav", name = "LiteAVSDK_TRTC", version = "13.5.0.20670" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version = "4.16.0" }
 shimmer = { group = "com.facebook.shimmer", name = "shimmer", version.ref = "shimmer" }
 lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
@@ -45,6 +45,7 @@ camerax-video = { group = "androidx.camera", name = "camera-video", version.ref 
 camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrentFutures" }
 play-app-update = { group = "com.google.android.play", name = "app-update", version.ref = "playAppUpdate" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

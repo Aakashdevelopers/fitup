@@ -76,7 +76,7 @@ public class GalleryPreviewActivity extends AppCompatActivity {
     private LinearSnapHelper snapHelper;
 
     private int selectedIndex = 0;
-    private String pageTitle = "Read at least 10 pages";
+    private String pageTitle = "Gallery";
 
     private GestureDetector gestureDetector;
 
@@ -90,23 +90,24 @@ public class GalleryPreviewActivity extends AppCompatActivity {
                         break;
                     }
                 }
-                if (isGranted) {
-                    Executors.newSingleThreadExecutor().execute(() -> {
-                        List<GalleryItem> loaded = queryDevicePhotos();
-                        runOnUiThread(() -> {
-                            if (isDestroyed() || isFinishing()) return;
-                            if (!loaded.isEmpty()) {
-                                galleryItems.clear();
-                                galleryItems.addAll(loaded);
-                                selectedIndex = 0;
-                                if (thumbnailAdapter != null) {
-                                    thumbnailAdapter.notifyDataSetChanged();
-                                }
-                                updateMainPreviewContent(selectedIndex, true);
-                            }
-                        });
+                final boolean finalGranted = isGranted;
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    List<GalleryItem> loaded = finalGranted ? queryDevicePhotos() : new ArrayList<>();
+                    runOnUiThread(() -> {
+                        if (isDestroyed() || isFinishing()) return;
+                        galleryItems.clear();
+                        if (!loaded.isEmpty()) {
+                            galleryItems.addAll(loaded);
+                        } else {
+                            loadSamplePhotos();
+                        }
+                        selectedIndex = 0;
+                        if (thumbnailAdapter != null) {
+                            thumbnailAdapter.notifyDataSetChanged();
+                        }
+                        updateMainPreviewContent(selectedIndex, true);
                     });
-                }
+                });
             }
     );
 
@@ -143,7 +144,9 @@ public class GalleryPreviewActivity extends AppCompatActivity {
         setupGestureDetector();
         setupRecyclerView();
         setupListeners();
-        updateMainPreviewContent(selectedIndex, true);
+        if (!galleryItems.isEmpty()) {
+            updateMainPreviewContent(selectedIndex, true);
+        }
     }
 
     private void setupWindowFlags() {
@@ -213,13 +216,14 @@ public class GalleryPreviewActivity extends AppCompatActivity {
                 List<GalleryItem> loaded = queryDevicePhotos();
                 runOnUiThread(() -> {
                     if (isDestroyed() || isFinishing()) return;
+                    galleryItems.clear();
                     if (!loaded.isEmpty()) {
                         galleryItems.addAll(loaded);
-                        if (thumbnailAdapter != null) thumbnailAdapter.notifyDataSetChanged();
-                        updateMainPreviewContent(selectedIndex, true);
                     } else {
                         loadSamplePhotos();
                     }
+                    if (thumbnailAdapter != null) thumbnailAdapter.notifyDataSetChanged();
+                    updateMainPreviewContent(selectedIndex, true);
                 });
             });
         } else {
@@ -279,26 +283,27 @@ public class GalleryPreviewActivity extends AppCompatActivity {
         Uri collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{
                 MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.DATE_ADDED,
-                MediaStore.Images.Media.TITLE
+                MediaStore.Images.Media.DATE_ADDED
         };
         String sortOrder = MediaStore.Images.Media.DATE_ADDED + " DESC";
 
         try (Cursor cursor = getContentResolver().query(collection, projection, null, null, sortOrder)) {
             if (cursor != null) {
-                int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
-                int dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED);
+                int idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                int dateColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED);
 
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyyy", Locale.getDefault());
 
                 while (cursor.moveToNext()) {
-                    long id = cursor.getLong(idColumn);
-                    long dateAddedSec = cursor.getLong(dateColumn);
+                    if (idColumn != -1) {
+                        long id = cursor.getLong(idColumn);
+                        long dateAddedSec = (dateColumn != -1) ? cursor.getLong(dateColumn) : (System.currentTimeMillis() / 1000L);
 
-                    Uri contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-                    String dateStr = dateFormat.format(new Date(dateAddedSec * 1000L));
+                        Uri contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                        String dateStr = dateFormat.format(new Date(dateAddedSec * 1000L));
 
-                    items.add(new GalleryItem(contentUri.toString(), dateStr, pageTitle));
+                        items.add(new GalleryItem(contentUri.toString(), dateStr, pageTitle));
+                    }
                 }
             }
         } catch (Exception e) {

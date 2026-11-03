@@ -123,65 +123,25 @@ public class FoodAnalysisResult {
         public void setNutrition(NutritionInfo nutrition) { this.nutrition = nutrition; }
 
         public String getDisplayName() {
-            if (hindiName != null && !hindiName.trim().isEmpty()) {
-                return name + " (" + hindiName.trim() + ")";
-            }
             return name;
         }
 
         public String getCategoryEmoji() {
-            String lower = (name + " " + commonName + " " + category).toLowerCase(Locale.US);
-            if (lower.contains("apple")) return "🍎";
-            if (lower.contains("banana")) return "🍌";
-            if (lower.contains("orange") || lower.contains("citrus") || lower.contains("kinnow")) return "🍊";
-            if (lower.contains("mango")) return "🥭";
-            if (lower.contains("grape")) return "🍇";
-            if (lower.contains("watermelon")) return "🍉";
-            if (lower.contains("pineapple")) return "🍍";
-            if (lower.contains("strawberry") || lower.contains("berry")) return "🍓";
-            if (lower.contains("papaya")) return "🍈";
-            if (lower.contains("guava")) return "🍏";
-            if (lower.contains("avocado")) return "🥑";
-            if (lower.contains("fruit")) return "🍎";
-
-            if (lower.contains("broccoli")) return "🥦";
-            if (lower.contains("potato")) return "🥔";
-            if (lower.contains("tomato")) return "🍅";
-            if (lower.contains("carrot")) return "🥕";
-            if (lower.contains("spinach")) return "🥬";
-            if (lower.contains("cucumber")) return "🥒";
-            if (lower.contains("vegetable") || lower.contains("veggie")) return "🥦";
-
-            if (lower.contains("pizza")) return "🍕";
-            if (lower.contains("pasta") || lower.contains("spaghetti")) return "🍝";
-            if (lower.contains("burger")) return "🍔";
-            if (lower.contains("sandwich")) return "🥪";
-            if (lower.contains("rice") || lower.contains("biryani")) return "🍚";
-            if (lower.contains("roti") || lower.contains("chapati") || lower.contains("naan")) return "🫓";
-            if (lower.contains("dal") || lower.contains("curry") || lower.contains("paneer")) return "🍛";
-            if (lower.contains("salad")) return "🥗";
-            if (lower.contains("meat") || lower.contains("steak") || lower.contains("chicken")) return "🥩";
-
-            if (lower.contains("milk") || lower.contains("shake") || lower.contains("smoothie")) return "🥛";
-            if (lower.contains("juice") || lower.contains("beverage") || lower.contains("drink")) return "🥤";
-            if (lower.contains("egg")) return "🥚";
-            if (lower.contains("nuts") || lower.contains("almond")) return "🥜";
-
-            return "🍽️";
+            return "";
         }
 
         public String getCleanLocationText() {
             StringBuilder sb = new StringBuilder();
             if (position != null && !position.trim().isEmpty()) {
-                sb.append("📍 ").append(position.trim());
+                sb.append(position.trim());
             }
             if (visiblePortion != null && !visiblePortion.trim().isEmpty()) {
                 if (sb.length() > 0) sb.append("  •  ");
-                sb.append("👁️ ").append(visiblePortion.trim());
+                sb.append(visiblePortion.trim());
             }
             if (uncertaintyReason != null && !uncertaintyReason.trim().isEmpty()) {
                 if (sb.length() > 0) sb.append("  •  ");
-                sb.append("⚠️ ").append(uncertaintyReason.trim());
+                sb.append(uncertaintyReason.trim());
             }
             return sb.toString();
         }

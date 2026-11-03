@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.amstudio.fitbond.helper.OneSignalManager;
 import com.amstudio.fitbond.repository.TencentChatManager;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
@@ -19,6 +20,19 @@ public class FitUpApplication extends Application {
         super.onCreate();
         instance = this;
 
+        // Explicitly initialize FirebaseApp context first
+        FirebaseApp.initializeApp(this);
+
+        // Initialize Firebase App Check before any other Firebase services (Auth, Firestore, etc.)
+        FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
+        if (BuildConfig.DEBUG) {
+            firebaseAppCheck.installAppCheckProviderFactory(
+                    DebugAppCheckProviderFactory.getInstance());
+        } else {
+            firebaseAppCheck.installAppCheckProviderFactory(
+                    PlayIntegrityAppCheckProviderFactory.getInstance());
+        }
+
         // Initialize OneSignal Push Notification SDK off the main thread
         OneSignalManager.getInstance().initialize(this, OneSignalManager.DEFAULT_APP_ID);
 
@@ -30,16 +44,6 @@ public class FitUpApplication extends Application {
 
         // Register application context for Tencent Chat SDK initialization
         TencentChatManager.ContextHolder.setContext(this);
-
-        // Initialize Firebase App Check
-        FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
-        if (BuildConfig.DEBUG) {
-            firebaseAppCheck.installAppCheckProviderFactory(
-                    DebugAppCheckProviderFactory.getInstance());
-        } else {
-            firebaseAppCheck.installAppCheckProviderFactory(
-                    PlayIntegrityAppCheckProviderFactory.getInstance());
-        }
     }
 
     public static FitUpApplication getInstance() {

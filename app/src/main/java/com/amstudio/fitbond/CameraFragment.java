@@ -4,10 +4,12 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Dialog;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -74,6 +76,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -182,7 +185,7 @@ public class CameraFragment extends Fragment {
                     if (uri != null) {
                         ArrayList<String> uris = new ArrayList<>();
                         uris.add(uri.toString());
-                        GalleryPreviewActivity.open(requireContext(), uris, null, "Read at least 10 pages");
+                        GalleryPreviewActivity.open(requireContext(), uris, null, "Gallery");
                     }
                 });
     }
@@ -291,7 +294,7 @@ public class CameraFragment extends Fragment {
         });
 
         btnGallery.setOnClickListener(v -> {
-            GalleryPreviewActivity.openWithSampleData(requireContext(), "Read at least 10 pages");
+            GalleryPreviewActivity.openWithSampleData(requireContext(), "Gallery");
         });
 
         btnGallery.setOnLongClickListener(v -> {
@@ -972,12 +975,11 @@ public class CameraFragment extends Fragment {
                                 headerRow.setGravity(Gravity.CENTER_VERTICAL);
 
                                 TextView tvName = new TextView(ctx);
-                                String emoji = item.getCategoryEmoji();
                                 String displayName = item.getDisplayName();
                                 if (item.getCount() > 1) {
                                     displayName = item.getCount() + "x " + displayName;
                                 }
-                                tvName.setText(emoji + " " + displayName);
+                                tvName.setText(displayName);
                                 tvName.setTextColor(Color.WHITE);
                                 tvName.setTextSize(15f);
                                 tvName.setTypeface(null, Typeface.BOLD);
@@ -1013,10 +1015,10 @@ public class CameraFragment extends Fragment {
                                 FoodAnalysisResult.NutritionInfo n = item.getNutrition();
                                 if (n != null) {
                                     TextView tvNut = new TextView(ctx);
-                                    String nutStr = "🔥 " + Math.round(n.getCalories()) + " kcal   •   🥩 " +
-                                            Math.round(n.getProtein()) + "g P   •   🌾 " +
-                                            Math.round(n.getCarbs()) + "g C   •   🥑 " +
-                                            Math.round(n.getFat()) + "g F   •   🎯 " +
+                                    String nutStr = Math.round(n.getCalories()) + " kcal   •   " +
+                                            Math.round(n.getProtein()) + "g P   •   " +
+                                            Math.round(n.getCarbs()) + "g C   •   " +
+                                            Math.round(n.getFat()) + "g F   •   " +
                                             Math.round(item.getConfidence() * 100) + "% match";
                                     tvNut.setText(nutStr);
                                     tvNut.setTextColor(Color.parseColor("#CBD5E1"));
@@ -1089,9 +1091,49 @@ public class CameraFragment extends Fragment {
     }
 
 
+    private void loadLatestGalleryThumbnail() {
+        if (getContext() == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        }
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Uri latestUri = null;
+            Uri collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            String[] projection = new String[]{ MediaStore.Images.Media._ID };
+            String sortOrder = MediaStore.Images.Media.DATE_ADDED + " DESC";
+            try (Cursor cursor = requireContext().getContentResolver().query(collection, projection, null, null, sortOrder)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    if (idColumn != -1) {
+                        long id = cursor.getLong(idColumn);
+                        latestUri = ContentUris.withAppendedId(collection, id);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to fetch latest gallery thumbnail", e);
+            }
+
+            final Uri thumbnailUri = latestUri;
+            mainHandler.post(() -> {
+                if (isAdded() && thumbnailUri != null) {
+                    updateGalleryThumbnail(thumbnailUri);
+                }
+            });
+        });
+    }
+
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onResume() {
+        super.onResume();
+        loadLatestGalleryThumbnail();
         if (activeRecording != null) {
             stopVideoRecording();
         }

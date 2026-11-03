@@ -200,4 +200,7 @@
     <string name="status_failed">Failed to deliver</string>
     <string name="photo_snap_label">Photo Snap</string>
     <string name="video_snap_label">Video Snap • %1$s</string>
+
+    <!-- Google Sign-In Web Client ID -->
+    <string name="google_web_client_id" translatable="false">86510177345-hqt64l5nu64n4p5bfhadq13b7p02q048.apps.googleusercontent.com</string>
 </resources>

@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -19,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -29,14 +32,21 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.amstudio.fitbond.helper.OneSignalManager;
-
 import com.amstudio.fitbond.model.UserProfile;
 import com.amstudio.fitbond.repository.UserRepository;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
 public class AuthActivity extends AppCompatActivity {
@@ -47,6 +57,7 @@ public class AuthActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private boolean isSignUpMode = false;
+    private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     // View References
     private ImageView btnBack;
@@ -110,6 +121,20 @@ public class AuthActivity extends AppCompatActivity {
             });
         }
 
+        // Register ActivityResultLauncher for Google Sign-In
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        handleGoogleSignInResult(task);
+                    } else {
+                        showLoading(false);
+                        Toast.makeText(AuthActivity.this, "Google Sign-In canceled or failed", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
         initializeViews();
         setupClickListeners();
         setupTermsAndPrivacyNotice();
@@ -168,9 +193,7 @@ public class AuthActivity extends AppCompatActivity {
         }
 
         if (btnGoogleSignin != null) {
-            btnGoogleSignin.setOnClickListener(v -> {
-                Toast.makeText(AuthActivity.this, "Google Sign-In selected", Toast.LENGTH_SHORT).show();
-            });
+            btnGoogleSignin.setOnClickListener(v -> performGoogleSignIn());
         }
 
         if (tvBottomSwitchPrompt != null) {
@@ -441,6 +464,121 @@ public class AuthActivity extends AppCompatActivity {
                         });
             }
         }
+    }
+
+    private String getWebClientId() {
+        int resId = getResources().getIdentifier("default_web_client_id", "string", getPackageName());
+        if (resId != 0) {
+            String client = getString(resId);
+            if (!TextUtils.isEmpty(client)) {
+                return client;
+            }
+        }
+        int customResId = getResources().getIdentifier("google_web_client_id", "string", getPackageName());
+        if (customResId != 0) {
+            String customClient = getString(customResId);
+            if (!TextUtils.isEmpty(customClient) && !customClient.contains("YOUR_WEB_CLIENT_ID")) {
+                return customClient;
+            }
+        }
+        return "";
+    }
+
+    private void performGoogleSignIn() {
+        showLoading(true);
+
+        String webClientId = getWebClientId();
+
+        GoogleSignInOptions.Builder gsoBuilder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestProfile();
+
+        if (!TextUtils.isEmpty(webClientId)) {
+            gsoBuilder.requestIdToken(webClientId);
+        }
+
+        GoogleSignInOptions gso = gsoBuilder.build();
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
+            Intent signInIntent = googleSignInClient.getSignInIntent();
+            googleSignInLauncher.launch(signInIntent);
+        });
+    }
+
+    private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            if (account != null) {
+                String idToken = account.getIdToken();
+                if (idToken != null && !idToken.isEmpty()) {
+                    firebaseAuthWithGoogle(idToken, account);
+                } else {
+                    FirebaseUser currentUser = mAuth.getCurrentUser();
+                    if (currentUser != null) {
+                        syncGoogleUserProfile(currentUser, account);
+                    } else {
+                        showLoading(false);
+                        Toast.makeText(this, "Google Sign-In requires Web Client ID. Configure google-services.json or strings.xml", Toast.LENGTH_LONG).show();
+                    }
+                }
+            } else {
+                showLoading(false);
+                Toast.makeText(this, "Google Sign-In failed: Account null", Toast.LENGTH_SHORT).show();
+            }
+        } catch (ApiException e) {
+            showLoading(false);
+            Log.w("AuthActivity", "Google signInResult:failed code=" + e.getStatusCode(), e);
+            if (e.getStatusCode() == 12500) {
+                Toast.makeText(this, "Google Sign-In failed. Please verify SHA-1 fingerprint in Firebase Console.", Toast.LENGTH_LONG).show();
+            } else if (e.getStatusCode() == 10) {
+                Toast.makeText(this, "Developer error: Ensure OAuth Web Client ID & SHA-1 are added to Firebase.", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Google Sign-In error (Code: " + e.getStatusCode() + ")", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void firebaseAuthWithGoogle(String idToken, GoogleSignInAccount account) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            syncGoogleUserProfile(user, account);
+                        } else {
+                            showLoading(false);
+                            navigateToMainApp();
+                        }
+                    } else {
+                        showLoading(false);
+                        String errorMsg = task.getException() != null ? task.getException().getLocalizedMessage() : "Google authentication failed";
+                        Toast.makeText(AuthActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void syncGoogleUserProfile(FirebaseUser user, GoogleSignInAccount account) {
+        UserRepository.getInstance().ensureUserProfileExistsForGoogleUser(
+                user,
+                account,
+                new UserRepository.ProfileCallback() {
+                    @Override
+                    public void onSuccess(UserProfile profile) {
+                        showLoading(false);
+                        Toast.makeText(AuthActivity.this, "Welcome " + (user.getDisplayName() != null ? user.getDisplayName() : "") + "!", Toast.LENGTH_SHORT).show();
+                        navigateToMainApp();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        showLoading(false);
+                        Toast.makeText(AuthActivity.this, "Signed in via Google!", Toast.LENGTH_SHORT).show();
+                        navigateToMainApp();
+                    }
+                }
+        );
     }
 
     private void navigateToMainApp() {

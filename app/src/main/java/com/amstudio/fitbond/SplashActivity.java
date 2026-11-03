@@ -14,9 +14,6 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import com.google.firebase.appcheck.FirebaseAppCheck;
-import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory;
-import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -50,16 +47,6 @@ public class SplashActivity extends AppCompatActivity {
                 );
                 return WindowInsetsCompat.CONSUMED;
             });
-        }
-
-        // Initialize Firebase App Check with Debug provider in debug builds and Play Integrity in release
-        FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
-        if (BuildConfig.DEBUG) {
-            firebaseAppCheck.installAppCheckProviderFactory(
-                    DebugAppCheckProviderFactory.getInstance());
-        } else {
-            firebaseAppCheck.installAppCheckProviderFactory(
-                    PlayIntegrityAppCheckProviderFactory.getInstance());
         }
 
         // Post navigation check after delay

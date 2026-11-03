@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 
 import com.amstudio.fitbond.FitUpApplication;
 import com.amstudio.fitbond.model.UserProfile;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -72,10 +73,57 @@ public class UserRepository {
         return user != null ? user.getUid() : null;
     }
 
+    public void ensureUserProfileExistsForGoogleUser(FirebaseUser user, GoogleSignInAccount account, ProfileCallback callback) {
+        if (user == null) {
+            callback.onError(new IllegalArgumentException("FirebaseUser cannot be null"));
+            return;
+        }
+
+        String uid = user.getUid();
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        UserProfile profile = doc.toObject(UserProfile.class);
+                        if (profile != null) {
+                            if (profile.getUid() == null) profile.setUid(uid);
+                            updateUserOnlineStatus(true);
+                            cachedProfile = profile;
+                            profileCacheTimestamp = System.currentTimeMillis();
+                            saveProfileToLocalCache(profile);
+                            callback.onSuccess(profile);
+                        } else {
+                            callback.onError(new Exception("Failed to parse profile"));
+                        }
+                    } else {
+                        // Create profile for new Google user
+                        String email = user.getEmail() != null && !user.getEmail().isEmpty() ? user.getEmail() : (account != null && account.getEmail() != null ? account.getEmail() : "");
+                        String fullName = user.getDisplayName() != null && !user.getDisplayName().isEmpty() ? user.getDisplayName() : (account != null && account.getDisplayName() != null ? account.getDisplayName() : "Gym Member");
+                        String avatarUrl = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : (account != null && account.getPhotoUrl() != null ? account.getPhotoUrl().toString() : null);
+
+                        String rawUsername = email.contains("@") ? email.split("@")[0] : fullName.replace(" ", "_");
+
+                        createProfileForNewUserWithAvatar(uid, email, fullName, rawUsername, avatarUrl, callback);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Error checking user profile in Firestore for Google User", e);
+                    String email = user.getEmail() != null ? user.getEmail() : "";
+                    String fullName = user.getDisplayName() != null ? user.getDisplayName() : "Gym Member";
+                    String avatarUrl = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
+                    String rawUsername = email.contains("@") ? email.split("@")[0] : fullName.replace(" ", "_");
+
+                    createProfileForNewUserWithAvatar(uid, email, fullName, rawUsername, avatarUrl, callback);
+                });
+    }
+
     public void createProfileForNewUser(String uid, String email, String fullName, String rawUsername, ProfileCallback callback) {
+        createProfileForNewUserWithAvatar(uid, email, fullName, rawUsername, null, callback);
+    }
+
+    public void createProfileForNewUserWithAvatar(String uid, String email, String fullName, String rawUsername, String avatarUrl, ProfileCallback callback) {
         String cleanUsername = rawUsername.toLowerCase().trim().replaceAll("[^a-z0-9_]", "");
         if (cleanUsername.isEmpty()) {
-            cleanUsername = "gymgoer_" + uid.substring(0, 6).toLowerCase();
+            cleanUsername = "gymgoer_" + uid.substring(0, Math.min(6, uid.length())).toLowerCase();
         }
 
         final String finalUsername = cleanUsername;
@@ -86,15 +134,15 @@ public class UserRepository {
                         String mappedUid = task.getResult().getString("uid");
                         if (mappedUid != null && !mappedUid.equals(uid)) {
                             String uniqueUsername = finalUsername + "_" + (System.currentTimeMillis() % 1000);
-                            saveUserProfile(uid, email, uniqueUsername, fullName, callback);
+                            saveUserProfile(uid, email, uniqueUsername, fullName, avatarUrl, callback);
                             return;
                         }
                     }
-                    saveUserProfile(uid, email, finalUsername, fullName, callback);
+                    saveUserProfile(uid, email, finalUsername, fullName, avatarUrl, callback);
                 })
                 .addOnFailureListener(e -> {
                     Log.w(TAG, "Username check error, proceeding with profile creation", e);
-                    saveUserProfile(uid, email, finalUsername, fullName, callback);
+                    saveUserProfile(uid, email, finalUsername, fullName, avatarUrl, callback);
                 });
     }
 
@@ -112,7 +160,11 @@ public class UserRepository {
     }
 
     private void saveUserProfile(String uid, String email, String username, String fullName, ProfileCallback callback) {
-        UserProfile profile = new UserProfile(uid, email, username, fullName, "Gym enthusiast 💪", null);
+        saveUserProfile(uid, email, username, fullName, null, callback);
+    }
+
+    private void saveUserProfile(String uid, String email, String username, String fullName, String avatarUrl, ProfileCallback callback) {
+        UserProfile profile = new UserProfile(uid, email, username, fullName, "Gym enthusiast 💪", avatarUrl);
         profile.setOnline(true);
 
         db.runTransaction(transaction -> {
