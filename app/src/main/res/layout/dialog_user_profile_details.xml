@@ -125,6 +125,46 @@
                 android:textSize="11sp" />
         </LinearLayout>
 
+        <!-- Private Account Lock Section -->
+        <LinearLayout
+            android:id="@+id/layout_private_account_lock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_pill_surface"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_lock"
+                app:tint="@color/electric_blue" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif-bold"
+                android:text="This Account is Private"
+                android:textColor="@color/primary_text"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="sans-serif"
+                android:gravity="center"
+                android:text="Follow this account to see their details and send messages."
+                android:textColor="@color/secondary_text"
+                android:textSize="12sp" />
+        </LinearLayout>
+
         <!-- Action Buttons Row (Follow + Send Message) -->
         <LinearLayout
             android:layout_width="match_parent"

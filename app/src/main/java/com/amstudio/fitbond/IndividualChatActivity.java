@@ -441,6 +441,7 @@ public class IndividualChatActivity extends AppCompatActivity {
                     if (tvStatus != null) {
                         tvStatus.setText(isOnline ? "active now" : "active recently");
                     }
+                    checkMessagingPermission(profile);
                 }
             }
 
@@ -449,6 +450,42 @@ public class IndividualChatActivity extends AppCompatActivity {
                 // Keep default header
             }
         });
+    }
+
+    private void checkMessagingPermission(UserProfile profile) {
+        if (profile == null || !profile.isPrivate()) return;
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        if (currentUid == null || chatId == null || chatId.equals(currentUid)) return;
+
+        com.amstudio.fitbond.repository.FriendRepository.getInstance().getAcceptedFriendUids(new com.amstudio.fitbond.repository.FriendRepository.FriendUidsCallback() {
+            @Override
+            public void onSuccess(Set<String> friendUids) {
+                if (!isFinishing() && (friendUids == null || !friendUids.contains(chatId))) {
+                    disableMessagingForPrivateUser();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isFinishing()) {
+                    disableMessagingForPrivateUser();
+                }
+            }
+        });
+    }
+
+    private void disableMessagingForPrivateUser() {
+        if (etInput != null) {
+            etInput.setEnabled(false);
+            etInput.setHint("Account is private. Follow to message.");
+        }
+        if (btnSend != null) btnSend.setEnabled(false);
+        if (btnGallery != null) btnGallery.setEnabled(false);
+        if (btnSnapShortcut != null) btnSnapShortcut.setEnabled(false);
+        if (btnEmoji != null) btnEmoji.setEnabled(false);
+        if (btnVoiceCall != null) btnVoiceCall.setEnabled(false);
+        if (btnVideoCall != null) btnVideoCall.setEnabled(false);
+        Toast.makeText(this, "This account is private. Messages can only be sent after your follow request is accepted.", Toast.LENGTH_LONG).show();
     }
 
     private void setupRecyclerView() {

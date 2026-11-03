@@ -239,17 +239,47 @@ public class FriendRepository {
     }
 
     public void sendFriendRequest(String targetUid, OperationCallback callback) {
-        callFriendshipFunction("SEND_REQUEST", targetUid, null, new OperationCallback() {
-            @Override
-            public void onSuccess() {
-                callback.onSuccess();
-            }
+        String currentUid = getCurrentUid();
+        if (currentUid == null || targetUid == null) {
+            callback.onError(new Exception("Invalid user ID"));
+            return;
+        }
 
-            @Override
-            public void onError(Exception e) {
-                fallbackSendFriendRequest(targetUid, callback);
-            }
-        });
+        db.collection("users").document(targetUid).get()
+                .addOnSuccessListener(doc -> {
+                    boolean isPrivate = false;
+                    if (doc.exists() && doc.getBoolean("isPrivate") != null) {
+                        isPrivate = Boolean.TRUE.equals(doc.getBoolean("isPrivate"));
+                    }
+                    if (!isPrivate) {
+                        directFollowUser(currentUid, targetUid, callback);
+                    } else {
+                        fallbackSendFriendRequest(targetUid, callback);
+                    }
+                })
+                .addOnFailureListener(e -> fallbackSendFriendRequest(targetUid, callback));
+    }
+
+    private void directFollowUser(String currentUid, String targetUid, OperationCallback callback) {
+        String u1 = currentUid.compareTo(targetUid) < 0 ? currentUid : targetUid;
+        String u2 = currentUid.compareTo(targetUid) < 0 ? targetUid : currentUid;
+        String friendshipId = u1 + "_" + u2;
+
+        db.runTransaction(transaction -> {
+            Map<String, Object> fs = new HashMap<>();
+            fs.put("friendshipId", friendshipId);
+            fs.put("user1Uid", u1);
+            fs.put("user2Uid", u2);
+            fs.put("createdAt", FieldValue.serverTimestamp());
+            transaction.set(db.collection("friendships").document(friendshipId), fs);
+
+            transaction.update(db.collection("users").document(currentUid), "friendsCount", FieldValue.increment(1));
+            return null;
+        }).addOnSuccessListener(aVoid -> {
+            invalidateFriendsCache();
+            UserRepository.getInstance().invalidateCache();
+            callback.onSuccess();
+        }).addOnFailureListener(callback::onError);
     }
 
     private void fallbackSendFriendRequest(String targetUid, OperationCallback callback) {

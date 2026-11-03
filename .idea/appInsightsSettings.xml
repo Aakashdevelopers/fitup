@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.amstudio.fitup" />
-                  <option name="mobileSdkAppId" value="1:202233961049:android:d2ed2c7ef6f87932cfef48" />
-                  <option name="projectId" value="rupixo-8ac97" />
-                  <option name="projectNumber" value="202233961049" />
+                  <option name="appId" value="com.amstudio.fitbond" />
+                  <option name="mobileSdkAppId" value="1:86510177345:android:c2dbb13c5ca4cb9c848ac0" />
+                  <option name="projectId" value="fitbond-c6560" />
+                  <option name="projectNumber" value="86510177345" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

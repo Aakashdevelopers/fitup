@@ -215,6 +215,7 @@ public class UserRepository {
             json.put("location", profile.getLocation() != null ? profile.getLocation() : "");
             json.put("friendsCount", profile.getFriendsCount());
             json.put("isOnline", profile.isOnline());
+            json.put("isPrivate", profile.isPrivate());
 
             prefs.edit().putString("profile_" + profile.getUid(), json.toString()).apply();
         } catch (Exception e) {
@@ -246,6 +247,7 @@ public class UserRepository {
             profile.setLocation(json.optString("location"));
             profile.setFriendsCount(json.optLong("friendsCount", 0));
             profile.setOnline(json.optBoolean("isOnline", false));
+            profile.setPrivate(json.optBoolean("isPrivate", false));
             return profile;
         } catch (Exception e) {
             Log.w(TAG, "Failed to load profile from local cache", e);
@@ -399,6 +401,7 @@ public class UserRepository {
         params.put("dateOfBirth", updatedProfile.getDateOfBirth());
         params.put("location", updatedProfile.getLocation());
         params.put("avatarUrl", updatedProfile.getAvatarUrl());
+        params.put("isPrivate", updatedProfile.isPrivate());
 
         functions.getHttpsCallable("updateMyProfile")
                 .call(params)
@@ -449,6 +452,7 @@ public class UserRepository {
                             if (profile.getDateOfBirth() != null) updates.put("dateOfBirth", profile.getDateOfBirth());
                             if (profile.getLocation() != null) updates.put("location", profile.getLocation());
                             if (profile.getAvatarUrl() != null) updates.put("avatarUrl", profile.getAvatarUrl());
+                            updates.put("isPrivate", profile.isPrivate());
                             updates.put("username", normalized);
                             updates.put("normalizedUsername", normalized);
                             updates.put("updatedAt", FieldValue.serverTimestamp());
@@ -469,6 +473,7 @@ public class UserRepository {
             if (profile.getDateOfBirth() != null) updates.put("dateOfBirth", profile.getDateOfBirth());
             if (profile.getLocation() != null) updates.put("location", profile.getLocation());
             if (profile.getAvatarUrl() != null) updates.put("avatarUrl", profile.getAvatarUrl());
+            updates.put("isPrivate", profile.isPrivate());
             updates.put("updatedAt", FieldValue.serverTimestamp());
 
             db.collection("users").document(uid)

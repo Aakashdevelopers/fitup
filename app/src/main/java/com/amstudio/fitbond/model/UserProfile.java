@@ -17,6 +17,7 @@ public class UserProfile {
     private String location;
     private long friendsCount;
     private boolean isOnline;
+    private boolean isPrivate;
 
     @ServerTimestamp
     private Timestamp lastActive;
@@ -165,6 +166,22 @@ public class UserProfile {
 
     public void setIsOnline(boolean isOnline) {
         this.isOnline = isOnline;
+    }
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public boolean getIsPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean isPrivate) {
+        this.isPrivate = isPrivate;
+    }
+
+    public void setIsPrivate(boolean isPrivate) {
+        this.isPrivate = isPrivate;
     }
 
     public Timestamp getLastActive() {

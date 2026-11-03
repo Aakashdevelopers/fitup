@@ -68,6 +68,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private AutoCompleteTextView actvGender;
     private TextInputEditText etDob;
     private TextInputEditText etLocation;
+    private com.google.android.material.switchmaterial.SwitchMaterial switchPrivateAccount;
 
     private MaterialButton btnSaveChanges;
     private View layoutLoadingOverlay;
@@ -214,6 +215,7 @@ public class EditProfileActivity extends AppCompatActivity {
         actvGender = findViewById(R.id.actv_gender);
         etDob = findViewById(R.id.et_dob);
         etLocation = findViewById(R.id.et_location);
+        switchPrivateAccount = findViewById(R.id.switch_private_account);
 
         btnSaveChanges = findViewById(R.id.btn_save_changes);
         layoutLoadingOverlay = findViewById(R.id.layout_loading_overlay);
@@ -426,6 +428,9 @@ public class EditProfileActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(profile.getLocation())) {
             etLocation.setText(profile.getLocation());
         }
+        if (switchPrivateAccount != null) {
+            switchPrivateAccount.setChecked(profile.isPrivate());
+        }
 
         if (!TextUtils.isEmpty(profile.getAvatarUrl())) {
             AvatarLoader.loadAvatar(this, profile.getAvatarUrl(), ivEditAvatar);
@@ -502,6 +507,9 @@ public class EditProfileActivity extends AppCompatActivity {
         profileToUpdate.setDateOfBirth(dob);
         profileToUpdate.setLocation(location);
         profileToUpdate.setAvatarUrl(avatarUrl);
+        if (switchPrivateAccount != null) {
+            profileToUpdate.setPrivate(switchPrivateAccount.isChecked());
+        }
 
         UserRepository.getInstance().updateMyProfile(profileToUpdate, new UserRepository.ActionCallback() {
             @Override

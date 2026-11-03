@@ -34,6 +34,7 @@ public class UserProfileDetailsDialog extends DialogFragment {
     private TextView tvBio;
     private TextView tvLocation;
     private View layoutLocation;
+    private View layoutPrivateLock;
     private MaterialButton btnFollow;
     private MaterialButton btnChat;
     private ImageButton btnClose;
@@ -89,6 +90,7 @@ public class UserProfileDetailsDialog extends DialogFragment {
         tvBio = view.findViewById(R.id.tv_dialog_bio);
         tvLocation = view.findViewById(R.id.tv_dialog_location);
         layoutLocation = view.findViewById(R.id.layout_dialog_location);
+        layoutPrivateLock = view.findViewById(R.id.layout_private_account_lock);
         btnFollow = view.findViewById(R.id.btn_dialog_follow);
         btnChat = view.findViewById(R.id.btn_dialog_chat);
         btnClose = view.findViewById(R.id.btn_close_user_details);
@@ -227,6 +229,7 @@ public class UserProfileDetailsDialog extends DialogFragment {
                     isPending = false;
                     if (btnFollow != null) btnFollow.setEnabled(true);
                     updateFollowButtonUI();
+                    updatePrivacyUI();
                     Toast.makeText(getContext(), "Unfollowed user", Toast.LENGTH_SHORT).show();
                 }
 
@@ -248,10 +251,18 @@ public class UserProfileDetailsDialog extends DialogFragment {
                 public void onSuccess() {
                     isFollowLoading = false;
                     if (!isAdded()) return;
-                    isPending = true;
+                    if (loadedProfile != null && loadedProfile.isPrivate()) {
+                        isPending = true;
+                        isFollowing = false;
+                        Toast.makeText(getContext(), "Follow request sent!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        isFollowing = true;
+                        isPending = false;
+                        Toast.makeText(getContext(), "Following!", Toast.LENGTH_SHORT).show();
+                    }
                     if (btnFollow != null) btnFollow.setEnabled(true);
                     updateFollowButtonUI();
-                    Toast.makeText(getContext(), "Follow request sent!", Toast.LENGTH_SHORT).show();
+                    updatePrivacyUI();
                 }
 
                 @Override
@@ -259,9 +270,33 @@ public class UserProfileDetailsDialog extends DialogFragment {
                     isFollowLoading = false;
                     if (!isAdded()) return;
                     if (btnFollow != null) btnFollow.setEnabled(true);
-                    Toast.makeText(getContext(), "Failed to send follow request", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to follow", Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+    }
+
+    private void updatePrivacyUI() {
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        boolean isSelf = !TextUtils.isEmpty(targetUid) && targetUid.equals(currentUid);
+        boolean isPrivateAccount = loadedProfile != null && loadedProfile.isPrivate();
+
+        if (isPrivateAccount && !isFollowing && !isSelf) {
+            if (layoutPrivateLock != null) layoutPrivateLock.setVisibility(View.VISIBLE);
+            if (tvBio != null) tvBio.setVisibility(View.GONE);
+            if (layoutLocation != null) layoutLocation.setVisibility(View.GONE);
+            if (btnChat != null) {
+                btnChat.setAlpha(0.6f);
+            }
+        } else {
+            if (layoutPrivateLock != null) layoutPrivateLock.setVisibility(View.GONE);
+            if (tvBio != null) tvBio.setVisibility(View.VISIBLE);
+            if (layoutLocation != null && loadedProfile != null && !TextUtils.isEmpty(loadedProfile.getLocation())) {
+                layoutLocation.setVisibility(View.VISIBLE);
+            }
+            if (btnChat != null) {
+                btnChat.setAlpha(1.0f);
+            }
         }
     }
 
@@ -289,6 +324,7 @@ public class UserProfileDetailsDialog extends DialogFragment {
             btnFollow.setTextColor(Color.WHITE);
             btnFollow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#26FFFFFF")));
         }
+        updatePrivacyUI();
     }
 
     private void populateData(@NonNull UserProfile profile) {
@@ -316,10 +352,18 @@ public class UserProfileDetailsDialog extends DialogFragment {
         if (ivAvatar != null) {
             AvatarLoader.loadAvatar(this, profile.getAvatarUrl(), ivAvatar);
         }
+        updatePrivacyUI();
     }
 
     private void openIndividualChat() {
         if (getContext() == null || loadedProfile == null) return;
+
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        boolean isSelf = !TextUtils.isEmpty(targetUid) && targetUid.equals(currentUid);
+        if (loadedProfile.isPrivate() && !isFollowing && !isSelf) {
+            Toast.makeText(getContext(), "Follow this account and wait for request approval to message.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Intent intent = new Intent(getContext(), IndividualChatActivity.class);
         intent.putExtra("CHAT_ID", loadedProfile.getUid() != null ? loadedProfile.getUid() : targetUid);
