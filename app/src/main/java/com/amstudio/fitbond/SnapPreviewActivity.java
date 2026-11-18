@@ -38,6 +38,7 @@ public class SnapPreviewActivity extends AppCompatActivity {
 
     public static final String EXTRA_MEDIA_URI = "extra_media_uri";
     public static final String EXTRA_MEDIA_TYPE = "extra_media_type";
+    public static final String EXTRA_CAPTION = "extra_caption";
     public static final String MEDIA_TYPE_PHOTO = "photo";
     public static final String MEDIA_TYPE_VIDEO = "video";
 
@@ -218,11 +219,7 @@ public class SnapPreviewActivity extends AppCompatActivity {
 
         // Editing Toolbar Placeholders
         if (btnToolText != null) {
-            btnToolText.setOnClickListener(v -> {
-                isCaptionVisible = !isCaptionVisible;
-                tvCaptionOverlay.setVisibility(isCaptionVisible ? View.VISIBLE : View.GONE);
-                Toast.makeText(this, isCaptionVisible ? "Text Caption Added" : "Text Caption Hidden", Toast.LENGTH_SHORT).show();
-            });
+            btnToolText.setOnClickListener(v -> openTextCaptionDialog());
         }
 
         if (btnToolCrop != null) {
@@ -389,12 +386,43 @@ public class SnapPreviewActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void openTextCaptionDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle("Add Snap Caption");
+
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setHint("Type caption here...");
+        if (tvCaptionOverlay != null && tvCaptionOverlay.getVisibility() == View.VISIBLE) {
+            input.setText(tvCaptionOverlay.getText());
+        }
+        builder.setView(input);
+
+        builder.setPositiveButton("Done", (dialog, which) -> {
+            String text = input.getText().toString().trim();
+            if (tvCaptionOverlay != null) {
+                if (!text.isEmpty()) {
+                    tvCaptionOverlay.setText(text);
+                    tvCaptionOverlay.setVisibility(View.VISIBLE);
+                    isCaptionVisible = true;
+                } else {
+                    tvCaptionOverlay.setVisibility(View.GONE);
+                    isCaptionVisible = false;
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
     private void navigateToSelectFriends() {
         Intent intent = new Intent(SnapPreviewActivity.this, SelectFriendsActivity.class);
         if (mediaUri != null) {
             intent.putExtra(EXTRA_MEDIA_URI, mediaUri.toString());
         }
         intent.putExtra(EXTRA_MEDIA_TYPE, mediaType);
+        if (tvCaptionOverlay != null && tvCaptionOverlay.getVisibility() == View.VISIBLE && tvCaptionOverlay.getText() != null) {
+            intent.putExtra(EXTRA_CAPTION, tvCaptionOverlay.getText().toString().trim());
+        }
         startActivity(intent);
     }
 

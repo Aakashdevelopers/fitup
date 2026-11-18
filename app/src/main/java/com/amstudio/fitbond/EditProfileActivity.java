@@ -27,6 +27,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -36,6 +37,16 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import java.util.List;
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.amstudio.fitbond.model.UserProfile;
 import com.amstudio.fitbond.repository.UserRepository;
 import com.amstudio.fitbond.util.AvatarLoader;
@@ -67,8 +78,10 @@ public class EditProfileActivity extends AppCompatActivity {
     private TextInputEditText etBio;
     private AutoCompleteTextView actvGender;
     private TextInputEditText etDob;
+    private TextInputLayout tilLocation;
     private TextInputEditText etLocation;
     private com.google.android.material.switchmaterial.SwitchMaterial switchPrivateAccount;
+    private com.google.android.material.switchmaterial.SwitchMaterial switchShowLocation;
 
     private MaterialButton btnSaveChanges;
     private View layoutLoadingOverlay;
@@ -109,6 +122,7 @@ public class EditProfileActivity extends AppCompatActivity {
         }
 
         initPhotoPickerLauncher();
+        initLocationPermissionLauncher();
         initViews();
         setupGenderDropdown();
         setupDobPicker();
@@ -116,6 +130,23 @@ public class EditProfileActivity extends AppCompatActivity {
         setupUsernameValidation();
 
         loadProfileData();
+    }
+
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
+
+    private void initLocationPermissionLauncher() {
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> {
+                    Boolean fine = result.get(Manifest.permission.ACCESS_FINE_LOCATION);
+                    Boolean coarse = result.get(Manifest.permission.ACCESS_COARSE_LOCATION);
+                    if ((fine != null && fine) || (coarse != null && coarse)) {
+                        fetchCurrentGPSLocation();
+                    } else {
+                        Toast.makeText(this, "Location permission is required to auto-detect location", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 
     private ActivityResultLauncher<String> getContentLauncher;
@@ -214,12 +245,117 @@ public class EditProfileActivity extends AppCompatActivity {
         etBio = findViewById(R.id.et_bio);
         actvGender = findViewById(R.id.actv_gender);
         etDob = findViewById(R.id.et_dob);
+        tilLocation = findViewById(R.id.til_location);
         etLocation = findViewById(R.id.et_location);
         switchPrivateAccount = findViewById(R.id.switch_private_account);
+        switchShowLocation = findViewById(R.id.switch_show_location);
+
+        if (tilLocation != null) {
+            tilLocation.setEndIconOnClickListener(v -> checkLocationPermissionAndFetch());
+        }
 
         btnSaveChanges = findViewById(R.id.btn_save_changes);
         layoutLoadingOverlay = findViewById(R.id.layout_loading_overlay);
         tvLoadingText = findViewById(R.id.tv_loading_text);
+    }
+
+    private void checkLocationPermissionAndFetch() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fetchCurrentGPSLocation();
+        } else {
+            if (locationPermissionLauncher != null) {
+                locationPermissionLauncher.launch(new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                });
+            }
+        }
+    }
+
+    private void fetchCurrentGPSLocation() {
+        Toast.makeText(this, "Detecting current location...", Toast.LENGTH_SHORT).show();
+        try {
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (lm == null) return;
+
+            Location bestLocation = null;
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                bestLocation = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            }
+            if (bestLocation == null && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)) {
+                bestLocation = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
+
+            if (bestLocation != null) {
+                geocodeLocation(bestLocation.getLatitude(), bestLocation.getLongitude());
+            } else {
+                String provider = lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    lm.requestSingleUpdate(provider, new android.location.LocationListener() {
+                        @Override
+                        public void onLocationChanged(@NonNull Location location) {
+                            if (location != null) {
+                                geocodeLocation(location.getLatitude(), location.getLongitude());
+                            }
+                        }
+
+                        @Override
+                        public void onProviderDisabled(@NonNull String provider) {}
+
+                        @Override
+                        public void onProviderEnabled(@NonNull String provider) {}
+
+                        @Override
+                        public void onStatusChanged(String provider, int status, Bundle extras) {}
+                    }, Looper.getMainLooper());
+                } else {
+                    Toast.makeText(this, "GPS location unavailable. Please type location manually.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to get location", e);
+            Toast.makeText(this, "Location detection error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void geocodeLocation(double lat, double lng) {
+        try {
+            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                geocoder.getFromLocation(lat, lng, 1, addresses -> {
+                    if (addresses != null && !addresses.isEmpty()) {
+                        Address addr = addresses.get(0);
+                        String city = addr.getLocality() != null ? addr.getLocality() : (addr.getSubAdminArea() != null ? addr.getSubAdminArea() : "");
+                        String country = addr.getCountryName() != null ? addr.getCountryName() : "";
+                        String locationStr = !city.isEmpty() && !country.isEmpty() ? city + ", " + country : (!city.isEmpty() ? city : country);
+                        runOnUiThread(() -> {
+                            if (etLocation != null && !locationStr.isEmpty()) {
+                                etLocation.setText(locationStr);
+                                Toast.makeText(EditProfileActivity.this, "Location detected: " + locationStr, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
+            } else {
+                List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+                if (addresses != null && !addresses.isEmpty()) {
+                    Address addr = addresses.get(0);
+                    String city = addr.getLocality() != null ? addr.getLocality() : (addr.getSubAdminArea() != null ? addr.getSubAdminArea() : "");
+                    String country = addr.getCountryName() != null ? addr.getCountryName() : "";
+                    String locationStr = !city.isEmpty() && !country.isEmpty() ? city + ", " + country : (!city.isEmpty() ? city : country);
+                    if (etLocation != null && !locationStr.isEmpty()) {
+                        etLocation.setText(locationStr);
+                        Toast.makeText(this, "Location detected: " + locationStr, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Geocoding error", e);
+            Toast.makeText(this, "Address resolution error", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupGenderDropdown() {
@@ -431,6 +567,9 @@ public class EditProfileActivity extends AppCompatActivity {
         if (switchPrivateAccount != null) {
             switchPrivateAccount.setChecked(profile.isPrivate());
         }
+        if (switchShowLocation != null) {
+            switchShowLocation.setChecked(profile.isShowLocation());
+        }
 
         if (!TextUtils.isEmpty(profile.getAvatarUrl())) {
             AvatarLoader.loadAvatar(this, profile.getAvatarUrl(), ivEditAvatar);
@@ -509,6 +648,9 @@ public class EditProfileActivity extends AppCompatActivity {
         profileToUpdate.setAvatarUrl(avatarUrl);
         if (switchPrivateAccount != null) {
             profileToUpdate.setPrivate(switchPrivateAccount.isChecked());
+        }
+        if (switchShowLocation != null) {
+            profileToUpdate.setShowLocation(switchShowLocation.isChecked());
         }
 
         UserRepository.getInstance().updateMyProfile(profileToUpdate, new UserRepository.ActionCallback() {

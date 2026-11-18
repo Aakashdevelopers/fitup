@@ -51,6 +51,11 @@ public class FriendRepository {
         void onError(Exception e);
     }
 
+    public interface FollowCallback {
+        void onSuccess(boolean isDirectFollow);
+        void onError(Exception e);
+    }
+
     public interface FriendUidsCallback {
         void onSuccess(Set<String> friendUids);
         void onError(Exception e);
@@ -238,10 +243,15 @@ public class FriendRepository {
                 .addOnFailureListener(callback::onError);
     }
 
-    public void sendFriendRequest(String targetUid, OperationCallback callback) {
+    public void followUser(String targetUid, FollowCallback callback) {
         String currentUid = getCurrentUid();
         if (currentUid == null || targetUid == null) {
             callback.onError(new Exception("Invalid user ID"));
+            return;
+        }
+
+        if (currentUid.equals(targetUid)) {
+            callback.onError(new Exception("Users cannot follow themselves"));
             return;
         }
 
@@ -252,24 +262,68 @@ public class FriendRepository {
                         isPrivate = Boolean.TRUE.equals(doc.getBoolean("isPrivate"));
                     }
                     if (!isPrivate) {
-                        directFollowUser(currentUid, targetUid, callback);
+                        directFollowUser(currentUid, targetUid, new OperationCallback() {
+                            @Override
+                            public void onSuccess() {
+                                callback.onSuccess(true);
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                callback.onError(e);
+                            }
+                        });
                     } else {
-                        fallbackSendFriendRequest(targetUid, callback);
+                        fallbackSendFriendRequest(targetUid, new OperationCallback() {
+                            @Override
+                            public void onSuccess() {
+                                callback.onSuccess(false);
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                callback.onError(e);
+                            }
+                        });
                     }
                 })
-                .addOnFailureListener(e -> fallbackSendFriendRequest(targetUid, callback));
+                .addOnFailureListener(e -> fallbackSendFriendRequest(targetUid, new OperationCallback() {
+                    @Override
+                    public void onSuccess() {
+                        callback.onSuccess(false);
+                    }
+
+                    @Override
+                    public void onError(Exception ex) {
+                        callback.onError(ex);
+                    }
+                }));
+    }
+
+    public void sendFriendRequest(String targetUid, OperationCallback callback) {
+        followUser(targetUid, new FollowCallback() {
+            @Override
+            public void onSuccess(boolean isDirectFollow) {
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onError(e);
+            }
+        });
     }
 
     private void directFollowUser(String currentUid, String targetUid, OperationCallback callback) {
-        String u1 = currentUid.compareTo(targetUid) < 0 ? currentUid : targetUid;
-        String u2 = currentUid.compareTo(targetUid) < 0 ? targetUid : currentUid;
-        String friendshipId = u1 + "_" + u2;
+        String friendshipId = currentUid + "_" + targetUid;
 
         db.runTransaction(transaction -> {
             Map<String, Object> fs = new HashMap<>();
             fs.put("friendshipId", friendshipId);
-            fs.put("user1Uid", u1);
-            fs.put("user2Uid", u2);
+            fs.put("user1Uid", currentUid);
+            fs.put("user2Uid", targetUid);
+            fs.put("followerUid", currentUid);
+            fs.put("followingUid", targetUid);
             fs.put("createdAt", FieldValue.serverTimestamp());
             transaction.set(db.collection("friendships").document(friendshipId), fs);
 
@@ -341,9 +395,7 @@ public class FriendRepository {
                         return;
                     }
 
-                    String u1 = currentUid.compareTo(senderUid) < 0 ? currentUid : senderUid;
-                    String u2 = currentUid.compareTo(senderUid) < 0 ? senderUid : currentUid;
-                    String friendshipId = u1 + "_" + u2;
+                    String friendshipId = senderUid + "_" + currentUid;
 
                     db.runTransaction(transaction -> {
                         transaction.update(db.collection("friendRequests").document(requestId),
@@ -352,8 +404,10 @@ public class FriendRepository {
 
                         Map<String, Object> fs = new HashMap<>();
                         fs.put("friendshipId", friendshipId);
-                        fs.put("user1Uid", u1);
-                        fs.put("user2Uid", u2);
+                        fs.put("user1Uid", senderUid);
+                        fs.put("user2Uid", currentUid);
+                        fs.put("followerUid", senderUid);
+                        fs.put("followingUid", currentUid);
                         fs.put("createdAt", FieldValue.serverTimestamp());
                         transaction.set(db.collection("friendships").document(friendshipId), fs);
 
@@ -411,12 +465,12 @@ public class FriendRepository {
             return;
         }
 
-        String u1 = currentUid.compareTo(friendUid) < 0 ? currentUid : friendUid;
-        String u2 = currentUid.compareTo(friendUid) < 0 ? friendUid : currentUid;
-        String friendshipId = u1 + "_" + u2;
+        String friendshipId1 = currentUid + "_" + friendUid;
+        String friendshipId2 = friendUid + "_" + currentUid;
 
         db.runTransaction(transaction -> {
-            transaction.delete(db.collection("friendships").document(friendshipId));
+            transaction.delete(db.collection("friendships").document(friendshipId1));
+            transaction.delete(db.collection("friendships").document(friendshipId2));
             transaction.update(db.collection("users").document(currentUid), "friendsCount", FieldValue.increment(-1));
             return null;
         }).addOnSuccessListener(aVoid -> {
@@ -570,7 +624,20 @@ public class FriendRepository {
                                     return;
                                 }
 
-                                fetchProfilesForUids(new ArrayList<>(friendUids), callback);
+                                fetchProfilesForUids(new ArrayList<>(friendUids), new FriendsListCallback() {
+                                    @Override
+                                    public void onSuccess(List<UserProfile> profiles) {
+                                        cachedFriendsList = new ArrayList<>(profiles);
+                                        friendsCacheTimestamp = System.currentTimeMillis();
+                                        saveFriendsToLocalCache(currentUid, cachedFriendsList);
+                                        callback.onSuccess(profiles);
+                                    }
+
+                                    @Override
+                                    public void onError(Exception e) {
+                                        if (cachedFriendsList == null) callback.onError(e);
+                                    }
+                                });
                             })
                             .addOnFailureListener(e -> {
                                 if (cachedFriendsList == null) callback.onError(e);
@@ -579,6 +646,60 @@ public class FriendRepository {
                 .addOnFailureListener(e -> {
                     if (cachedFriendsList == null) callback.onError(e);
                 });
+    }
+
+    public void getFollowers(String targetUid, FriendsListCallback callback) {
+        if (targetUid == null) {
+            callback.onError(new Exception("Invalid UID"));
+            return;
+        }
+
+        db.collection("friendships")
+                .whereEqualTo("followingUid", targetUid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Set<String> followerUids = new HashSet<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        String follower = doc.getString("followerUid");
+                        if (follower == null) follower = doc.getString("user1Uid");
+                        if (follower != null && !follower.equals(targetUid)) {
+                            followerUids.add(follower);
+                        }
+                    }
+                    if (followerUids.isEmpty()) {
+                        callback.onSuccess(new ArrayList<>());
+                    } else {
+                        fetchProfilesForUids(new ArrayList<>(followerUids), callback);
+                    }
+                })
+                .addOnFailureListener(e -> callback.onError(e));
+    }
+
+    public void getFollowing(String targetUid, FriendsListCallback callback) {
+        if (targetUid == null) {
+            callback.onError(new Exception("Invalid UID"));
+            return;
+        }
+
+        db.collection("friendships")
+                .whereEqualTo("followerUid", targetUid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    Set<String> followingUids = new HashSet<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        String following = doc.getString("followingUid");
+                        if (following == null) following = doc.getString("user2Uid");
+                        if (following != null && !following.equals(targetUid)) {
+                            followingUids.add(following);
+                        }
+                    }
+                    if (followingUids.isEmpty()) {
+                        callback.onSuccess(new ArrayList<>());
+                    } else {
+                        fetchProfilesForUids(new ArrayList<>(followingUids), callback);
+                    }
+                })
+                .addOnFailureListener(e -> callback.onError(e));
     }
 
     private void fetchProfilesForUids(List<String> uids, FriendsListCallback callback) {
@@ -607,12 +728,6 @@ public class FriendRepository {
                         profiles.add(profile);
                     }
                 }
-            }
-            cachedFriendsList = new ArrayList<>(profiles);
-            friendsCacheTimestamp = System.currentTimeMillis();
-            String currentUid = getCurrentUid();
-            if (currentUid != null) {
-                saveFriendsToLocalCache(currentUid, cachedFriendsList);
             }
             callback.onSuccess(profiles);
         }).addOnFailureListener(callback::onError);

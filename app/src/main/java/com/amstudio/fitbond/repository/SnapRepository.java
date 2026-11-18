@@ -64,10 +64,15 @@ public class SnapRepository {
 
     public void sendPrivateSnap(Uri localMediaUri, String mediaType, List<String> recipientUids,
                                long durationSeconds, SnapUploadCallback callback) {
-        sendPrivateSnap(null, localMediaUri, mediaType, recipientUids, durationSeconds, callback);
+        sendPrivateSnap(null, localMediaUri, mediaType, "", recipientUids, durationSeconds, callback);
     }
 
     public void sendPrivateSnap(Context context, Uri localMediaUri, String mediaType, List<String> recipientUids,
+                               long durationSeconds, SnapUploadCallback callback) {
+        sendPrivateSnap(context, localMediaUri, mediaType, "", recipientUids, durationSeconds, callback);
+    }
+
+    public void sendPrivateSnap(Context context, Uri localMediaUri, String mediaType, String caption, List<String> recipientUids,
                                long durationSeconds, SnapUploadCallback callback) {
         String senderUid = getCurrentUid();
         if (senderUid == null) {
@@ -117,6 +122,7 @@ public class SnapRepository {
                     fullMediaUrl,
                     durationSeconds
             );
+            metadata.setCaption(caption);
 
             // Save Snap metadata in Firestore snaps/{snapId}
             db.collection("snaps").document(snapId)
@@ -126,7 +132,7 @@ public class SnapRepository {
 
                         TencentChatManager chatManager = TencentChatManager.getInstance();
                         for (String recipientUid : recipientUids) {
-                            saveSnapChatMessageToFirestore(senderUid, recipientUid, snapId, mediaType, fullMediaUrl, durationSeconds);
+                            saveSnapChatMessageToFirestore(senderUid, recipientUid, snapId, mediaType, fullMediaUrl, durationSeconds, caption);
 
                             chatManager.sendCustomSnapMessage(
                                     recipientUid,
@@ -149,9 +155,10 @@ public class SnapRepository {
                     @Override
                     public void onSuccess(String imgBbUrl) {
                         SnapMetadata meta = new SnapMetadata(snapId, senderUid, recipientUids, mediaType.toUpperCase(), imgBbUrl, durationSeconds);
+                        meta.setCaption(caption);
                         db.collection("snaps").document(snapId).set(meta);
                         for (String recipientUid : recipientUids) {
-                            saveSnapChatMessageToFirestore(senderUid, recipientUid, snapId, mediaType, imgBbUrl, durationSeconds);
+                            saveSnapChatMessageToFirestore(senderUid, recipientUid, snapId, mediaType, imgBbUrl, durationSeconds, caption);
                         }
                         callback.onSuccess(meta);
                     }
@@ -169,7 +176,7 @@ public class SnapRepository {
     }
 
     private void saveSnapChatMessageToFirestore(String senderUid, String recipientUid, String snapId,
-                                                String mediaType, String mediaUrl, long duration) {
+                                                String mediaType, String mediaUrl, long duration, String caption) {
         if (senderUid == null || recipientUid == null) return;
 
         String conversationId = senderUid.compareTo(recipientUid) < 0 ? senderUid + "_" + recipientUid : recipientUid + "_" + senderUid;
@@ -179,7 +186,8 @@ public class SnapRepository {
         snapMsgDoc.put("id", snapId);
         snapMsgDoc.put("senderUid", senderUid);
         snapMsgDoc.put("senderName", "You");
-        snapMsgDoc.put("text", "VIDEO".equalsIgnoreCase(mediaType) ? "Video Snap" : "Snap");
+        snapMsgDoc.put("text", !android.text.TextUtils.isEmpty(caption) ? caption : ("VIDEO".equalsIgnoreCase(mediaType) ? "Video Snap" : "Snap"));
+        snapMsgDoc.put("caption", caption != null ? caption : "");
         snapMsgDoc.put("type", "SNAP");
         snapMsgDoc.put("mediaType", mediaType.toUpperCase());
         snapMsgDoc.put("mediaUrl", mediaUrl);
@@ -198,15 +206,136 @@ public class SnapRepository {
             return;
         }
 
-        db.collection("snaps").document(snapId).get()
+        String cleanSnapId = snapId.startsWith("snap_") ? snapId.substring(5) : snapId;
+
+        db.collection("snaps").document(cleanSnapId).get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists()) {
                         SnapMetadata metadata = doc.toObject(SnapMetadata.class);
                         callback.onSuccess(metadata);
                     } else {
-                        callback.onError(new Exception("Snap not found or expired"));
+                        db.collection("snaps").document(snapId).get()
+                                .addOnSuccessListener(rawDoc -> {
+                                    if (rawDoc.exists()) {
+                                        callback.onSuccess(rawDoc.toObject(SnapMetadata.class));
+                                    } else {
+                                        callback.onError(new Exception("Snap not found or expired"));
+                                    }
+                                })
+                                .addOnFailureListener(callback::onError);
                     }
                 })
                 .addOnFailureListener(callback::onError);
+    }
+
+    public interface SnapActionCallback {
+        void onSuccess();
+        void onError(Exception e);
+    }
+
+    public interface SnapReplayCallback {
+        void onSuccess(int newReplayCount, boolean isExpired);
+        void onError(Exception e);
+    }
+
+    public void incrementSnapReplayCount(String conversationId, String msgId, String snapId, SnapReplayCallback callback) {
+        if (conversationId == null || msgId == null) {
+            callback.onError(new IllegalArgumentException("Invalid message parameters"));
+            return;
+        }
+
+        db.collection("chats").document(conversationId)
+                .collection("messages").document(msgId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) {
+                        callback.onError(new Exception("Snap message not found"));
+                        return;
+                    }
+
+                    Long currentReplaysObj = doc.getLong("replayCount");
+                    int currentReplays = currentReplaysObj != null ? currentReplaysObj.intValue() : 0;
+                    Boolean isSavedObj = doc.getBoolean("isSaved");
+                    boolean isSaved = Boolean.TRUE.equals(isSavedObj);
+
+                    if (currentReplays >= 3) {
+                        if (!isSaved) {
+                            deleteSnapMediaAndDoc(conversationId, msgId, snapId, doc.getString("mediaUrl"), null);
+                        }
+                        callback.onSuccess(3, true);
+                        return;
+                    }
+
+                    int newCount = currentReplays + 1;
+                    boolean willExpire = (newCount >= 3) && !isSaved;
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("replayCount", newCount);
+                    updates.put("isExpired", willExpire);
+                    if (willExpire) {
+                        updates.put("mediaUrl", "");
+                    }
+
+                    db.collection("chats").document(conversationId)
+                            .collection("messages").document(msgId)
+                            .update(updates)
+                            .addOnSuccessListener(aVoid -> {
+                                if (willExpire) {
+                                    deleteSnapMediaAndDoc(conversationId, msgId, snapId, doc.getString("mediaUrl"), null);
+                                }
+                                callback.onSuccess(newCount, willExpire);
+                            })
+                            .addOnFailureListener(callback::onError);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    public void setSnapSavedStatus(String conversationId, String msgId, boolean isSaved, SnapActionCallback callback) {
+        if (conversationId == null || msgId == null) {
+            if (callback != null) callback.onError(new IllegalArgumentException("Invalid parameters"));
+            return;
+        }
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("isSaved", isSaved);
+        if (isSaved) {
+            updates.put("isExpired", false);
+        }
+
+        db.collection("chats").document(conversationId)
+                .collection("messages").document(msgId)
+                .update(updates)
+                .addOnSuccessListener(aVoid -> {
+                    if (callback != null) callback.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    if (callback != null) callback.onError(e);
+                });
+    }
+
+    public void deleteSnapMediaAndDoc(String conversationId, String msgId, String snapId, String mediaUrl, SnapActionCallback callback) {
+        if (conversationId != null && msgId != null) {
+            db.collection("chats").document(conversationId)
+                    .collection("messages").document(msgId)
+                    .delete();
+        }
+
+        if (snapId != null && !snapId.trim().isEmpty()) {
+            String cleanSnapId = snapId.startsWith("snap_") ? snapId.substring(5) : snapId;
+            db.collection("snaps").document(cleanSnapId).delete();
+            db.collection("snaps").document(snapId).delete();
+        }
+
+        if (mediaUrl != null && mediaUrl.contains("firebasestorage")) {
+            try {
+                FirebaseStorage.getInstance().getReferenceFromUrl(mediaUrl).delete();
+            } catch (Exception e) {
+                Log.w(TAG, "Storage delete error: " + e.getMessage());
+            }
+        }
+
+        if (callback != null) {
+            callback.onSuccess();
+        }
     }
 }

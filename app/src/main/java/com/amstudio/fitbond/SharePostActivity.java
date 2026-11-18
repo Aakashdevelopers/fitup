@@ -31,6 +31,7 @@ import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,6 +46,7 @@ public class SharePostActivity extends AppCompatActivity {
     private MaterialButton btnShare;
 
     private Uri mediaUri;
+    private final List<Uri> multipleUris = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -89,6 +91,14 @@ public class SharePostActivity extends AppCompatActivity {
             } else if (intent.getParcelableExtra(SnapPreviewActivity.EXTRA_MEDIA_URI) != null) {
                 mediaUri = intent.getParcelableExtra(SnapPreviewActivity.EXTRA_MEDIA_URI);
             }
+
+            ArrayList<Uri> extraUris = intent.getParcelableArrayListExtra("extra_multiple_uris");
+            if (extraUris != null && !extraUris.isEmpty()) {
+                multipleUris.addAll(extraUris);
+                if (mediaUri == null) {
+                    mediaUri = multipleUris.get(0);
+                }
+            }
         }
     }
 
@@ -117,7 +127,13 @@ public class SharePostActivity extends AppCompatActivity {
     private void openFullImagePreview() {
         if (mediaUri == null) return;
         ArrayList<String> uris = new ArrayList<>();
-        uris.add(mediaUri.toString());
+        if (!multipleUris.isEmpty()) {
+            for (Uri u : multipleUris) {
+                if (u != null) uris.add(u.toString());
+            }
+        } else {
+            uris.add(mediaUri.toString());
+        }
         String title = (etTitle != null && !TextUtils.isEmpty(etTitle.getText())) ?
                 etTitle.getText().toString() : "New post";
         GalleryPreviewActivity.open(this, uris, null, title);
@@ -151,35 +167,47 @@ public class SharePostActivity extends AppCompatActivity {
         Toast.makeText(this, "Sharing post...", Toast.LENGTH_SHORT).show();
 
         String snapId = UUID.randomUUID().toString();
-        if (mediaUri != null) {
-            uploadMediaAndSavePost(currentUid, snapId, title, caption, mediaUri);
+        List<Uri> targets = !multipleUris.isEmpty() ? multipleUris : (mediaUri != null ? java.util.Collections.singletonList(mediaUri) : new ArrayList<>());
+
+        if (!targets.isEmpty()) {
+            uploadMultipleMediaAndSavePost(currentUid, snapId, title, caption, targets, 0, new ArrayList<>());
         } else {
-            savePostMetadataToFirestore(currentUid, snapId, title, caption, "");
+            savePostMetadataToFirestore(currentUid, snapId, title, caption, new ArrayList<>());
         }
     }
 
-    private void uploadMediaAndSavePost(String currentUid, String snapId, String title, String caption, Uri uri) {
-        StorageReference ref = FirebaseStorage.getInstance().getReference().child("snaps/" + snapId + "/media.jpg");
+    private void uploadMultipleMediaAndSavePost(String currentUid, String snapId, String title, String caption, List<Uri> uris, int index, List<String> uploadedUrls) {
+        if (index >= uris.size()) {
+            savePostMetadataToFirestore(currentUid, snapId, title, caption, uploadedUrls);
+            return;
+        }
+
+        Uri uri = uris.get(index);
+        StorageReference ref = FirebaseStorage.getInstance().getReference().child("snaps/" + snapId + "/media_" + index + ".jpg");
         ref.putFile(uri)
                 .addOnSuccessListener(taskSnapshot -> ref.getDownloadUrl().addOnSuccessListener(downloadUrl -> {
-                    savePostMetadataToFirestore(currentUid, snapId, title, caption, downloadUrl.toString());
+                    uploadedUrls.add(downloadUrl.toString());
+                    uploadMultipleMediaAndSavePost(currentUid, snapId, title, caption, uris, index + 1, uploadedUrls);
                 }).addOnFailureListener(e -> {
-                    Log.w(TAG, "Get download URL failed, using local URI fallback", e);
-                    savePostMetadataToFirestore(currentUid, snapId, title, caption, uri.toString());
+                    Log.w(TAG, "Get download URL failed for index " + index + ", using local URI fallback", e);
+                    uploadedUrls.add(uri.toString());
+                    uploadMultipleMediaAndSavePost(currentUid, snapId, title, caption, uris, index + 1, uploadedUrls);
                 }))
                 .addOnFailureListener(e -> {
-                    Log.w(TAG, "Storage upload failed, using local URI fallback", e);
-                    savePostMetadataToFirestore(currentUid, snapId, title, caption, uri.toString());
+                    Log.w(TAG, "Storage upload failed for index " + index + ", using local URI fallback", e);
+                    uploadedUrls.add(uri.toString());
+                    uploadMultipleMediaAndSavePost(currentUid, snapId, title, caption, uris, index + 1, uploadedUrls);
                 });
     }
 
-    private void savePostMetadataToFirestore(String currentUid, String snapId, String title, String caption, String mediaUrl) {
+    private void savePostMetadataToFirestore(String currentUid, String snapId, String title, String caption, List<String> uploadedUrls) {
         Map<String, Object> postMap = new HashMap<>();
         postMap.put("id", snapId);
         postMap.put("senderUid", currentUid);
         postMap.put("title", title);
         postMap.put("caption", caption);
-        postMap.put("mediaUrl", mediaUrl);
+        postMap.put("mediaUrl", !uploadedUrls.isEmpty() ? uploadedUrls.get(0) : "");
+        postMap.put("mediaUrls", uploadedUrls);
         postMap.put("mediaType", "PHOTO");
         postMap.put("createdAt", FieldValue.serverTimestamp());
 

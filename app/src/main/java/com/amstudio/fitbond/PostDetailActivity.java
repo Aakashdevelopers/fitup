@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -20,6 +21,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
+
+import java.util.ArrayList;
+import java.util.List;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
 
 import com.amstudio.fitbond.model.UserProfile;
 import com.amstudio.fitbond.repository.FriendRepository;
@@ -40,6 +48,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_POST_ID = "extra_post_id";
     public static final String EXTRA_MEDIA_URL = "extra_media_url";
+    public static final String EXTRA_MEDIA_URLS = "extra_media_urls";
     public static final String EXTRA_TITLE = "extra_title";
     public static final String EXTRA_CAPTION = "extra_caption";
     public static final String EXTRA_SENDER_UID = "extra_sender_uid";
@@ -48,6 +57,8 @@ public class PostDetailActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private ImageButton btnActionAdd;
     private ImageView ivPostMedia;
+    private ViewPager2 vpPostCarousel;
+    private TextView tvCarouselIndicator;
 
     // Right Action Column Views
     private View actionLikeContainer;
@@ -70,6 +81,7 @@ public class PostDetailActivity extends AppCompatActivity {
     // State
     private String postId;
     private String mediaUrl;
+    private ArrayList<String> mediaUrls;
     private String title;
     private String caption;
     private String senderUid;
@@ -85,15 +97,23 @@ public class PostDetailActivity extends AppCompatActivity {
     private ListenerRegistration postDocRegistration;
     private ListenerRegistration likesRegistration;
     private ListenerRegistration commentsRegistration;
+    private ListenerRegistration bookmarkRegistration;
 
-    public static void open(Context context, String postId, String mediaUrl, String title, String caption, String senderUid) {
+    public static void open(Context context, String postId, String mediaUrl, ArrayList<String> mediaUrls, String title, String caption, String senderUid) {
         Intent intent = new Intent(context, PostDetailActivity.class);
         intent.putExtra(EXTRA_POST_ID, postId);
         intent.putExtra(EXTRA_MEDIA_URL, mediaUrl);
+        if (mediaUrls != null && !mediaUrls.isEmpty()) {
+            intent.putStringArrayListExtra(EXTRA_MEDIA_URLS, mediaUrls);
+        }
         intent.putExtra(EXTRA_TITLE, title);
         intent.putExtra(EXTRA_CAPTION, caption);
         intent.putExtra(EXTRA_SENDER_UID, senderUid);
         context.startActivity(intent);
+    }
+
+    public static void open(Context context, String postId, String mediaUrl, String title, String caption, String senderUid) {
+        open(context, postId, mediaUrl, null, title, caption, senderUid);
     }
 
     @Override
@@ -119,6 +139,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
         parseIntentData();
         initViews();
+        applyWindowInsets();
         setupClickListeners();
 
         loadPostMedia();
@@ -132,6 +153,7 @@ public class PostDetailActivity extends AppCompatActivity {
         if (intent != null) {
             postId = intent.getStringExtra(EXTRA_POST_ID);
             mediaUrl = intent.getStringExtra(EXTRA_MEDIA_URL);
+            mediaUrls = intent.getStringArrayListExtra(EXTRA_MEDIA_URLS);
             title = intent.getStringExtra(EXTRA_TITLE);
             caption = intent.getStringExtra(EXTRA_CAPTION);
             senderUid = intent.getStringExtra(EXTRA_SENDER_UID);
@@ -142,6 +164,8 @@ public class PostDetailActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btn_back_post_detail);
         btnActionAdd = findViewById(R.id.btn_action_add);
         ivPostMedia = findViewById(R.id.iv_post_media);
+        vpPostCarousel = findViewById(R.id.vp_post_carousel);
+        tvCarouselIndicator = findViewById(R.id.tv_carousel_indicator);
 
         actionLikeContainer = findViewById(R.id.action_like_container);
         ivActionLike = findViewById(R.id.iv_action_like);
@@ -158,6 +182,24 @@ public class PostDetailActivity extends AppCompatActivity {
         tvCreatorUsername = findViewById(R.id.tv_creator_username);
         btnFollowUser = findViewById(R.id.btn_follow_user);
         tvPostCaption = findViewById(R.id.tv_post_caption);
+    }
+
+    private void applyWindowInsets() {
+        View topBar = findViewById(R.id.top_bar_post_detail);
+        if (topBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
+                int statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                float density = getResources().getDisplayMetrics().density;
+                v.setPadding(
+                        v.getPaddingLeft(),
+                        statusBarTop + Math.round(8 * density),
+                        v.getPaddingRight(),
+                        Math.round(8 * density)
+                );
+                return insets;
+            });
+            topBar.post(() -> ViewCompat.requestApplyInsets(topBar));
+        }
     }
 
     private void setupClickListeners() {
@@ -213,15 +255,85 @@ public class PostDetailActivity extends AppCompatActivity {
     }
 
     private void loadPostMedia() {
-        if (ivPostMedia != null && !TextUtils.isEmpty(mediaUrl)) {
-            Glide.with(this)
-                    .load(mediaUrl)
-                    .placeholder(R.drawable.bg_sample_gym_preview)
-                    .error(R.drawable.bg_sample_gym_preview)
-                    .into(ivPostMedia);
+        if (mediaUrls != null && mediaUrls.size() > 1) {
+            if (ivPostMedia != null) ivPostMedia.setVisibility(View.GONE);
+            if (vpPostCarousel != null) {
+                vpPostCarousel.setVisibility(View.VISIBLE);
+                vpPostCarousel.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+                vpPostCarousel.setAdapter(new PostCarouselAdapter(mediaUrls));
+                vpPostCarousel.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                    @Override
+                    public void onPageSelected(int position) {
+                        if (tvCarouselIndicator != null) {
+                            tvCarouselIndicator.setText((position + 1) + "/" + mediaUrls.size());
+                        }
+                    }
+                });
+            }
+            if (tvCarouselIndicator != null) {
+                tvCarouselIndicator.setText("1/" + mediaUrls.size());
+                tvCarouselIndicator.setVisibility(View.VISIBLE);
+            }
+        } else {
+            if (vpPostCarousel != null) vpPostCarousel.setVisibility(View.GONE);
+            if (tvCarouselIndicator != null) tvCarouselIndicator.setVisibility(View.GONE);
+            if (ivPostMedia != null) {
+                ivPostMedia.setVisibility(View.VISIBLE);
+                if (!TextUtils.isEmpty(mediaUrl)) {
+                    Glide.with(this)
+                            .load(mediaUrl)
+                            .placeholder(R.drawable.bg_sample_gym_preview)
+                            .error(R.drawable.bg_sample_gym_preview)
+                            .into(ivPostMedia);
+                }
+            }
         }
 
         updateCaptionUI(title, caption);
+    }
+
+    private static class PostCarouselAdapter extends RecyclerView.Adapter<PostCarouselAdapter.CarouselViewHolder> {
+        private final List<String> imageUrls;
+
+        PostCarouselAdapter(List<String> imageUrls) {
+            this.imageUrls = imageUrls != null ? imageUrls : new ArrayList<>();
+        }
+
+        @NonNull
+        @Override
+        public CarouselViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_carousel_image, parent, false);
+            return new CarouselViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CarouselViewHolder holder, int position) {
+            holder.bind(imageUrls.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        static class CarouselViewHolder extends RecyclerView.ViewHolder {
+            private final ImageView ivCarouselImage;
+
+            CarouselViewHolder(@NonNull View itemView) {
+                super(itemView);
+                ivCarouselImage = itemView.findViewById(R.id.iv_carousel_image);
+            }
+
+            void bind(String url) {
+                if (ivCarouselImage != null && !TextUtils.isEmpty(url)) {
+                    Glide.with(itemView.getContext())
+                            .load(url)
+                            .placeholder(R.drawable.bg_sample_gym_preview)
+                            .error(R.drawable.bg_sample_gym_preview)
+                            .into(ivCarouselImage);
+                }
+            }
+        }
     }
 
     private void updateCaptionUI(String titleText, String captionText) {
@@ -395,15 +507,22 @@ public class PostDetailActivity extends AppCompatActivity {
             if (btnFollowUser != null) btnFollowUser.setEnabled(true);
             Toast.makeText(PostDetailActivity.this, "Follow request pending", Toast.LENGTH_SHORT).show();
         } else {
-            FriendRepository.getInstance().sendFriendRequest(senderUid, new FriendRepository.OperationCallback() {
+            FriendRepository.getInstance().followUser(senderUid, new FriendRepository.FollowCallback() {
                 @Override
-                public void onSuccess() {
+                public void onSuccess(boolean isDirectFollow) {
                     isFollowLoading = false;
                     if (isFinishing() || isDestroyed()) return;
-                    isPending = true;
+                    if (isDirectFollow) {
+                        isFollowing = true;
+                        isPending = false;
+                        Toast.makeText(PostDetailActivity.this, "Following!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        isPending = true;
+                        isFollowing = false;
+                        Toast.makeText(PostDetailActivity.this, "Follow request sent!", Toast.LENGTH_SHORT).show();
+                    }
                     if (btnFollowUser != null) btnFollowUser.setEnabled(true);
                     updateFollowButtonUI();
-                    Toast.makeText(PostDetailActivity.this, "Follow request sent!", Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
@@ -411,7 +530,7 @@ public class PostDetailActivity extends AppCompatActivity {
                     isFollowLoading = false;
                     if (isFinishing() || isDestroyed()) return;
                     if (btnFollowUser != null) btnFollowUser.setEnabled(true);
-                    Toast.makeText(PostDetailActivity.this, "Failed to send follow request", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PostDetailActivity.this, "Failed to follow", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -512,6 +631,17 @@ public class PostDetailActivity extends AppCompatActivity {
                         tvCommentCount.setText(formatCount(commentCount));
                     }
                 });
+
+        // 4. Real-time Bookmark Listener
+        if (currentUid != null) {
+            bookmarkRegistration = db.collection("users").document(currentUid)
+                    .collection("bookmarks").document(postId)
+                    .addSnapshotListener((doc, e) -> {
+                        if (e != null || isFinishing()) return;
+                        isBookmarked = doc != null && doc.exists();
+                        updateBookmarkUI();
+                    });
+        }
     }
 
     private void toggleLikeState() {
@@ -564,11 +694,37 @@ public class PostDetailActivity extends AppCompatActivity {
     }
 
     private void toggleBookmarkState() {
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        if (currentUid == null || TextUtils.isEmpty(postId)) {
+            Toast.makeText(this, "Please sign in to save posts", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         isBookmarked = !isBookmarked;
+        updateBookmarkUI();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        com.google.firebase.firestore.DocumentReference bookmarkRef = db.collection("users").document(currentUid)
+                .collection("bookmarks").document(postId);
+
+        if (isBookmarked) {
+            Map<String, Object> bm = new HashMap<>();
+            bm.put("postId", postId);
+            bm.put("createdAt", FieldValue.serverTimestamp());
+            bookmarkRef.set(bm)
+                    .addOnSuccessListener(aVoid -> Toast.makeText(PostDetailActivity.this, "Saved to collection", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e -> Log.e("PostDetailActivity", "Failed to save bookmark", e));
+        } else {
+            bookmarkRef.delete()
+                    .addOnSuccessListener(aVoid -> Toast.makeText(PostDetailActivity.this, "Removed from saved collection", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e -> Log.e("PostDetailActivity", "Failed to remove bookmark", e));
+        }
+    }
+
+    private void updateBookmarkUI() {
         if (ivActionBookmark != null) {
             if (isBookmarked) {
                 ivActionBookmark.setColorFilter(Color.parseColor("#3897F0"));
-                Toast.makeText(this, "Saved to collection", Toast.LENGTH_SHORT).show();
             } else {
                 ivActionBookmark.clearColorFilter();
             }
@@ -610,6 +766,10 @@ public class PostDetailActivity extends AppCompatActivity {
         if (commentsRegistration != null) {
             commentsRegistration.remove();
             commentsRegistration = null;
+        }
+        if (bookmarkRegistration != null) {
+            bookmarkRegistration.remove();
+            bookmarkRegistration = null;
         }
     }
 }

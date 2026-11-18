@@ -1,207 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#050608">
+    android:background="#050608"
+    android:orientation="vertical">
 
-    <!-- 1. MAIN MEDIA DISPLAY -->
-    <ImageView
-        android:id="@+id/iv_post_media"
+    <!-- 1. TOP HEADER ROW (CREATOR INFO + FOLLOW BUTTON) -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_centerInParent="true"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:contentDescription="@null"
-        tools:src="@drawable/bg_sample_gym_preview" />
+        android:layout_height="56dp"
+        android:layout_marginTop="52dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp">
 
-    <!-- Dark Gradient Overlay at Bottom for Text Legibility -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="320dp"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/bg_preview_bottom_bar" />
-
-    <!-- 2. RIGHT VERTICAL ACTION COLUMN -->
-    <LinearLayout
-        android:id="@+id/layout_right_actions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="90dp"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <!-- Like Button -->
         <LinearLayout
-            android:id="@+id/action_like_container"
+            android:id="@+id/layout_creator_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/btn_follow_user"
+            android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="6dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/iv_action_like"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ic_heart"
-                android:contentDescription="@null" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_creator_avatar"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_avatar_placeholder"
+                app:shapeAppearanceOverlay="@style/CircularImageView" />
 
             <TextView
-                android:id="@+id/tv_like_count"
+                android:id="@+id/tv_creator_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="0"
+                android:layout_marginStart="10dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-bold"
+                android:maxLines="1"
                 android:textColor="@color/white"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="gym_goer" />
         </LinearLayout>
 
-        <!-- Comment Button -->
-        <LinearLayout
-            android:id="@+id/action_comment_container"
+        <!-- Follow Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_follow_user"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="6dp">
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:backgroundTint="#26FFFFFF"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="14dp"
+            android:text="Follow"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:cornerRadius="8dp"
+            app:strokeColor="#66FFFFFF"
+            app:strokeWidth="1dp" />
+    </RelativeLayout>
 
-            <ImageView
-                android:id="@+id/iv_action_comment"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ic_comment"
-                android:contentDescription="@null" />
+    <!-- 2. CENTER PHOTO MEDIA DISPLAY (SINGLE PHOTO OR MULTI-PHOTO CAROUSEL) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#000000">
 
-            <TextView
-                android:id="@+id/tv_comment_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="0"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Share Direct Button -->
+        <!-- Single Photo View -->
         <ImageView
-            android:id="@+id/iv_action_share"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_send"
+            android:id="@+id/iv_post_media"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
             android:contentDescription="@null"
-            app:tint="@color/white" />
+            android:scaleType="centerCrop"
+            tools:src="@drawable/bg_sample_gym_preview" />
+
+        <!-- Multi-Photo Horizontal Slider Carousel ViewPager2 -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vp_post_carousel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Top-Right Page Indicator Badge (e.g., 1/3) -->
+        <TextView
+            android:id="@+id/tv_carousel_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_pill_surface"
+            android:fontFamily="sans-serif-medium"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="1/3" />
+    </FrameLayout>
+
+    <!-- 3. HORIZONTAL ACTION BAR (LIKE, COMMENT, SHARE, BOOKMARK) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Like Button -->
+            <FrameLayout
+                android:id="@+id/action_like_container"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/iv_action_like"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_heart" />
+            </FrameLayout>
+
+            <!-- Comment Button -->
+            <FrameLayout
+                android:id="@+id/action_comment_container"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/iv_action_comment"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_comment" />
+            </FrameLayout>
+
+            <!-- Share Direct Button -->
+            <ImageView
+                android:id="@+id/iv_action_share"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="14dp"
+                android:clickable="true"
+                android:contentDescription="@null"
+                android:focusable="true"
+                android:src="@drawable/ic_send"
+                app:tint="@color/white" />
+        </LinearLayout>
 
         <!-- Bookmark / Save Button -->
         <ImageView
             android:id="@+id/iv_action_bookmark"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginTop="18dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
             android:clickable="true"
+            android:contentDescription="@null"
             android:focusable="true"
-            android:src="@drawable/ic_bookmark"
-            android:contentDescription="@null" />
-    </LinearLayout>
+            android:src="@drawable/ic_bookmark" />
+    </RelativeLayout>
 
-    <!-- 3. BOTTOM PROFILE & CAPTION OVERLAY -->
+    <!-- 4. TEXT DETAILS (LIKES COUNT & CAPTION) -->
     <LinearLayout
-        android:id="@+id/layout_bottom_profile_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@+id/layout_right_actions"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="90dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="16dp">
 
-        <!-- User Info Row (Avatar + Username + Follow Button) -->
-        <LinearLayout
+        <!-- Likes Count Text -->
+        <TextView
+            android:id="@+id/tv_like_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/layout_creator_info"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
-
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/iv_creator_avatar"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_avatar_placeholder"
-                    app:shapeAppearanceOverlay="@style/CircularImageView" />
-
-                <TextView
-                    android:id="@+id/tv_creator_username"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-bold"
-                    tools:text="mr.abhiishekk" />
-            </LinearLayout>
-
-            <!-- Follow / Following Action Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_follow_user"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_marginStart="12dp"
-                android:paddingHorizontal="14dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:backgroundTint="#26FFFFFF"
-                android:text="Follow"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:cornerRadius="8dp"
-                app:strokeColor="#66FFFFFF"
-                app:strokeWidth="1dp" />
-        </LinearLayout>
+            android:fontFamily="sans-serif-bold"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="1,420 likes" />
 
         <!-- Caption Text -->
         <TextView
             android:id="@+id/tv_post_caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="4dp"
             android:ellipsize="end"
-            android:maxLines="8"
+            android:maxLines="4"
             android:textColor="@color/white"
             android:textSize="13sp"
-            tools:text="Mai hu kaafi hai 😉 ..." />
+            tools:text="gym_goer Morning workout routine 💪" />
+
+        <!-- View Comments Text -->
+        <TextView
+            android:id="@+id/tv_comment_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#99FFFFFF"
+            android:textSize="12sp"
+            tools:text="View all 24 comments" />
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>

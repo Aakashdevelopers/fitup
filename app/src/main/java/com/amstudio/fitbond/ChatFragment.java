@@ -62,6 +62,7 @@ public class ChatFragment extends Fragment {
 
     private ShimmerFrameLayout shimmerViewContainer;
     private View layoutContentContainer;
+    private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshChat;
 
     private ActiveFriendsAdapter activeFriendsAdapter;
     private ChatListAdapter chatListAdapter;
@@ -135,6 +136,20 @@ public class ChatFragment extends Fragment {
 
         shimmerViewContainer = view.findViewById(R.id.shimmer_view_container);
         layoutContentContainer = view.findViewById(R.id.layout_content_container);
+
+        swipeRefreshChat = view.findViewById(R.id.swipe_refresh_chat);
+        if (swipeRefreshChat != null) {
+            swipeRefreshChat.setColorSchemeResources(R.color.electric_blue, R.color.primary_blue);
+            swipeRefreshChat.setOnRefreshListener(() -> {
+                FriendRepository.getInstance().invalidateFriendsCache();
+                loadData();
+                swipeRefreshChat.postDelayed(() -> {
+                    if (swipeRefreshChat != null) {
+                        swipeRefreshChat.setRefreshing(false);
+                    }
+                }, 800);
+            });
+        }
     }
 
     private void setupRecyclerViews() {

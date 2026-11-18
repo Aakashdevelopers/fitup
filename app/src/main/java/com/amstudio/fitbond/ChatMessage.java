@@ -71,6 +71,10 @@ public class ChatMessage {
     private int photoCount = 1;
     private String userReactionEmoji = null;
 
+    private int replayCount = 0;
+    private boolean isSavedInChat = false;
+    private boolean isExpired = false;
+
     public ChatMessage(String id, String senderId, String senderName, String text,
                        MessageType messageType, SnapKind snapKind, String timestamp,
                        String durationText, String mediaUri, boolean isViewed) {
@@ -235,5 +239,43 @@ public class ChatMessage {
 
     public void setUserReactionEmoji(String userReactionEmoji) {
         this.userReactionEmoji = userReactionEmoji;
+    }
+
+    public int getReplayCount() {
+        return replayCount;
+    }
+
+    public void setReplayCount(int replayCount) {
+        this.replayCount = Math.min(Math.max(0, replayCount), 3);
+        if (this.replayCount >= 3 && !isSavedInChat) {
+            this.isExpired = true;
+        }
+    }
+
+    public boolean canReplay() {
+        return isSnap() && isViewed() && replayCount < 3 && !isExpired;
+    }
+
+    public int getRemainingReplays() {
+        return Math.max(0, 3 - replayCount);
+    }
+
+    public boolean isSavedInChat() {
+        return isSavedInChat;
+    }
+
+    public void setSavedInChat(boolean savedInChat) {
+        isSavedInChat = savedInChat;
+        if (savedInChat) {
+            this.isExpired = false;
+        }
+    }
+
+    public boolean isExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(boolean expired) {
+        isExpired = expired;
     }
 }

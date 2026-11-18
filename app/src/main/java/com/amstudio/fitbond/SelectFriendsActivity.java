@@ -59,6 +59,7 @@ public class SelectFriendsActivity extends AppCompatActivity {
     private final Set<String> selectedFriendIds = new HashSet<>();
     private String mediaUriStr;
     private String mediaType = SnapPreviewActivity.MEDIA_TYPE_PHOTO;
+    private String snapCaption = "";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -188,6 +189,10 @@ public class SelectFriendsActivity extends AppCompatActivity {
             if (typeExtra != null) {
                 mediaType = typeExtra;
             }
+            String capExtra = intent.getStringExtra(SnapPreviewActivity.EXTRA_CAPTION);
+            if (capExtra != null) {
+                snapCaption = capExtra;
+            }
         }
     }
 
@@ -236,6 +241,7 @@ public class SelectFriendsActivity extends AppCompatActivity {
                             SelectFriendsActivity.this,
                             Uri.parse(mediaUriStr),
                             mediaType,
+                            snapCaption,
                             new ArrayList<>(selectedFriendIds),
                             15,
                             new SnapRepository.SnapUploadCallback() {

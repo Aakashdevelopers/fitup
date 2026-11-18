@@ -1,635 +1,661 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipe_refresh_profile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_profile_gradient"
-    android:fillViewport="true"
-    android:overScrollMode="never">
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingTop="27dp"
-        android:paddingBottom="36dp">
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_profile_gradient"
+        android:orientation="vertical">
 
-        <!-- 1. TOP APP BAR -->
-        <RelativeLayout
-            android:id="@+id/top_app_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="52dp">
-
-            <ImageButton
-                android:id="@+id/btn_add_post_top"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@null"
-                android:padding="6dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_add_plus"
-                app:tint="@color/primary_text" />
-
-            <TextView
-                android:id="@+id/tv_profile_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-bold"
-                android:paddingStart="48dp"
-                android:paddingEnd="48dp"
-                android:singleLine="true"
-                android:text="@string/profile_title"
-                android:textColor="@color/primary_text"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <ImageButton
-                android:id="@+id/btn_settings_top"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/content_desc_settings"
-                android:padding="6dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_settings_gear"
-                app:tint="@color/primary_text"/>
-        </RelativeLayout>
-
-        <!-- 2. PROFILE HEADER SECTION (INSTAGRAM STYLE) -->
-        <!-- Top Row: Avatar Left + Stats Right -->
+        <!-- Fixed Top Header Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="8dp">
 
-            <!-- Profile Avatar -->
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+            <!-- 1. TOP APP BAR -->
+            <RelativeLayout
+                android:id="@+id/top_app_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:minHeight="52dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="8dp">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/iv_avatar"
-                    android:layout_width="84dp"
-                    android:layout_height="84dp"
-                    android:padding="3dp"
-                    android:background="@drawable/bg_avatar_ring"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="@string/content_desc_profile_avatar"
-                    android:src="@drawable/ic_avatar_placeholder"
-                    app:shapeAppearanceOverlay="@style/CircularImageView"/>
+                <ImageButton
+                    android:id="@+id/btn_add_post_top"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@null"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_add_plus"
+                    app:tint="@color/primary_text" />
 
-                <!-- Avatar Edit Badge -->
+                <TextView
+                    android:id="@+id/tv_profile_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-bold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:paddingStart="48dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="48dp"
+                    android:paddingBottom="4dp"
+                    android:singleLine="true"
+                    android:text="@string/profile_title"
+                    android:textColor="@color/primary_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btn_settings_top"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/content_desc_settings"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_settings_gear"
+                    app:tint="@color/primary_text"/>
+            </RelativeLayout>
+
+            <!-- 2. PROFILE HEADER SECTION (INSTAGRAM STYLE) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Profile Avatar -->
                 <FrameLayout
-                    android:id="@+id/btn_edit_avatar"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="bottom|end"
-                    android:background="@drawable/bg_avatar_edit_badge"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:contentDescription="@string/content_desc_edit_avatar">
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/iv_avatar"
+                        android:layout_width="84dp"
+                        android:layout_height="84dp"
+                        android:padding="3dp"
+                        android:background="@drawable/bg_avatar_ring"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="@string/content_desc_profile_avatar"
+                        android:src="@drawable/ic_avatar_placeholder"
+                        app:shapeAppearanceOverlay="@style/CircularImageView"/>
+
+                    <!-- Avatar Edit Badge -->
+                    <FrameLayout
+                        android:id="@+id/btn_edit_avatar"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_avatar_edit_badge"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="@string/content_desc_edit_avatar">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_edit_camera"
+                            android:contentDescription="@null"
+                            app:tint="@color/white"/>
+                    </FrameLayout>
+                </FrameLayout>
+
+                <!-- Stats Container (Transparent Background, Right side) -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Posts Stat -->
+                    <LinearLayout
+                        android:id="@+id/stat_posts_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_stat_posts_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/profile_stat_posts_default"
+                            android:textColor="@color/primary_text"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-bold"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/profile_stat_posts"
+                            android:textColor="@color/secondary_text"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/profile_divider"/>
+
+                    <!-- Followers Stat -->
+                    <LinearLayout
+                        android:id="@+id/stat_followers_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_stat_followers_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/profile_stat_followers_default"
+                            android:textColor="@color/primary_text"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-bold"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/profile_stat_followers"
+                            android:textColor="@color/secondary_text"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/profile_divider"/>
+
+                    <!-- Following Stat -->
+                    <LinearLayout
+                        android:id="@+id/stat_following_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_stat_following_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/profile_stat_following_default"
+                            android:textColor="@color/primary_text"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-bold"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/profile_stat_following"
+                            android:textColor="@color/secondary_text"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Display Name, Username, Bio & Location -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_display_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile_default_name"
+                    android:textColor="@color/primary_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-bold"/>
+
+                <TextView
+                    android:id="@+id/tv_username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/profile_default_username"
+                    android:textColor="@color/electric_blue"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"/>
+
+                <TextView
+                    android:id="@+id/tv_bio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/profile_default_bio"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="2dp"/>
+
+                <!-- Location & Goal Pill -->
+                <LinearLayout
+                    android:id="@+id/layout_profile_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_pill_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="4dp">
 
                     <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_edit_camera"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:src="@drawable/ic_location"
                         android:contentDescription="@null"
-                        app:tint="@color/white"/>
-                </FrameLayout>
-            </FrameLayout>
+                        app:tint="@color/light_blue"/>
 
-            <!-- Stats Container (Transparent Background, Right side) -->
+                    <TextView
+                        android:id="@+id/tv_profile_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/profile_default_location"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="11sp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Action Buttons Row (Edit Profile & Share Profile) -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_edit_profile"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:paddingHorizontal="4dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:backgroundTint="@color/profile_surface"
+                    android:text="@string/btn_edit_profile"
+                    android:textAllCaps="false"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:strokeColor="@color/subtle_border"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="10dp"
+                    app:elevation="0dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_share_profile"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:paddingHorizontal="4dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:backgroundTint="@color/profile_surface"
+                    android:text="@string/btn_share_profile"
+                    android:textAllCaps="false"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:strokeColor="@color/subtle_border"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="10dp"
+                    app:elevation="0dp"/>
+            </LinearLayout>
+
+            <!-- 5. PROFILE CONTENT TABS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <!-- Posts Stat -->
+                <!-- Tab 1: Posts -->
                 <LinearLayout
-                    android:id="@+id/stat_posts_container"
+                    android:id="@+id/tab_posts"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tv_stat_posts_value"
+                        android:id="@+id/tv_tab_posts"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/profile_stat_posts_default"
-                        android:textColor="@color/primary_text"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold"/>
+                        android:text="@string/profile_tab_posts"
+                        android:textColor="@color/electric_blue"
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/profile_stat_posts"
-                        android:textColor="@color/secondary_text"
-                        android:textSize="12sp"/>
+                    <View
+                        android:id="@+id/indicator_tab_posts"
+                        android:layout_width="24dp"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_tab_indicator"/>
                 </LinearLayout>
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@color/profile_divider"/>
-
-                <!-- Followers Stat -->
+                <!-- Tab 2: Snaps -->
                 <LinearLayout
-                    android:id="@+id/stat_followers_container"
+                    android:id="@+id/tab_snaps"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tv_stat_followers_value"
+                        android:id="@+id/tv_tab_snaps"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/profile_stat_followers_default"
-                        android:textColor="@color/primary_text"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/profile_stat_followers"
+                        android:text="@string/profile_tab_snaps"
                         android:textColor="@color/secondary_text"
-                        android:textSize="12sp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
+
+                    <View
+                        android:id="@+id/indicator_tab_snaps"
+                        android:layout_width="24dp"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_tab_indicator"
+                        android:visibility="invisible"/>
                 </LinearLayout>
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@color/profile_divider"/>
-
-                <!-- Following Stat -->
+                <!-- Tab 3: Activity -->
                 <LinearLayout
-                    android:id="@+id/stat_following_container"
+                    android:id="@+id/tab_activity"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tv_stat_following_value"
+                        android:id="@+id/tv_tab_activity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/profile_stat_following_default"
-                        android:textColor="@color/primary_text"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-bold"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/profile_stat_following"
+                        android:text="@string/profile_tab_activity"
                         android:textColor="@color/secondary_text"
-                        android:textSize="12sp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
+
+                    <View
+                        android:id="@+id/indicator_tab_activity"
+                        android:layout_width="24dp"
+                        android:layout_height="3dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_tab_indicator"
+                        android:visibility="invisible"/>
                 </LinearLayout>
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/profile_divider"/>
         </LinearLayout>
 
-        <!-- Display Name, Username, Bio & Location (Left Aligned Below Top Row) -->
+        <!-- Independently Scrollable Bottom Content Section -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="11dp"
-            android:orientation="vertical">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="16dp">
 
-            <TextView
-                android:id="@+id/tv_display_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/profile_default_name"
-                android:textColor="@color/primary_text"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-bold"/>
-
-            <TextView
-                android:id="@+id/tv_username"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="@string/profile_default_username"
-                android:textColor="@color/electric_blue"
-                android:textSize="13sp"
-                android:fontFamily="sans-serif-medium"/>
-
-            <TextView
-                android:id="@+id/tv_bio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/profile_default_bio"
-                android:textColor="@color/secondary_text"
-                android:textSize="13sp"
-                android:lineSpacingExtra="2dp"/>
-
-            <!-- Location & Goal Pill -->
+            <!-- 4. FITNESS STATS SECTION (ONLY VISIBLE IN ACTIVITY TAB) -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:id="@+id/container_activity_cards"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_pill_surface"
-                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp"
+                android:baselineAligned="false"
                 android:orientation="horizontal"
-                android:paddingStart="10dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="4dp">
+                android:visibility="gone">
 
-                <ImageView
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:src="@drawable/ic_location"
-                    android:contentDescription="@null"
-                    app:tint="@color/light_blue"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Card 1: Workout Days -->
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/profile_default_location"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="11sp"/>
-            </LinearLayout>
-        </LinearLayout>
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_stat_card"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-        <!-- Action Buttons Row (Edit Profile & Share Profile - Instagram Style) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_workout_days"
+                        android:contentDescription="@null"
+                        app:tint="@color/electric_blue"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_edit_profile"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:paddingHorizontal="4dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:singleLine="true"
-                android:ellipsize="end"
-                android:backgroundTint="@color/profile_surface"
-                android:text="@string/btn_edit_profile"
-                android:textAllCaps="false"
-                android:textColor="@color/primary_text"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                app:strokeColor="@color/subtle_border"
-                app:strokeWidth="1dp"
-                app:cornerRadius="10dp"
-                app:elevation="0dp"/>
+                    <TextView
+                        android:id="@+id/tv_activity_days_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/profile_stat_workout_days_default"
+                        android:textColor="@color/primary_text"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-bold"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_share_profile"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:paddingHorizontal="4dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:singleLine="true"
-                android:ellipsize="end"
-                android:backgroundTint="@color/profile_surface"
-                android:text="@string/btn_share_profile"
-                android:textAllCaps="false"
-                android:textColor="@color/primary_text"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                app:strokeColor="@color/subtle_border"
-                app:strokeWidth="1dp"
-                app:cornerRadius="10dp"
-                app:elevation="0dp"/>
-        </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/profile_stat_workout_days"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="11sp"/>
+                </LinearLayout>
 
-
-
-        <!-- 4. FITNESS STATS SECTION -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="19dp"
-            android:layout_marginBottom="12dp"
-            android:text="@string/profile_section_activity"
-            android:textColor="@color/primary_text"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-bold"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
-
-            <!-- Card 1: Workout Days -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_stat_card"
-                android:orientation="vertical"
-                android:padding="12dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_workout_days"
-                    android:contentDescription="@null"
-                    app:tint="@color/electric_blue"/>
-
-                <TextView
-                    android:id="@+id/tv_activity_days_val"
-                    android:layout_width="wrap_content"
+                <!-- Card 2: Current Streak -->
+                <LinearLayout
+                    android:id="@+id/card_current_streak"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/profile_stat_workout_days_default"
-                    android:textColor="@color/primary_text"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-bold"/>
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_stat_card"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_streak_flame"
+                        android:contentDescription="@null"
+                        app:tint="@color/streak_orange"/>
+
+                    <TextView
+                        android:id="@+id/tv_activity_streak_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/profile_stat_streak_default"
+                        android:textColor="@color/primary_text"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-bold"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/profile_stat_streak"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="11sp"/>
+                </LinearLayout>
+
+                <!-- Card 3: Total Workouts -->
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/profile_stat_workout_days"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="11sp"/>
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:background="@drawable/bg_stat_card"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_dumbbell"
+                        android:contentDescription="@null"
+                        app:tint="@color/light_blue"/>
+
+                    <TextView
+                        android:id="@+id/tv_activity_total_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/profile_stat_total_default"
+                        android:textColor="@color/primary_text"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-bold"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/profile_stat_total_workouts"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="11sp"/>
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Card 2: Current Streak -->
-            <LinearLayout
-                android:id="@+id/card_current_streak"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_stat_card"
-                android:clickable="true"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:padding="12dp">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_streak_flame"
-                    android:contentDescription="@null"
-                    app:tint="@color/streak_orange"/>
+                <!-- 3-Column Posts & Snaps Grid / Stacked Cards -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_profile_posts_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="true"
+                    android:overScrollMode="never"
+                    android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/tv_activity_streak_val"
-                    android:layout_width="wrap_content"
+                <!-- Tab Content Empty State Container -->
+                <LinearLayout
+                    android:id="@+id/container_empty_state"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/profile_stat_streak_default"
-                    android:textColor="@color/primary_text"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-bold"/>
+                    android:layout_gravity="top|center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_profile_card"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="28dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/profile_stat_streak"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="11sp"/>
-            </LinearLayout>
+                    <ImageView
+                        android:id="@+id/iv_empty_icon"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_posts_grid"
+                        android:contentDescription="@null"
+                        app:tint="@color/subtle_border"/>
 
-            <!-- Card 3: Total Workouts -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:background="@drawable/bg_stat_card"
-                android:orientation="vertical"
-                android:padding="12dp">
+                    <TextView
+                        android:id="@+id/tv_empty_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/profile_empty_posts_title"
+                        android:textColor="@color/primary_text"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-bold"/>
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_dumbbell"
-                    android:contentDescription="@null"
-                    app:tint="@color/light_blue"/>
+                    <TextView
+                        android:id="@+id/tv_empty_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="@string/profile_empty_posts_sub"
+                        android:textColor="@color/secondary_text"
+                        android:textSize="13sp"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_activity_total_val"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/profile_stat_total_default"
-                    android:textColor="@color/primary_text"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-bold"/>
+            </FrameLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/profile_stat_total_workouts"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="11sp"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 5. PROFILE CONTENT TABS -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="24dp"
-            android:baselineAligned="false"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <!-- Tab 1: Posts -->
-            <LinearLayout
-                android:id="@+id/tab_posts"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tv_tab_posts"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/profile_tab_posts"
-                    android:textColor="@color/electric_blue"
-                    android:textSize="14sp"
-                    android:textStyle="bold"/>
-
-                <View
-                    android:id="@+id/indicator_tab_posts"
-                    android:layout_width="24dp"
-                    android:layout_height="3dp"
-                    android:layout_marginTop="4dp"
-                    android:background="@drawable/bg_tab_indicator"/>
-            </LinearLayout>
-
-            <!-- Tab 2: Snaps -->
-            <LinearLayout
-                android:id="@+id/tab_snaps"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tv_tab_snaps"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/profile_tab_snaps"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="14sp"
-                    android:textStyle="bold"/>
-
-                <View
-                    android:id="@+id/indicator_tab_snaps"
-                    android:layout_width="24dp"
-                    android:layout_height="3dp"
-                    android:layout_marginTop="4dp"
-                    android:background="@drawable/bg_tab_indicator"
-                    android:visibility="invisible"/>
-            </LinearLayout>
-
-            <!-- Tab 3: Activity -->
-            <LinearLayout
-                android:id="@+id/tab_activity"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tv_tab_activity"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/profile_tab_activity"
-                    android:textColor="@color/secondary_text"
-                    android:textSize="14sp"
-                    android:textStyle="bold"/>
-
-                <View
-                    android:id="@+id/indicator_tab_activity"
-                    android:layout_width="24dp"
-                    android:layout_height="3dp"
-                    android:layout_marginTop="4dp"
-                    android:background="@drawable/bg_tab_indicator"
-                    android:visibility="invisible"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/profile_divider"/>
-
-        <!-- 3-Column Posts & Snaps Grid -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_profile_posts_grid"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:clipToPadding="false"
-            android:nestedScrollingEnabled="false"
-            android:overScrollMode="never"
-            android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="3" />
-
-        <!-- Tab Content Empty State Container -->
-        <LinearLayout
-            android:id="@+id/container_empty_state"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_profile_card"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="28dp">
-
-            <ImageView
-                android:id="@+id/iv_empty_icon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_posts_grid"
-                android:contentDescription="@null"
-                app:tint="@color/subtle_border"/>
-
-            <TextView
-                android:id="@+id/tv_empty_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/profile_empty_posts_title"
-                android:textColor="@color/primary_text"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-bold"/>
-
-            <TextView
-                android:id="@+id/tv_empty_subtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:text="@string/profile_empty_posts_sub"
-                android:textColor="@color/secondary_text"
-                android:textSize="13sp"/>
         </LinearLayout>
 
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

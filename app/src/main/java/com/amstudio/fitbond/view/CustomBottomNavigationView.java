@@ -30,6 +30,7 @@ public class CustomBottomNavigationView extends FrameLayout {
         void onNavigationItemReselected(@NonNull MenuItem item);
     }
 
+    private View rootNavLayout;
     private ViewGroup tabsContainer;
     private View tabChat;
     private View tabCamera;
@@ -83,6 +84,7 @@ public class CustomBottomNavigationView extends FrameLayout {
         selectedColor = ContextCompat.getColor(context, R.color.nav_selected_item);
         inactiveColor = ContextCompat.getColor(context, R.color.nav_inactive_item);
 
+        rootNavLayout = findViewById(R.id.root_nav_layout);
         tabsContainer = findViewById(R.id.tabs_container);
 
         tabChat = findViewById(R.id.tab_chat);
@@ -98,7 +100,7 @@ public class CustomBottomNavigationView extends FrameLayout {
         ivChatIcon = findViewById(R.id.iv_chat_icon);
         tvChatLabel = findViewById(R.id.tv_chat_label);
         ivCameraIcon = findViewById(R.id.iv_camera_icon);
-        tvCameraLabel = findViewById(R.id.tv_camera_label);
+        tvCameraLabel = null;
         ivPostIcon = findViewById(R.id.iv_post_icon);
         tvPostLabel = findViewById(R.id.tv_post_label);
         ivProfileIcon = findViewById(R.id.iv_profile_icon);
@@ -177,6 +179,14 @@ public class CustomBottomNavigationView extends FrameLayout {
         boolean isPost = (selectedItemId == R.id.nav_post);
         boolean isProfile = (selectedItemId == R.id.nav_profile);
 
+        if (isCamera) {
+            setBackgroundResource(android.R.color.transparent);
+            if (rootNavLayout != null) rootNavLayout.setBackgroundResource(android.R.color.transparent);
+        } else {
+            setBackgroundResource(R.drawable.bg_floating_bottom_nav);
+            if (rootNavLayout != null) rootNavLayout.setBackgroundResource(R.drawable.bg_floating_bottom_nav);
+        }
+
         setTabSelected(pillChat, ivChatIcon, tvChatLabel, isChat);
         setTabSelected(pillCamera, ivCameraIcon, tvCameraLabel, isCamera);
         setTabSelected(pillPost, ivPostIcon, tvPostLabel, isPost);
@@ -184,10 +194,10 @@ public class CustomBottomNavigationView extends FrameLayout {
     }
 
     private void setTabSelected(LinearLayout pill, ImageView icon, TextView label, boolean active) {
+        if (pill != null) {
+            pill.setBackground(null);
+        }
         if (active) {
-            if (pill != null) {
-                pill.setBackgroundResource(R.drawable.bg_nav_selected_pill);
-            }
             if (icon != null) {
                 icon.setImageTintList(ColorStateList.valueOf(selectedColor));
             }
@@ -196,9 +206,6 @@ public class CustomBottomNavigationView extends FrameLayout {
                 label.setTextColor(selectedColor);
             }
         } else {
-            if (pill != null) {
-                pill.setBackground(null);
-            }
             if (icon != null) {
                 icon.setImageTintList(ColorStateList.valueOf(inactiveColor));
             }

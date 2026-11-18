@@ -15,7 +15,12 @@ public class SnapMetadata {
     private List<String> recipientUids;
     private String mediaType;
     private String mediaUrl;
+    private List<String> mediaUrls;
+    private String caption;
     private long durationSeconds;
+    private int replayCount = 0;
+    private boolean isSaved = false;
+    private boolean isExpired = false;
 
     @ServerTimestamp
     private Timestamp createdAt;
@@ -74,6 +79,22 @@ public class SnapMetadata {
         this.mediaUrl = mediaUrl;
     }
 
+    public List<String> getMediaUrls() {
+        return mediaUrls;
+    }
+
+    public void setMediaUrls(List<String> mediaUrls) {
+        this.mediaUrls = mediaUrls;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public void setCaption(String caption) {
+        this.caption = caption;
+    }
+
     public long getDurationSeconds() {
         return durationSeconds;
     }
@@ -88,5 +109,29 @@ public class SnapMetadata {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getReplayCount() {
+        return replayCount;
+    }
+
+    public void setReplayCount(int replayCount) {
+        this.replayCount = replayCount;
+    }
+
+    public boolean isSaved() {
+        return isSaved;
+    }
+
+    public void setSaved(boolean saved) {
+        isSaved = saved;
+    }
+
+    public boolean isExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(boolean expired) {
+        isExpired = expired;
     }
 }

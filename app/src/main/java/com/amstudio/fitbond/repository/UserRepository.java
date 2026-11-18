@@ -216,6 +216,7 @@ public class UserRepository {
             json.put("friendsCount", profile.getFriendsCount());
             json.put("isOnline", profile.isOnline());
             json.put("isPrivate", profile.isPrivate());
+            json.put("showLocation", profile.isShowLocation());
 
             prefs.edit().putString("profile_" + profile.getUid(), json.toString()).apply();
         } catch (Exception e) {
@@ -248,6 +249,7 @@ public class UserRepository {
             profile.setFriendsCount(json.optLong("friendsCount", 0));
             profile.setOnline(json.optBoolean("isOnline", false));
             profile.setPrivate(json.optBoolean("isPrivate", false));
+            profile.setShowLocation(json.optBoolean("showLocation", true));
             return profile;
         } catch (Exception e) {
             Log.w(TAG, "Failed to load profile from local cache", e);
@@ -402,6 +404,7 @@ public class UserRepository {
         params.put("location", updatedProfile.getLocation());
         params.put("avatarUrl", updatedProfile.getAvatarUrl());
         params.put("isPrivate", updatedProfile.isPrivate());
+        params.put("showLocation", updatedProfile.isShowLocation());
 
         functions.getHttpsCallable("updateMyProfile")
                 .call(params)
@@ -453,6 +456,7 @@ public class UserRepository {
                             if (profile.getLocation() != null) updates.put("location", profile.getLocation());
                             if (profile.getAvatarUrl() != null) updates.put("avatarUrl", profile.getAvatarUrl());
                             updates.put("isPrivate", profile.isPrivate());
+                            updates.put("showLocation", profile.isShowLocation());
                             updates.put("username", normalized);
                             updates.put("normalizedUsername", normalized);
                             updates.put("updatedAt", FieldValue.serverTimestamp());
@@ -474,6 +478,7 @@ public class UserRepository {
             if (profile.getLocation() != null) updates.put("location", profile.getLocation());
             if (profile.getAvatarUrl() != null) updates.put("avatarUrl", profile.getAvatarUrl());
             updates.put("isPrivate", profile.isPrivate());
+            updates.put("showLocation", profile.isShowLocation());
             updates.put("updatedAt", FieldValue.serverTimestamp());
 
             db.collection("users").document(uid)

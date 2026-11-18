@@ -20,6 +20,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
@@ -55,6 +57,7 @@ public class PostFragment extends Fragment {
     private MaterialButton btnCreateFirstPost;
     private ImageButton btnActionAdd;
     private ImageButton btnBack;
+    private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshPosts;
 
     private PostsAdapter postsAdapter;
     private final List<PostItem> postList = new ArrayList<>();
@@ -67,18 +70,24 @@ public class PostFragment extends Fragment {
         public String title;
         public String caption;
         public String mediaUrl;
+        public List<String> mediaUrls;
         public String mediaType;
         public String senderUid;
         public long createdAtMs;
 
-        public PostItem(String id, String title, String caption, String mediaUrl, String mediaType, String senderUid, long createdAtMs) {
+        public PostItem(String id, String title, String caption, String mediaUrl, List<String> mediaUrls, String mediaType, String senderUid, long createdAtMs) {
             this.id = id;
             this.title = title;
             this.caption = caption;
             this.mediaUrl = mediaUrl;
+            this.mediaUrls = mediaUrls != null && !mediaUrls.isEmpty() ? mediaUrls : (mediaUrl != null ? java.util.Collections.singletonList(mediaUrl) : new java.util.ArrayList<>());
             this.mediaType = mediaType;
             this.senderUid = senderUid;
             this.createdAtMs = createdAtMs;
+        }
+
+        public PostItem(String id, String title, String caption, String mediaUrl, String mediaType, String senderUid, long createdAtMs) {
+            this(id, title, caption, mediaUrl, null, mediaType, senderUid, createdAtMs);
         }
     }
 
@@ -126,6 +135,35 @@ public class PostFragment extends Fragment {
 
         if (btnBack != null) {
             btnBack.setVisibility(View.GONE);
+        }
+
+        swipeRefreshPosts = view.findViewById(R.id.swipe_refresh_posts);
+        if (swipeRefreshPosts != null) {
+            swipeRefreshPosts.setColorSchemeResources(R.color.electric_blue, R.color.primary_blue);
+            swipeRefreshPosts.setOnRefreshListener(() -> {
+                loadAllUserPosts();
+                swipeRefreshPosts.postDelayed(() -> {
+                    if (swipeRefreshPosts != null) {
+                        swipeRefreshPosts.setRefreshing(false);
+                    }
+                }, 800);
+            });
+        }
+
+        View topBar = view.findViewById(R.id.top_bar_post_detail);
+        if (topBar != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
+                int statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                float density = getResources().getDisplayMetrics().density;
+                v.setPadding(
+                        v.getPaddingLeft(),
+                        statusBarTop + Math.round(8 * density),
+                        v.getPaddingRight(),
+                        Math.round(8 * density)
+                );
+                return insets;
+            });
+            topBar.post(() -> ViewCompat.requestApplyInsets(topBar));
         }
     }
 
@@ -175,8 +213,9 @@ public class PostFragment extends Fragment {
                         Timestamp ts = doc.getTimestamp("createdAt");
                         long createdAtMs = ts != null ? ts.toDate().getTime() : System.currentTimeMillis();
 
-                        if (!TextUtils.isEmpty(mediaUrl)) {
-                            postList.add(new PostItem(id, title, caption, mediaUrl, mediaType, senderUid, createdAtMs));
+                        List<String> mediaUrls = (List<String>) doc.get("mediaUrls");
+                        if (!TextUtils.isEmpty(mediaUrl) || (mediaUrls != null && !mediaUrls.isEmpty())) {
+                            postList.add(new PostItem(id, title, caption, mediaUrl, mediaUrls, mediaType, senderUid, createdAtMs));
                         }
                     }
 
@@ -216,16 +255,33 @@ public class PostFragment extends Fragment {
     // ViewPager2 Adapter for scrolling through all users' posts
     private class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.PostViewHolder> {
 
+        private static final int VIEW_TYPE_POST = 0;
+        private static final int VIEW_TYPE_REEL = 1;
+
         private final List<PostItem> items;
 
         PostsAdapter(List<PostItem> items) {
             this.items = items;
         }
 
+        @Override
+        public int getItemViewType(int position) {
+            PostItem item = items.get(position);
+            if (item != null && ("VIDEO".equalsIgnoreCase(item.mediaType) || "SNAP".equalsIgnoreCase(item.mediaType))) {
+                return VIEW_TYPE_REEL;
+            }
+            return VIEW_TYPE_POST;
+        }
+
         @NonNull
         @Override
         public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_page, parent, false);
+            View view;
+            if (viewType == VIEW_TYPE_REEL) {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_page, parent, false);
+            } else {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_feed, parent, false);
+            }
             return new PostViewHolder(view);
         }
 
@@ -248,6 +304,8 @@ public class PostFragment extends Fragment {
         class PostViewHolder extends RecyclerView.ViewHolder {
 
             private final ImageView ivPostMedia;
+            private final ViewPager2 vpPostCarousel;
+            private final TextView tvCarouselIndicator;
             private final View actionLikeContainer;
             private final ImageView ivActionLike;
             private final TextView tvLikeCount;
@@ -273,10 +331,13 @@ public class PostFragment extends Fragment {
             private ListenerRegistration postDocRegistration;
             private ListenerRegistration likesRegistration;
             private ListenerRegistration commentsRegistration;
+            private ListenerRegistration bookmarkRegistration;
 
             PostViewHolder(@NonNull View itemView) {
                 super(itemView);
                 ivPostMedia = itemView.findViewById(R.id.iv_post_media);
+                vpPostCarousel = itemView.findViewById(R.id.vp_post_carousel);
+                tvCarouselIndicator = itemView.findViewById(R.id.tv_carousel_indicator);
                 actionLikeContainer = itemView.findViewById(R.id.action_like_container);
                 ivActionLike = itemView.findViewById(R.id.iv_action_like);
                 tvLikeCount = itemView.findViewById(R.id.tv_like_count);
@@ -295,12 +356,38 @@ public class PostFragment extends Fragment {
                 this.currentItem = item;
                 unbind();
 
-                if (ivPostMedia != null && !TextUtils.isEmpty(item.mediaUrl)) {
-                    Glide.with(itemView.getContext())
-                            .load(item.mediaUrl)
-                            .placeholder(R.drawable.bg_sample_gym_preview)
-                            .error(R.drawable.bg_sample_gym_preview)
-                            .into(ivPostMedia);
+                if (item.mediaUrls != null && item.mediaUrls.size() > 1) {
+                    if (ivPostMedia != null) ivPostMedia.setVisibility(View.GONE);
+                    if (vpPostCarousel != null) {
+                        vpPostCarousel.setVisibility(View.VISIBLE);
+                        vpPostCarousel.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+                        vpPostCarousel.setAdapter(new PostCarouselAdapter(item.mediaUrls));
+                        vpPostCarousel.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                            @Override
+                            public void onPageSelected(int position) {
+                                if (tvCarouselIndicator != null) {
+                                    tvCarouselIndicator.setText((position + 1) + "/" + item.mediaUrls.size());
+                                }
+                            }
+                        });
+                    }
+                    if (tvCarouselIndicator != null) {
+                        tvCarouselIndicator.setText("1/" + item.mediaUrls.size());
+                        tvCarouselIndicator.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    if (vpPostCarousel != null) vpPostCarousel.setVisibility(View.GONE);
+                    if (tvCarouselIndicator != null) tvCarouselIndicator.setVisibility(View.GONE);
+                    if (ivPostMedia != null) {
+                        ivPostMedia.setVisibility(View.VISIBLE);
+                        if (!TextUtils.isEmpty(item.mediaUrl)) {
+                            Glide.with(itemView.getContext())
+                                    .load(item.mediaUrl)
+                                    .placeholder(R.drawable.bg_sample_gym_preview)
+                                    .error(R.drawable.bg_sample_gym_preview)
+                                    .into(ivPostMedia);
+                        }
+                    }
                 }
 
                 updateCaptionUI(item.title, item.caption);
@@ -322,6 +409,10 @@ public class PostFragment extends Fragment {
                 if (commentsRegistration != null) {
                     commentsRegistration.remove();
                     commentsRegistration = null;
+                }
+                if (bookmarkRegistration != null) {
+                    bookmarkRegistration.remove();
+                    bookmarkRegistration = null;
                 }
             }
 
@@ -510,21 +601,28 @@ public class PostFragment extends Fragment {
                     if (btnFollowUser != null) btnFollowUser.setEnabled(true);
                     Toast.makeText(itemView.getContext(), "Follow request pending", Toast.LENGTH_SHORT).show();
                 } else {
-                    FriendRepository.getInstance().sendFriendRequest(senderUid, new FriendRepository.OperationCallback() {
+                    FriendRepository.getInstance().followUser(senderUid, new FriendRepository.FollowCallback() {
                         @Override
-                        public void onSuccess() {
+                        public void onSuccess(boolean isDirectFollow) {
                             isFollowLoading = false;
-                            isPending = true;
+                            if (isDirectFollow) {
+                                isFollowing = true;
+                                isPending = false;
+                                Toast.makeText(itemView.getContext(), "Following!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                isPending = true;
+                                isFollowing = false;
+                                Toast.makeText(itemView.getContext(), "Follow request sent!", Toast.LENGTH_SHORT).show();
+                            }
                             if (btnFollowUser != null) btnFollowUser.setEnabled(true);
                             updateFollowButtonUI();
-                            Toast.makeText(itemView.getContext(), "Follow request sent!", Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
                         public void onError(Exception e) {
                             isFollowLoading = false;
                             if (btnFollowUser != null) btnFollowUser.setEnabled(true);
-                            Toast.makeText(itemView.getContext(), "Failed to send follow request", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(itemView.getContext(), "Failed to follow", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -600,6 +698,17 @@ public class PostFragment extends Fragment {
                                 tvCommentCount.setText(formatCount(commentCount));
                             }
                         });
+
+                // Bookmark Listener
+                if (currentUid != null) {
+                    bookmarkRegistration = db.collection("users").document(currentUid)
+                            .collection("bookmarks").document(postId)
+                            .addSnapshotListener((doc, e) -> {
+                                if (e != null) return;
+                                isBookmarked = doc != null && doc.exists();
+                                updateBookmarkUI();
+                            });
+                }
             }
 
             private void toggleLikeState() {
@@ -653,11 +762,39 @@ public class PostFragment extends Fragment {
             }
 
             private void toggleBookmarkState() {
+                if (currentItem == null || TextUtils.isEmpty(currentItem.id)) return;
+                String postId = currentItem.id;
+                String currentUid = UserRepository.getInstance().getCurrentUid();
+                if (currentUid == null) {
+                    Toast.makeText(itemView.getContext(), "Please sign in to save posts", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 isBookmarked = !isBookmarked;
+                updateBookmarkUI();
+
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                DocumentReference bookmarkRef = db.collection("users").document(currentUid)
+                        .collection("bookmarks").document(postId);
+
+                if (isBookmarked) {
+                    Map<String, Object> bm = new HashMap<>();
+                    bm.put("postId", postId);
+                    bm.put("createdAt", FieldValue.serverTimestamp());
+                    bookmarkRef.set(bm)
+                            .addOnSuccessListener(aVoid -> Toast.makeText(itemView.getContext(), "Saved to collection", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Log.e(TAG, "Failed to save bookmark", e));
+                } else {
+                    bookmarkRef.delete()
+                            .addOnSuccessListener(aVoid -> Toast.makeText(itemView.getContext(), "Removed from saved collection", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Log.e(TAG, "Failed to remove bookmark", e));
+                }
+            }
+
+            private void updateBookmarkUI() {
                 if (ivActionBookmark != null) {
                     if (isBookmarked) {
                         ivActionBookmark.setColorFilter(Color.parseColor("#3897F0"));
-                        Toast.makeText(itemView.getContext(), "Saved to collection", Toast.LENGTH_SHORT).show();
                     } else {
                         ivActionBookmark.clearColorFilter();
                     }
@@ -684,8 +821,52 @@ public class PostFragment extends Fragment {
 
             private String formatCount(int count) {
                 if (count < 1000) return String.valueOf(count);
-                if (count < 1000000) return String.format(Locale.US, "%.1fk", count / 1000.0f);
-                return String.format(Locale.US, "%.1fM", count / 1000000.0f);
+                if (count < 1000000) return String.format(java.util.Locale.US, "%.1fk", count / 1000.0f);
+                return String.format(java.util.Locale.US, "%.1fM", count / 1000000.0f);
+            }
+        }
+    }
+
+    private static class PostCarouselAdapter extends RecyclerView.Adapter<PostCarouselAdapter.CarouselViewHolder> {
+        private final List<String> imageUrls;
+
+        PostCarouselAdapter(List<String> imageUrls) {
+            this.imageUrls = imageUrls != null ? imageUrls : new java.util.ArrayList<>();
+        }
+
+        @NonNull
+        @Override
+        public CarouselViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_carousel_image, parent, false);
+            return new CarouselViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CarouselViewHolder holder, int position) {
+            holder.bind(imageUrls.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        static class CarouselViewHolder extends RecyclerView.ViewHolder {
+            private final ImageView ivCarouselImage;
+
+            CarouselViewHolder(@NonNull View itemView) {
+                super(itemView);
+                ivCarouselImage = itemView.findViewById(R.id.iv_carousel_image);
+            }
+
+            void bind(String url) {
+                if (ivCarouselImage != null && !TextUtils.isEmpty(url)) {
+                    Glide.with(itemView.getContext())
+                            .load(url)
+                            .placeholder(R.drawable.bg_sample_gym_preview)
+                            .error(R.drawable.bg_sample_gym_preview)
+                            .into(ivCarouselImage);
+                }
             }
         }
     }

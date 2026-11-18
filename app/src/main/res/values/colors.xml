@@ -39,7 +39,7 @@
     <color name="app_bg">#0B141B</color>
     <color name="nav_bg">#0B141B</color>
     <color name="nav_selected_item">#FFFFFF</color>
-    <color name="nav_selected_pill">#16283E</color>
+    <color name="nav_selected_pill">#600B141B</color>
     <color name="nav_inactive_item">#8397B2</color>
     <color name="nav_divider">#16283E</color>
 

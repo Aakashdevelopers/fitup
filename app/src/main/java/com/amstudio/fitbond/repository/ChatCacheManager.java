@@ -48,6 +48,9 @@ public class ChatCacheManager {
                 json.put("isMissedCall", msg.isMissedCall());
                 json.put("isVideoCall", msg.isVideoCall());
                 json.put("userReactionEmoji", msg.getUserReactionEmoji() != null ? msg.getUserReactionEmoji() : "");
+                json.put("replayCount", msg.getReplayCount());
+                json.put("isSavedInChat", msg.isSavedInChat());
+                json.put("isExpired", msg.isExpired());
 
                 if (msg.getReactions() != null) {
                     JSONArray reactionsArray = new JSONArray();
@@ -108,6 +111,9 @@ public class ChatCacheManager {
                 boolean isVideoCall = json.optBoolean("isVideoCall", false);
                 String userReactionEmoji = json.has("userReactionEmoji") ? json.optString("userReactionEmoji", "") : null;
                 if (userReactionEmoji != null && userReactionEmoji.isEmpty()) userReactionEmoji = null;
+                int replayCount = json.optInt("replayCount", 0);
+                boolean isSavedInChat = json.optBoolean("isSavedInChat", false);
+                boolean isExpired = json.optBoolean("isExpired", false);
 
                 ChatMessage.MessageType messageType;
                 try {
@@ -128,6 +134,9 @@ public class ChatCacheManager {
                         timestamp, durationText, mediaUri, isViewed, isMissedCall, isVideoCall
                 );
                 msg.setUserReactionEmoji(userReactionEmoji);
+                msg.setReplayCount(replayCount);
+                msg.setSavedInChat(isSavedInChat);
+                msg.setExpired(isExpired);
                 try {
                     msg.setStatus(ChatMessage.Status.valueOf(statusStr));
                 } catch (Exception ignored) {}

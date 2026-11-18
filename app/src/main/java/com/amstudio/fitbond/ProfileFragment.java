@@ -23,13 +23,21 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
+import android.graphics.Color;
+import android.util.TypedValue;
+import com.amstudio.fitbond.repository.SnapRepository;
+import com.google.android.material.imageview.ShapeableImageView;
+import java.util.Map;
 
 import android.net.Uri;
 
 import com.amstudio.fitbond.helper.OneSignalManager;
 import com.amstudio.fitbond.model.StreakStatus;
 import com.amstudio.fitbond.model.UserProfile;
+import com.amstudio.fitbond.repository.FriendRepository;
 import com.amstudio.fitbond.repository.StreakRepository;
 import com.amstudio.fitbond.repository.TencentChatManager;
 import com.amstudio.fitbond.repository.UserRepository;
@@ -58,6 +66,8 @@ public class ProfileFragment extends Fragment {
     private TextView tvBio;
     private TextView tvFriendsCount;
     private ImageView ivAvatar;
+    private TextView tvProfileLocation;
+    private View layoutProfileLocation;
 
     private TextView tvStatPostsValue;
     private TextView tvStatFollowersValue;
@@ -65,11 +75,16 @@ public class ProfileFragment extends Fragment {
 
     private ListenerRegistration userProfileRegistration;
     private ListenerRegistration postsRegistration;
+    private ListenerRegistration sentPostsRegistration;
+    private ListenerRegistration receivedSnapsRegistration;
     private ListenerRegistration followersRegistration;
     private ListenerRegistration followingRegistration;
+    private final Map<String, ProfilePostItem> snapPostMap = new java.util.concurrent.ConcurrentHashMap<>();
 
+    private TextView tvActivityDaysVal;
     private TextView tvActivityStreakVal;
     private TextView tvActivityTotalVal;
+    private View containerActivityCards;
 
     // Tab Views
     private View tabPosts;
@@ -87,13 +102,18 @@ public class ProfileFragment extends Fragment {
     private TextView tvEmptyTitle;
     private TextView tvEmptySubtitle;
     private View containerEmptyState;
+    private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshProfile;
 
     // Posts Grid Views
     private RecyclerView rvPostsGrid;
     private final List<ProfilePostItem> allUserPosts = new ArrayList<>();
+    private final List<ProfilePostItem> savedActivityPosts = new ArrayList<>();
     private final List<ProfilePostItem> currentTabPosts = new ArrayList<>();
     private ProfilePostAdapter gridAdapter;
+    private ProfileSnapCardAdapter profileSnapCardAdapter;
+    private final Map<String, ProfileSnapMessageHolder> authorizedSnapMap = new java.util.concurrent.ConcurrentHashMap<>();
     private TabState currentTabState = TabState.POSTS;
+    private ListenerRegistration bookmarksRegistration;
 
     private ActivityResultLauncher<Intent> editProfileLauncher;
     private ActivityResultLauncher<PickVisualMediaRequest> createPostMediaLauncher;
@@ -145,14 +165,15 @@ public class ProfileFragment extends Fragment {
         if (topBar != null) {
             ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
                 int statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                if (statusBarTop > 0) {
-                    topBar.setPadding(
-                            topBar.getPaddingLeft(),
-                            statusBarTop,
-                            topBar.getPaddingRight(),
-                            topBar.getPaddingBottom()
-                    );
-                }
+                float density = getResources().getDisplayMetrics().density;
+                int extraTopPadding = Math.round(14 * density);
+                int extraBottomPadding = Math.round(8 * density);
+                topBar.setPadding(
+                        topBar.getPaddingLeft(),
+                        statusBarTop + extraTopPadding,
+                        topBar.getPaddingRight(),
+                        extraBottomPadding
+                );
                 return insets;
             });
             view.post(() -> ViewCompat.requestApplyInsets(view));
@@ -169,9 +190,13 @@ public class ProfileFragment extends Fragment {
         tvStatFollowingValue = view.findViewById(R.id.tv_stat_following_value);
         tvFriendsCount = tvStatFollowersValue;
         ivAvatar = view.findViewById(R.id.iv_avatar);
+        tvProfileLocation = view.findViewById(R.id.tv_profile_location);
+        layoutProfileLocation = view.findViewById(R.id.layout_profile_location);
 
+        tvActivityDaysVal = view.findViewById(R.id.tv_activity_days_val);
         tvActivityStreakVal = view.findViewById(R.id.tv_activity_streak_val);
         tvActivityTotalVal = view.findViewById(R.id.tv_activity_total_val);
+        containerActivityCards = view.findViewById(R.id.container_activity_cards);
 
         // Tabs
         tabPosts = view.findViewById(R.id.tab_posts);
@@ -194,6 +219,21 @@ public class ProfileFragment extends Fragment {
 
         rvPostsGrid = view.findViewById(R.id.rv_profile_posts_grid);
         setupPostsGridRecyclerView();
+
+        swipeRefreshProfile = view.findViewById(R.id.swipe_refresh_profile);
+        if (swipeRefreshProfile != null) {
+            swipeRefreshProfile.setColorSchemeResources(R.color.electric_blue, R.color.primary_blue);
+            swipeRefreshProfile.setOnRefreshListener(() -> {
+                UserRepository.getInstance().invalidateCache();
+                populateUserData();
+                setupRealtimeStatsListeners();
+                swipeRefreshProfile.postDelayed(() -> {
+                    if (swipeRefreshProfile != null) {
+                        swipeRefreshProfile.setRefreshing(false);
+                    }
+                }, 800);
+            });
+        }
     }
 
     private void populateUserData() {
@@ -229,6 +269,7 @@ public class ProfileFragment extends Fragment {
                         if (ivAvatar != null) {
                             AvatarLoader.loadAvatar(ProfileFragment.this, profile.getAvatarUrl(), ivAvatar);
                         }
+                        updateLocationPill(profile);
                     }
                 }
 
@@ -253,6 +294,9 @@ public class ProfileFragment extends Fragment {
                 @Override
                 public void onSuccess(StreakStatus status) {
                     if (isAdded() && status != null) {
+                        if (tvActivityDaysVal != null) {
+                            tvActivityDaysVal.setText(status.getTotalCheckIns() + " Days");
+                        }
                         if (tvActivityStreakVal != null) {
                             tvActivityStreakVal.setText(status.getCurrentStreak() + " Days");
                         }
@@ -267,6 +311,19 @@ public class ProfileFragment extends Fragment {
                     // Silent fallback
                 }
             });
+        }
+    }
+
+    private void updateLocationPill(UserProfile profile) {
+        if (profile == null) return;
+        boolean showLocation = profile.isShowLocation();
+        String locStr = profile.getLocation();
+        if (showLocation) {
+            String displayLocation = !TextUtils.isEmpty(locStr) ? locStr : "Fitness Enthusiast";
+            if (tvProfileLocation != null) tvProfileLocation.setText(displayLocation);
+            if (layoutProfileLocation != null) layoutProfileLocation.setVisibility(View.VISIBLE);
+        } else {
+            if (layoutProfileLocation != null) layoutProfileLocation.setVisibility(View.GONE);
         }
     }
 
@@ -307,7 +364,8 @@ public class ProfileFragment extends Fragment {
         View statFollowers = view.findViewById(R.id.stat_followers_container);
         if (statFollowers != null) {
             statFollowers.setOnClickListener(v -> {
-                FollowersListDialog dialog = FollowersListDialog.newInstance("Followers");
+                String currentUid = UserRepository.getInstance().getCurrentUid();
+                FollowersListDialog dialog = FollowersListDialog.newInstance(currentUid, "Followers");
                 dialog.show(getParentFragmentManager(), "FollowersListDialog");
             });
         }
@@ -315,7 +373,8 @@ public class ProfileFragment extends Fragment {
         View statFollowing = view.findViewById(R.id.stat_following_container);
         if (statFollowing != null) {
             statFollowing.setOnClickListener(v -> {
-                FollowersListDialog dialog = FollowersListDialog.newInstance("Following");
+                String currentUid = UserRepository.getInstance().getCurrentUid();
+                FollowersListDialog dialog = FollowersListDialog.newInstance(currentUid, "Following");
                 dialog.show(getParentFragmentManager(), "FollowersListDialog");
             });
         }
@@ -375,15 +434,35 @@ public class ProfileFragment extends Fragment {
 
         gridAdapter = new ProfilePostAdapter(currentTabPosts, item -> {
             String currentUid = UserRepository.getInstance().getCurrentUid();
+            ArrayList<String> urls = item.mediaUrls != null ? new ArrayList<>(item.mediaUrls) : new ArrayList<>();
             PostDetailActivity.open(
                     getContext(),
                     item.id,
                     item.mediaUrl,
+                    urls,
                     item.title,
                     item.caption,
                     currentUid
             );
         });
+
+        profileSnapCardAdapter = new ProfileSnapCardAdapter(
+                message -> {
+                    if (message == null || !isAdded()) return;
+                    boolean isVideo = message.getSnapKind() == ChatMessage.SnapKind.VIDEO;
+                    SnapViewerDialog dialog = SnapViewerDialog.newInstance(
+                            message.getSenderName() != null ? message.getSenderName() : "You",
+                            message.getSenderName() != null && message.getSenderName().length() >= 2 ? message.getSenderName().substring(0, 2).toUpperCase() : "GB",
+                            R.drawable.bg_avatar_gradient_1,
+                            isVideo,
+                            message.getDurationText(),
+                            message.getId(),
+                            message.getMediaUri()
+                    );
+                    dialog.show(getParentFragmentManager(), "SnapViewerDialog");
+                },
+                (message, anchorView) -> showSnapOptionsDialogForProfile(message)
+        );
 
         rvPostsGrid.setLayoutManager(new GridLayoutManager(getContext(), 3));
         rvPostsGrid.setAdapter(gridAdapter);
@@ -519,61 +598,223 @@ public class ProfileFragment extends Fragment {
                         if (ivAvatar != null) {
                             AvatarLoader.loadAvatar(ProfileFragment.this, profile.getAvatarUrl(), ivAvatar);
                         }
+                        updateLocationPill(profile);
                     }
                 });
 
-        // 2. Real-Time Posts/Snaps Count & Grid Listener
-        postsRegistration = db.collection("snaps")
+        // 2. Real-Time Sent & Received Snaps/Posts Listeners
+        if (sentPostsRegistration != null) sentPostsRegistration.remove();
+        if (receivedSnapsRegistration != null) receivedSnapsRegistration.remove();
+
+        sentPostsRegistration = db.collection("snaps")
                 .whereEqualTo("senderUid", currentUid)
                 .addSnapshotListener((snapshot, e) -> {
                     if (e != null || snapshot == null || !isAdded()) return;
-
-                    allUserPosts.clear();
-                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                        String id = doc.getString("id");
-                        String title = doc.getString("title");
-                        String caption = doc.getString("caption");
-                        String mediaUrl = doc.getString("mediaUrl");
-                        String mediaType = doc.getString("mediaType");
-                        Timestamp ts = doc.getTimestamp("createdAt");
-                        long createdAtMs = ts != null ? ts.toDate().getTime() : System.currentTimeMillis();
-
-                        if (mediaUrl != null && !mediaUrl.isEmpty()) {
-                            allUserPosts.add(new ProfilePostItem(id, title, caption, mediaUrl, mediaType, createdAtMs));
-                        }
-                    }
-
-                    // Sort newest posts first
-                    allUserPosts.sort((a, b) -> Long.compare(b.createdAtMs, a.createdAtMs));
-
-                    if (tvStatPostsValue != null) {
-                        tvStatPostsValue.setText(String.valueOf(allUserPosts.size()));
-                    }
-
-                    renderPostsGridForCurrentTab();
+                    processSnapDocs(snapshot.getDocuments());
                 });
 
-        // 3. Real-Time Followers Count Listener (User is user2 in friendship)
+        receivedSnapsRegistration = db.collection("snaps")
+                .whereArrayContains("recipientUids", currentUid)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null || snapshot == null || !isAdded()) return;
+                    processSnapDocs(snapshot.getDocuments());
+                });
+
+        // 3. Real-Time Followers & Following Count Listener
         followersRegistration = db.collection("friendships")
-                .whereEqualTo("user2Uid", currentUid)
                 .addSnapshotListener((snapshot, e) -> {
-                    if (e != null || snapshot == null || !isAdded()) return;
-                    int count = snapshot.size();
-                    if (tvStatFollowersValue != null) {
-                        tvStatFollowersValue.setText(String.valueOf(count));
-                    }
+                    if (e != null || !isAdded()) return;
+                    FriendRepository.getInstance().invalidateFriendsCache();
+                    FriendRepository.getInstance().getFollowers(currentUid, new FriendRepository.FriendsListCallback() {
+                        @Override
+                        public void onSuccess(List<UserProfile> friends) {
+                            if (isAdded() && tvStatFollowersValue != null) {
+                                tvStatFollowersValue.setText(String.valueOf(friends != null ? friends.size() : 0));
+                            }
+                        }
+
+                        @Override
+                        public void onError(Exception ex) {
+                            if (isAdded() && tvStatFollowersValue != null) {
+                                tvStatFollowersValue.setText("0");
+                            }
+                        }
+                    });
+
+                    FriendRepository.getInstance().getFollowing(currentUid, new FriendRepository.FriendsListCallback() {
+                        @Override
+                        public void onSuccess(List<UserProfile> friends) {
+                            if (isAdded() && tvStatFollowingValue != null) {
+                                tvStatFollowingValue.setText(String.valueOf(friends != null ? friends.size() : 0));
+                            }
+                        }
+
+                        @Override
+                        public void onError(Exception ex) {
+                            if (isAdded() && tvStatFollowingValue != null) {
+                                tvStatFollowingValue.setText("0");
+                            }
+                        }
+                    });
                 });
 
-        // 4. Real-Time Following Count Listener (User is user1 in friendship)
-        followingRegistration = db.collection("friendships")
-                .whereEqualTo("user1Uid", currentUid)
+        loadActivityBookmarks(currentUid);
+    }
+
+    private void loadActivityBookmarks(String currentUid) {
+        if (bookmarksRegistration != null) bookmarksRegistration.remove();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        bookmarksRegistration = db.collection("users").document(currentUid)
+                .collection("bookmarks")
                 .addSnapshotListener((snapshot, e) -> {
                     if (e != null || snapshot == null || !isAdded()) return;
-                    int count = snapshot.size();
-                    if (tvStatFollowingValue != null) {
-                        tvStatFollowingValue.setText(String.valueOf(count));
+                    savedActivityPosts.clear();
+                    List<String> postIds = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        String pId = doc.getString("postId");
+                        if (pId == null) pId = doc.getId();
+                        if (pId != null && !pId.isEmpty()) postIds.add(pId);
+                    }
+
+                    if (postIds.isEmpty()) {
+                        renderPostsGridForCurrentTab();
+                        return;
+                    }
+
+                    int batchSize = 30;
+                    for (int i = 0; i < postIds.size(); i += batchSize) {
+                        List<String> batch = postIds.subList(i, Math.min(i + batchSize, postIds.size()));
+                        db.collection("snaps").whereIn(com.google.firebase.firestore.FieldPath.documentId(), batch).get()
+                                .addOnSuccessListener(q -> {
+                                    if (!isAdded() || q == null) return;
+                                    for (DocumentSnapshot doc : q.getDocuments()) {
+                                        String id = doc.getId();
+                                        String title = doc.getString("title");
+                                        String caption = doc.getString("caption");
+                                        String mediaUrl = doc.getString("mediaUrl");
+                                        String mediaType = doc.getString("mediaType");
+                                        Timestamp ts = doc.getTimestamp("createdAt");
+                                        long createdAtMs = ts != null ? ts.toDate().getTime() : System.currentTimeMillis();
+
+                                        if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                                            savedActivityPosts.add(new ProfilePostItem(id, title, caption, mediaUrl, mediaType, createdAtMs));
+                                        }
+                                    }
+                                    savedActivityPosts.sort((a, b) -> Long.compare(b.createdAtMs, a.createdAtMs));
+                                    renderPostsGridForCurrentTab();
+                                });
                     }
                 });
+    }
+
+    private void processSnapDocs(List<DocumentSnapshot> docs) {
+        if (docs == null) return;
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        if (currentUid == null) return;
+
+        for (DocumentSnapshot doc : docs) {
+            String id = doc.getId();
+            String title = doc.getString("title");
+            String caption = doc.getString("caption");
+            String mediaUrl = doc.getString("mediaUrl");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("url");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("downloadUrl");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("imageUrl");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("photoUrl");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("image");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("media");
+            if (TextUtils.isEmpty(mediaUrl)) mediaUrl = doc.getString("storagePath");
+
+            String mediaType = doc.getString("mediaType");
+            if (mediaType == null) mediaType = doc.getString("type");
+            Timestamp ts = doc.getTimestamp("createdAt");
+            long createdAtMs = ts != null ? ts.toDate().getTime() : System.currentTimeMillis();
+
+            List<String> mediaUrls = (List<String>) doc.get("mediaUrls");
+            List<String> recipientUids = (List<String>) doc.get("recipientUids");
+            String senderUid = doc.getString("senderUid");
+
+            boolean isSentByMe = currentUid.equals(senderUid);
+            boolean isRecipientMe = recipientUids != null && recipientUids.contains(currentUid);
+            boolean isSnapDoc = isSentByMe || isRecipientMe || (recipientUids != null && !recipientUids.isEmpty()) || "SNAP".equalsIgnoreCase(mediaType);
+
+            if (isSentByMe || isRecipientMe) {
+                boolean isVideo = "VIDEO".equalsIgnoreCase(mediaType);
+                ChatMessage.MessageType msgType = isSentByMe ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
+                ChatMessage.SnapKind snapKind = isVideo ? ChatMessage.SnapKind.VIDEO : ChatMessage.SnapKind.PHOTO;
+
+                Long durObj = doc.getLong("durationSeconds");
+                long durSec = durObj != null ? durObj : 10;
+                String durationStr = isVideo ? "0:" + durSec : durSec + "s";
+                String label = isVideo ? "Video Snap" : "Snap";
+
+                java.text.SimpleDateFormat timeSdf = new java.text.SimpleDateFormat("hh:mm a", java.util.Locale.US);
+                String formattedTime = timeSdf.format(new java.util.Date(createdAtMs));
+
+                ChatMessage msg = new ChatMessage(
+                        id,
+                        isSentByMe ? "me" : (senderUid != null ? senderUid : "friend"),
+                        isSentByMe ? "You" : "Friend",
+                        label,
+                        msgType,
+                        snapKind,
+                        formattedTime,
+                        durationStr,
+                        mediaUrl,
+                        false
+                );
+
+                Long replaysObj = doc.getLong("replayCount");
+                if (replaysObj != null) msg.setReplayCount(replaysObj.intValue());
+                Boolean isSavedObj = doc.getBoolean("isSaved");
+                if (isSavedObj != null) msg.setSavedInChat(isSavedObj);
+                Boolean isExpiredObj = doc.getBoolean("isExpired");
+                if (isExpiredObj != null) msg.setExpired(isExpiredObj);
+
+                authorizedSnapMap.put(id, new ProfileSnapMessageHolder(msg, createdAtMs));
+            }
+
+            if (!TextUtils.isEmpty(mediaUrl) || (mediaUrls != null && !mediaUrls.isEmpty())) {
+                snapPostMap.put(id, new ProfilePostItem(id, title, caption, mediaUrl, mediaUrls, mediaType != null ? mediaType : "SNAP", createdAtMs, isSnapDoc));
+            }
+        }
+
+        allUserPosts.clear();
+        allUserPosts.addAll(snapPostMap.values());
+        allUserPosts.sort((a, b) -> Long.compare(b.createdAtMs, a.createdAtMs));
+
+        if (tvStatPostsValue != null) {
+            long publicPostsCount = 0;
+            for (ProfilePostItem item : allUserPosts) {
+                if (!item.isSnap) publicPostsCount++;
+            }
+            tvStatPostsValue.setText(String.valueOf(publicPostsCount));
+        }
+
+        renderPostsGridForCurrentTab();
+    }
+
+    private String getDateHeaderString(long epochMs) {
+        if (epochMs <= 0) return "Today";
+
+        java.util.Calendar now = java.util.Calendar.getInstance();
+        java.util.Calendar itemCal = java.util.Calendar.getInstance();
+        itemCal.setTimeInMillis(epochMs);
+
+        if (now.get(java.util.Calendar.YEAR) == itemCal.get(java.util.Calendar.YEAR)
+                && now.get(java.util.Calendar.DAY_OF_YEAR) == itemCal.get(java.util.Calendar.DAY_OF_YEAR)) {
+            return "Today";
+        }
+
+        now.add(java.util.Calendar.DAY_OF_YEAR, -1);
+        if (now.get(java.util.Calendar.YEAR) == itemCal.get(java.util.Calendar.YEAR)
+                && now.get(java.util.Calendar.DAY_OF_YEAR) == itemCal.get(java.util.Calendar.DAY_OF_YEAR)) {
+            return "Yesterday";
+        }
+
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEEE, dd MMM", java.util.Locale.getDefault());
+        return sdf.format(new java.util.Date(epochMs));
     }
 
     private void removeStatsListeners() {
@@ -585,6 +826,14 @@ public class ProfileFragment extends Fragment {
             postsRegistration.remove();
             postsRegistration = null;
         }
+        if (sentPostsRegistration != null) {
+            sentPostsRegistration.remove();
+            sentPostsRegistration = null;
+        }
+        if (receivedSnapsRegistration != null) {
+            receivedSnapsRegistration.remove();
+            receivedSnapsRegistration = null;
+        }
         if (followersRegistration != null) {
             followersRegistration.remove();
             followersRegistration = null;
@@ -593,47 +842,348 @@ public class ProfileFragment extends Fragment {
             followingRegistration.remove();
             followingRegistration = null;
         }
+        if (bookmarksRegistration != null) {
+            bookmarksRegistration.remove();
+            bookmarksRegistration = null;
+        }
     }
 
     private void renderPostsGridForCurrentTab() {
-        currentTabPosts.clear();
+        if (getContext() == null || rvPostsGrid == null) return;
 
-        for (ProfilePostItem item : allUserPosts) {
-            switch (currentTabState) {
-                case SNAPS:
-                    if ("VIDEO".equalsIgnoreCase(item.mediaType)) {
-                        currentTabPosts.add(item);
+        if (containerActivityCards != null) {
+            containerActivityCards.setVisibility(currentTabState == TabState.ACTIVITY ? View.VISIBLE : View.GONE);
+        }
+
+        if (currentTabState == TabState.SNAPS) {
+            rvPostsGrid.setLayoutManager(new LinearLayoutManager(getContext()));
+            rvPostsGrid.setAdapter(profileSnapCardAdapter);
+
+            List<ProfileSnapMessageHolder> snapHolders = new ArrayList<>(authorizedSnapMap.values());
+            snapHolders.sort((a, b) -> Long.compare(b.createdAtMs, a.createdAtMs));
+
+            List<ProfileSnapCardItem> cardItems = new ArrayList<>();
+            String lastHeader = null;
+
+            for (ProfileSnapMessageHolder h : snapHolders) {
+                String dateHeader = getDateHeaderString(h.createdAtMs);
+                if (lastHeader == null || !lastHeader.equalsIgnoreCase(dateHeader)) {
+                    lastHeader = dateHeader;
+                    cardItems.add(new ProfileSnapCardItem(dateHeader));
+                }
+                int type = h.message.isOutgoing() ? ProfileSnapCardItem.TYPE_SNAP_OUTGOING : ProfileSnapCardItem.TYPE_SNAP_INCOMING;
+                cardItems.add(new ProfileSnapCardItem(h.message, type));
+            }
+
+            if (profileSnapCardAdapter != null) {
+                profileSnapCardAdapter.setItems(cardItems);
+            }
+
+            boolean hasSnaps = !cardItems.isEmpty();
+            if (rvPostsGrid != null) rvPostsGrid.setVisibility(hasSnaps ? View.VISIBLE : View.GONE);
+            if (containerEmptyState != null) containerEmptyState.setVisibility(hasSnaps ? View.GONE : View.VISIBLE);
+
+        } else {
+            rvPostsGrid.setLayoutManager(new GridLayoutManager(getContext(), 3));
+            rvPostsGrid.setAdapter(gridAdapter);
+
+            currentTabPosts.clear();
+
+            for (ProfilePostItem item : allUserPosts) {
+                switch (currentTabState) {
+                    case ACTIVITY:
+                        if ("ACTIVITY".equalsIgnoreCase(item.mediaType) || "WORKOUT".equalsIgnoreCase(item.mediaType)) {
+                            currentTabPosts.add(item);
+                        }
+                        break;
+                    case POSTS:
+                    default:
+                        if (!item.isSnap && !"ACTIVITY".equalsIgnoreCase(item.mediaType) && !"WORKOUT".equalsIgnoreCase(item.mediaType)) {
+                            currentTabPosts.add(item);
+                        }
+                        break;
+                }
+            }
+
+            if (currentTabState == TabState.ACTIVITY) {
+                for (ProfilePostItem savedItem : savedActivityPosts) {
+                    boolean duplicate = false;
+                    for (ProfilePostItem existing : currentTabPosts) {
+                        if (existing.id != null && existing.id.equals(savedItem.id)) {
+                            duplicate = true;
+                            break;
+                        }
                     }
-                    break;
-                case ACTIVITY:
-                    if ("ACTIVITY".equalsIgnoreCase(item.mediaType)) {
-                        currentTabPosts.add(item);
+                    if (!duplicate) {
+                        currentTabPosts.add(savedItem);
                     }
-                    break;
-                case POSTS:
-                default:
-                    if (!"VIDEO".equalsIgnoreCase(item.mediaType) && !"ACTIVITY".equalsIgnoreCase(item.mediaType)) {
-                        currentTabPosts.add(item);
+                }
+                currentTabPosts.sort((a, b) -> Long.compare(b.createdAtMs, a.createdAtMs));
+            }
+
+            if (gridAdapter != null) {
+                gridAdapter.notifyDataSetChanged();
+            }
+
+            boolean hasPosts = !currentTabPosts.isEmpty();
+            if (rvPostsGrid != null) {
+                rvPostsGrid.setVisibility(hasPosts ? View.VISIBLE : View.GONE);
+            }
+            if (containerEmptyState != null) {
+                containerEmptyState.setVisibility(hasPosts ? View.GONE : View.VISIBLE);
+            }
+        }
+    }
+
+    private void showSnapOptionsDialogForProfile(ChatMessage message) {
+        if (message == null || getContext() == null) return;
+        SnapOptionsDialog dialog = SnapOptionsDialog.newInstance(
+                message.getReplayCount(),
+                message.isSavedInChat(),
+                message.isExpired()
+        );
+        dialog.setOnSnapOptionSelectedListener(new SnapOptionsDialog.OnSnapOptionSelectedListener() {
+            @Override
+            public void onReplaySelected() {
+                if (message.isExpired() || message.getRemainingReplays() <= 0) {
+                    showToast("Maximum 3 replays reached for this snap");
+                    return;
+                }
+                String currentUid = UserRepository.getInstance().getCurrentUid();
+                String conversationId = currentUid != null && message.getSenderId() != null
+                        ? (currentUid.compareTo(message.getSenderId()) < 0 ? currentUid + "_" + message.getSenderId() : message.getSenderId() + "_" + currentUid)
+                        : "conversation";
+
+                SnapRepository.getInstance().incrementSnapReplayCount(conversationId, message.getId(), message.getId(), new SnapRepository.SnapReplayCallback() {
+                    @Override
+                    public void onSuccess(int newReplayCount, boolean isExpired) {
+                        message.setReplayCount(newReplayCount);
+                        if (isExpired) {
+                            message.setExpired(true);
+                        }
+                        if (profileSnapCardAdapter != null) profileSnapCardAdapter.notifyDataSetChanged();
+                        if (!isExpired) {
+                            boolean isVideo = message.getSnapKind() == ChatMessage.SnapKind.VIDEO;
+                            SnapViewerDialog snapViewer = SnapViewerDialog.newInstance(
+                                    message.getSenderName(),
+                                    "GB",
+                                    R.drawable.bg_avatar_gradient_1,
+                                    isVideo,
+                                    message.getDurationText(),
+                                    message.getId(),
+                                    message.getMediaUri()
+                            );
+                            snapViewer.show(getParentFragmentManager(), "SnapViewerDialog");
+                        }
                     }
-                    break;
+
+                    @Override
+                    public void onError(Exception e) {
+                        showToast("Failed to replay snap");
+                    }
+                });
+            }
+
+            @Override
+            public void onSaveToggleSelected(boolean currentSavedState) {
+                boolean newSavedState = !currentSavedState;
+                String currentUid = UserRepository.getInstance().getCurrentUid();
+                String conversationId = currentUid != null && message.getSenderId() != null
+                        ? (currentUid.compareTo(message.getSenderId()) < 0 ? currentUid + "_" + message.getSenderId() : message.getSenderId() + "_" + currentUid)
+                        : "conversation";
+
+                SnapRepository.getInstance().setSnapSavedStatus(conversationId, message.getId(), newSavedState, new SnapRepository.SnapActionCallback() {
+                    @Override
+                    public void onSuccess() {
+                        message.setSavedInChat(newSavedState);
+                        if (profileSnapCardAdapter != null) profileSnapCardAdapter.notifyDataSetChanged();
+                        showToast(newSavedState ? "Snap saved in chat 💾" : "Snap unsaved");
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        showToast("Failed to update save status");
+                    }
+                });
+            }
+
+            @Override
+            public void onDeleteSelected() {
+                String currentUid = UserRepository.getInstance().getCurrentUid();
+                String conversationId = currentUid != null && message.getSenderId() != null
+                        ? (currentUid.compareTo(message.getSenderId()) < 0 ? currentUid + "_" + message.getSenderId() : message.getSenderId() + "_" + currentUid)
+                        : "conversation";
+
+                SnapRepository.getInstance().deleteSnapMediaAndDoc(conversationId, message.getId(), message.getId(), message.getMediaUri(), new SnapRepository.SnapActionCallback() {
+                    @Override
+                    public void onSuccess() {
+                        authorizedSnapMap.remove(message.getId());
+                        renderPostsGridForCurrentTab();
+                        showToast("Snap deleted");
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        showToast("Failed to delete snap");
+                    }
+                });
+            }
+        });
+        dialog.show(getParentFragmentManager(), "SnapOptionsDialog");
+    }
+
+    public static class ProfileSnapMessageHolder {
+        public final ChatMessage message;
+        public final long createdAtMs;
+
+        public ProfileSnapMessageHolder(ChatMessage message, long createdAtMs) {
+            this.message = message;
+            this.createdAtMs = createdAtMs;
+        }
+    }
+
+    public static class ProfileSnapCardItem {
+        public static final int TYPE_HEADER = 0;
+        public static final int TYPE_SNAP_INCOMING = 1;
+        public static final int TYPE_SNAP_OUTGOING = 2;
+
+        public final int itemType;
+        public final String dateHeader;
+        public final ChatMessage message;
+
+        public ProfileSnapCardItem(String dateHeader) {
+            this.itemType = TYPE_HEADER;
+            this.dateHeader = dateHeader;
+            this.message = null;
+        }
+
+        public ProfileSnapCardItem(ChatMessage message, int itemType) {
+            this.itemType = itemType;
+            this.dateHeader = null;
+            this.message = message;
+        }
+    }
+
+    private static class ProfileSnapCardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        private final List<ProfileSnapCardItem> items = new ArrayList<>();
+        private final ChatMessageAdapter.OnSnapClickListener snapClickListener;
+        private final ChatMessageAdapter.OnMessageLongClickListener snapLongClickListener;
+
+        ProfileSnapCardAdapter(ChatMessageAdapter.OnSnapClickListener snapClickListener,
+                               ChatMessageAdapter.OnMessageLongClickListener snapLongClickListener) {
+            this.snapClickListener = snapClickListener;
+            this.snapLongClickListener = snapLongClickListener;
+        }
+
+        public void setItems(List<ProfileSnapCardItem> newItems) {
+            this.items.clear();
+            if (newItems != null) this.items.addAll(newItems);
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return items.get(position).itemType;
+        }
+
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            if (viewType == ProfileSnapCardItem.TYPE_HEADER) {
+                TextView tv = new TextView(parent.getContext());
+                tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                tv.setPadding(32, 20, 32, 10);
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+                tv.setLetterSpacing(0.06f);
+                tv.setTextColor(Color.parseColor("#94A3B8"));
+                tv.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
+                return new HeaderViewHolder(tv);
+            } else if (viewType == ProfileSnapCardItem.TYPE_SNAP_INCOMING) {
+                View v = inflater.inflate(R.layout.item_message_snap_incoming, parent, false);
+                return new ChatMessageAdapter.SnapMessageViewHolder(v);
+            } else {
+                View v = inflater.inflate(R.layout.item_message_snap_outgoing, parent, false);
+                return new ChatMessageAdapter.SnapMessageViewHolder(v);
             }
         }
 
-        // If POSTS tab filtered list is empty but user has posts, show all user posts in main POSTS grid (Instagram behavior)
-        if (currentTabState == TabState.POSTS && currentTabPosts.isEmpty() && !allUserPosts.isEmpty()) {
-            currentTabPosts.addAll(allUserPosts);
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+            ProfileSnapCardItem item = items.get(position);
+            if (holder instanceof HeaderViewHolder) {
+                ((HeaderViewHolder) holder).tvHeader.setText(item.dateHeader);
+            } else if (holder instanceof ChatMessageAdapter.SnapMessageViewHolder) {
+                ChatMessageAdapter.SnapMessageViewHolder vh = (ChatMessageAdapter.SnapMessageViewHolder) holder;
+                ChatMessage message = item.message;
+                if (message == null) return;
+
+                boolean isVideo = message.getSnapKind() == ChatMessage.SnapKind.VIDEO;
+                vh.tvSnapLabel.setText(isVideo ? "Video Snap" : "Snap");
+                vh.ivSnapIcon.setImageResource(isVideo ? R.drawable.ic_snap_video : R.drawable.ic_nav_camera);
+
+                if (message.isExpired()) {
+                    vh.tvSnapSubtext.setText("Snap Expired");
+                    vh.cardSnapBubble.setAlpha(0.5f);
+                } else if (message.isSavedInChat()) {
+                    vh.tvSnapSubtext.setText("Saved in Chat • Hold for options");
+                    vh.cardSnapBubble.setAlpha(1.0f);
+                } else if (message.isOutgoing()) {
+                    if (message.getStatus() == ChatMessage.Status.READ) {
+                        vh.tvSnapSubtext.setText("Opened • " + message.getDurationText());
+                    } else if (message.getStatus() == ChatMessage.Status.DELIVERED) {
+                        vh.tvSnapSubtext.setText("Delivered • " + message.getDurationText());
+                    } else {
+                        vh.tvSnapSubtext.setText("Sent • " + message.getDurationText());
+                    }
+                    vh.cardSnapBubble.setAlpha(1.0f);
+                } else {
+                    if (message.isViewed()) {
+                        int remaining = message.getRemainingReplays();
+                        if (remaining > 0) {
+                            vh.tvSnapSubtext.setText("Opened • Hold to replay (" + remaining + "/3)");
+                        } else {
+                            vh.tvSnapSubtext.setText("Opened • 0 replays left");
+                        }
+                    } else {
+                        vh.tvSnapSubtext.setText("Tap to view • " + message.getDurationText());
+                    }
+                    vh.cardSnapBubble.setAlpha(1.0f);
+                }
+
+                vh.tvMessageTime.setText(message.getTimestamp());
+                if (vh.tvIncomingAvatar != null) {
+                    vh.tvIncomingAvatar.setText(message.getSenderName() != null && message.getSenderName().length() >= 2 ? message.getSenderName().substring(0, 2).toUpperCase() : "GB");
+                    vh.tvIncomingAvatar.setBackgroundResource(R.drawable.bg_avatar_gradient_3);
+                }
+
+                vh.cardSnapBubble.setOnClickListener(v -> {
+                    if (snapClickListener != null) {
+                        snapClickListener.onSnapClick(message);
+                    }
+                });
+
+                vh.cardSnapBubble.setOnLongClickListener(v -> {
+                    if (snapLongClickListener != null) {
+                        snapLongClickListener.onMessageLongClick(message, v);
+                        return true;
+                    }
+                    return false;
+                });
+            }
         }
 
-        if (gridAdapter != null) {
-            gridAdapter.notifyDataSetChanged();
+        @Override
+        public int getItemCount() {
+            return items.size();
         }
 
-        boolean hasPosts = !currentTabPosts.isEmpty();
-        if (rvPostsGrid != null) {
-            rvPostsGrid.setVisibility(hasPosts ? View.VISIBLE : View.GONE);
-        }
-        if (containerEmptyState != null) {
-            containerEmptyState.setVisibility(hasPosts ? View.GONE : View.VISIBLE);
+        static class HeaderViewHolder extends RecyclerView.ViewHolder {
+            TextView tvHeader;
+            HeaderViewHolder(View itemView) {
+                super(itemView);
+                tvHeader = (TextView) itemView;
+            }
         }
     }
 
@@ -649,25 +1199,81 @@ public class ProfileFragment extends Fragment {
         public final String title;
         public final String caption;
         public final String mediaUrl;
+        public final List<String> mediaUrls;
         public final String mediaType;
         public final long createdAtMs;
+        public final boolean isSnap;
 
-        public ProfilePostItem(String id, String title, String caption, String mediaUrl, String mediaType, long createdAtMs) {
+        public ProfilePostItem(String id, String title, String caption, String mediaUrl, List<String> mediaUrls, String mediaType, long createdAtMs, boolean isSnap) {
             this.id = id;
             this.title = title;
             this.caption = caption;
             this.mediaUrl = mediaUrl;
+            this.mediaUrls = mediaUrls != null && !mediaUrls.isEmpty() ? mediaUrls : (mediaUrl != null ? java.util.Collections.singletonList(mediaUrl) : new java.util.ArrayList<>());
             this.mediaType = mediaType;
             this.createdAtMs = createdAtMs;
+            this.isSnap = isSnap;
+        }
+
+        public ProfilePostItem(String id, String title, String caption, String mediaUrl, String mediaType, long createdAtMs, boolean isSnap) {
+            this(id, title, caption, mediaUrl, null, mediaType, createdAtMs, isSnap);
+        }
+
+        public ProfilePostItem(String id, String title, String caption, String mediaUrl, String mediaType, long createdAtMs) {
+            this(id, title, caption, mediaUrl, null, mediaType, createdAtMs, "SNAP".equalsIgnoreCase(mediaType));
+        }
+    }
+
+    private interface OnPostClickListener {
+        void onPostClick(ProfilePostItem item);
+    }
+
+    private static class PostCarouselAdapter extends RecyclerView.Adapter<PostCarouselAdapter.CarouselViewHolder> {
+        private final List<String> imageUrls;
+
+        PostCarouselAdapter(List<String> imageUrls) {
+            this.imageUrls = imageUrls != null ? imageUrls : new java.util.ArrayList<>();
+        }
+
+        @NonNull
+        @Override
+        public CarouselViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_carousel_image, parent, false);
+            return new CarouselViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CarouselViewHolder holder, int position) {
+            holder.bind(imageUrls.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        static class CarouselViewHolder extends RecyclerView.ViewHolder {
+            private final ImageView ivCarouselImage;
+
+            CarouselViewHolder(@NonNull View itemView) {
+                super(itemView);
+                ivCarouselImage = itemView.findViewById(R.id.iv_carousel_image);
+            }
+
+            void bind(String url) {
+                if (ivCarouselImage != null && !TextUtils.isEmpty(url)) {
+                    Glide.with(itemView.getContext())
+                            .load(url)
+                            .placeholder(R.drawable.bg_sample_gym_preview)
+                            .error(R.drawable.bg_sample_gym_preview)
+                            .into(ivCarouselImage);
+                }
+            }
         }
     }
 
     // RecyclerView Adapter
     private static class ProfilePostAdapter extends RecyclerView.Adapter<ProfilePostAdapter.PostViewHolder> {
-
-        interface OnPostClickListener {
-            void onPostClick(ProfilePostItem item);
-        }
 
         private final List<ProfilePostItem> list;
         private final OnPostClickListener listener;
@@ -708,24 +1314,44 @@ public class ProfileFragment extends Fragment {
         static class PostViewHolder extends RecyclerView.ViewHolder {
             ImageView ivThumbnail;
             ImageView ivMediaTypeIcon;
+            TextView tvGridDateTime;
 
             PostViewHolder(@NonNull View itemView) {
                 super(itemView);
                 ivThumbnail = itemView.findViewById(R.id.iv_grid_thumbnail);
                 ivMediaTypeIcon = itemView.findViewById(R.id.iv_media_type_icon);
+                tvGridDateTime = itemView.findViewById(R.id.tv_grid_date_time);
             }
 
             void bind(ProfilePostItem item, OnPostClickListener listener) {
                 if (ivThumbnail != null && item.mediaUrl != null) {
                     Glide.with(itemView.getContext())
                             .load(item.mediaUrl)
-                            .placeholder(R.drawable.ic_avatar_placeholder)
-                            .error(R.drawable.ic_avatar_placeholder)
+                            .placeholder(R.drawable.bg_sample_gym_preview)
+                            .error(R.drawable.bg_sample_gym_preview)
                             .into(ivThumbnail);
                 }
 
                 if (ivMediaTypeIcon != null) {
-                    ivMediaTypeIcon.setVisibility("VIDEO".equalsIgnoreCase(item.mediaType) ? View.VISIBLE : View.GONE);
+                    if (item.mediaUrls != null && item.mediaUrls.size() > 1) {
+                        ivMediaTypeIcon.setImageResource(R.drawable.ic_carousel_layers);
+                        ivMediaTypeIcon.setVisibility(View.VISIBLE);
+                    } else if ("VIDEO".equalsIgnoreCase(item.mediaType) || "SNAP".equalsIgnoreCase(item.mediaType)) {
+                        ivMediaTypeIcon.setImageResource(R.drawable.ic_snap_video);
+                        ivMediaTypeIcon.setVisibility(View.VISIBLE);
+                    } else {
+                        ivMediaTypeIcon.setVisibility(View.GONE);
+                    }
+                }
+
+                if (tvGridDateTime != null) {
+                    if (item.isSnap && item.createdAtMs > 0) {
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM, hh:mm a", java.util.Locale.getDefault());
+                        tvGridDateTime.setText(sdf.format(new java.util.Date(item.createdAtMs)));
+                        tvGridDateTime.setVisibility(View.VISIBLE);
+                    } else {
+                        tvGridDateTime.setVisibility(View.GONE);
+                    }
                 }
 
                 itemView.setOnClickListener(v -> {

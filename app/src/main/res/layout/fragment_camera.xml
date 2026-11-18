@@ -5,6 +5,8 @@
     android:id="@+id/camera_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:background="@color/brand_bottom_black_blue">
 
     <!-- Live Camera Preview -->
@@ -12,6 +14,7 @@
         android:id="@+id/preview_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:scaleType="fillCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -156,7 +159,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="6dp"
         android:text="1.0x"
-        android:textColor="@color/electric_blue"
+        android:textColor="@color/white"
         android:textSize="13sp"
         android:textStyle="bold"
         android:visibility="gone"
@@ -212,6 +215,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Front Camera Selfie Screen Flash Frame Border Overlay -->
+    <View
+        android:id="@+id/v_selfie_flash_border"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_selfie_flash_border"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- AI Food Scanner Viewfinder & Laser Reticle Overlay -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_food_scan_overlay"
@@ -244,13 +259,15 @@
         android:id="@+id/bottom_capture_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:paddingHorizontal="24dp"
-        android:paddingBottom="24dp"
+        android:paddingBottom="42dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- PHOTO / VIDEO / FOOD ANALYZE Mode Selector -->
+        <!-- PHOTO / FOOD ANALYZE Mode Selector -->
         <LinearLayout
             android:id="@+id/mode_selector_container"
             android:layout_width="wrap_content"
@@ -276,17 +293,6 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/btn_mode_video"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="8dp"
-                android:text="VIDEO"
-                android:textColor="@color/text_secondary_blue"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
                 android:id="@+id/btn_mode_food"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -296,6 +302,37 @@
                 android:textColor="@color/text_secondary_blue"
                 android:textSize="13sp"
                 android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Video Hands-Free Lock Target Container (Snapchat style) -->
+        <LinearLayout
+            android:id="@+id/layout_video_lock_target"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/btn_shutter"
+            app:layout_constraintEnd_toStartOf="@id/btn_shutter"
+            app:layout_constraintTop_toTopOf="@id/btn_shutter"
+            tools:visibility="visible">
+
+            <FrameLayout
+                android:id="@+id/container_lock_icon"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_control_circle">
+
+                <ImageView
+                    android:id="@+id/iv_lock_target"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_lock"
+                    app:tint="@color/white" />
+            </FrameLayout>
         </LinearLayout>
 
         <!-- Gallery Button (Left) -->
@@ -331,8 +368,10 @@
         <!-- Shutter / Record Button (Center) -->
         <FrameLayout
             android:id="@+id/btn_shutter"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintBottom_toBottomOf="parent"

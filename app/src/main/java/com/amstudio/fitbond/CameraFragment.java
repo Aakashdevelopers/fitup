@@ -31,6 +31,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -105,10 +106,10 @@ public class CameraFragment extends Fragment {
     private TextView tvRecordingTimer;
     private View vRecordingDot;
     private View vCaptureFlash;
+    private View vSelfieFlashBorder;
     private View bottomCaptureContainer;
     private View modeSelectorContainer;
     private TextView btnModePhoto;
-    private TextView btnModeVideo;
     private TextView btnModeFood;
     private View layoutFoodScanOverlay;
     private FrameLayout btnGallery;
@@ -118,6 +119,10 @@ public class CameraFragment extends Fragment {
     private View vShutterOuter;
     private View vShutterInner;
     private ImageButton btnGrid;
+
+    private View layoutVideoLockTarget;
+    private View containerLockIcon;
+    private ImageView ivLockTarget;
 
     // Media Preview Views
     private View layoutMediaPreview;
@@ -145,6 +150,9 @@ public class CameraFragment extends Fragment {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private Runnable timerRunnable;
     private Runnable hideZoomRunnable;
+    private Runnable longPressVideoRunnable;
+    private boolean isLongPressRecording = false;
+    private boolean isHandsFreeLocked = false;
 
     private MediaRepository mediaRepository;
 
@@ -209,6 +217,9 @@ public class CameraFragment extends Fragment {
 
     private void bindViews(@NonNull View view) {
         previewView = view.findViewById(R.id.preview_view);
+        if (previewView != null) {
+            previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
+        }
         gridOverlay = view.findViewById(R.id.grid_overlay);
         focusRing = view.findViewById(R.id.focus_ring);
         layoutPermission = view.findViewById(R.id.layout_permission);
@@ -230,10 +241,10 @@ public class CameraFragment extends Fragment {
         tvRecordingTimer = view.findViewById(R.id.tv_recording_timer);
         vRecordingDot = view.findViewById(R.id.v_recording_dot);
         vCaptureFlash = view.findViewById(R.id.v_capture_flash);
+        vSelfieFlashBorder = view.findViewById(R.id.v_selfie_flash_border);
         bottomCaptureContainer = view.findViewById(R.id.bottom_capture_container);
         modeSelectorContainer = view.findViewById(R.id.mode_selector_container);
         btnModePhoto = view.findViewById(R.id.btn_mode_photo);
-        btnModeVideo = view.findViewById(R.id.btn_mode_video);
         btnModeFood = view.findViewById(R.id.btn_mode_food);
         layoutFoodScanOverlay = view.findViewById(R.id.layout_food_scan_overlay);
         btnGallery = view.findViewById(R.id.btn_gallery);
@@ -243,6 +254,10 @@ public class CameraFragment extends Fragment {
         vShutterOuter = view.findViewById(R.id.v_shutter_outer);
         vShutterInner = view.findViewById(R.id.v_shutter_inner);
         btnGrid = view.findViewById(R.id.btn_grid);
+
+        layoutVideoLockTarget = view.findViewById(R.id.layout_video_lock_target);
+        containerLockIcon = view.findViewById(R.id.container_lock_icon);
+        ivLockTarget = view.findViewById(R.id.iv_lock_target);
 
         layoutMediaPreview = view.findViewById(R.id.layout_media_preview);
         View previewTopBar = view.findViewById(R.id.preview_top_bar);
@@ -277,21 +292,24 @@ public class CameraFragment extends Fragment {
             btnGrid.setImageResource(isGridVisible ? R.drawable.ic_grid_on : R.drawable.ic_grid_off);
         });
 
-        btnModePhoto.setOnClickListener(v -> setCaptureMode(MODE_PHOTO));
-        btnModeVideo.setOnClickListener(v -> setCaptureMode(MODE_VIDEO));
+        if (btnModePhoto != null) {
+            btnModePhoto.setOnClickListener(v -> setCaptureMode(MODE_PHOTO));
+        }
         if (btnModeFood != null) {
             btnModeFood.setOnClickListener(v -> setCaptureMode(MODE_FOOD_ANALYZE));
         }
 
-        btnShutter.setOnClickListener(v -> {
-            if (currentMode == MODE_PHOTO) {
-                takePhoto();
-            } else if (currentMode == MODE_VIDEO) {
-                toggleVideoRecording();
-            } else if (currentMode == MODE_FOOD_ANALYZE) {
-                takeFoodPhotoAndAnalyze();
+        setupShutterTouchListener();
+
+        View.OnClickListener stopLockListener = v -> {
+            if (isHandsFreeLocked || activeRecording != null) {
+                stopVideoRecording();
             }
-        });
+        };
+
+        if (layoutVideoLockTarget != null) layoutVideoLockTarget.setOnClickListener(stopLockListener);
+        if (containerLockIcon != null) containerLockIcon.setOnClickListener(stopLockListener);
+        if (ivLockTarget != null) ivLockTarget.setOnClickListener(stopLockListener);
 
         btnGallery.setOnClickListener(v -> {
             GalleryPreviewActivity.openWithSampleData(requireContext(), "Gallery");
@@ -319,6 +337,121 @@ public class CameraFragment extends Fragment {
             }
             layoutMediaPreview.setVisibility(View.GONE);
             Toast.makeText(getContext(), "Media selected", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void setupShutterTouchListener() {
+        if (btnShutter == null) return;
+
+        btnShutter.setOnTouchListener(new View.OnTouchListener() {
+            private long touchDownTime = 0;
+            private float initialX = 0f;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        touchDownTime = System.currentTimeMillis();
+                        initialX = event.getRawX();
+                        isLongPressRecording = false;
+
+                        if (ivLockTarget != null) {
+                            ivLockTarget.setColorFilter(Color.WHITE);
+                        }
+                        if (containerLockIcon != null) {
+                            containerLockIcon.setBackgroundResource(R.drawable.bg_control_circle);
+                            containerLockIcon.setScaleX(1.0f);
+                            containerLockIcon.setScaleY(1.0f);
+                        }
+
+                        if (longPressVideoRunnable != null) {
+                            mainHandler.removeCallbacks(longPressVideoRunnable);
+                        }
+
+                        longPressVideoRunnable = () -> {
+                            isLongPressRecording = true;
+                            if (vShutterOuter != null) {
+                                vShutterOuter.animate().scaleX(1.22f).scaleY(1.22f).setDuration(200).start();
+                            }
+                            if (layoutVideoLockTarget != null) {
+                                layoutVideoLockTarget.setVisibility(View.VISIBLE);
+                                layoutVideoLockTarget.setAlpha(1.0f);
+                            }
+                            if (currentMode != MODE_VIDEO) {
+                                setCaptureMode(MODE_VIDEO);
+                            }
+                            if (activeRecording == null) {
+                                startVideoRecording();
+                            }
+                        };
+
+                        mainHandler.postDelayed(longPressVideoRunnable, 300);
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        if (isLongPressRecording && !isHandsFreeLocked) {
+                            float deltaX = initialX - event.getRawX();
+                            float density = getResources().getDisplayMetrics().density;
+                            if (deltaX > 0) {
+                                float progress = Math.min(1.0f, deltaX / (80 * density));
+                                if (containerLockIcon != null) {
+                                    containerLockIcon.setScaleX(1.0f + 0.25f * progress);
+                                    containerLockIcon.setScaleY(1.0f + 0.25f * progress);
+                                }
+                                if (deltaX >= (80 * density)) {
+                                    isHandsFreeLocked = true;
+                                    if (v != null) v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                                    if (ivLockTarget != null) {
+                                        ivLockTarget.setColorFilter(Color.parseColor("#FF3B30"));
+                                    }
+                                    if (containerLockIcon != null) {
+                                        containerLockIcon.setBackgroundResource(R.drawable.bg_control_circle);
+                                        containerLockIcon.setScaleX(1.2f);
+                                        containerLockIcon.setScaleY(1.2f);
+                                    }
+                                    Toast.makeText(getContext(), "Hands-Free Video Locked 🔒", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        v.performClick();
+                    case MotionEvent.ACTION_CANCEL:
+                        long duration = System.currentTimeMillis() - touchDownTime;
+
+                        if (longPressVideoRunnable != null) {
+                            mainHandler.removeCallbacks(longPressVideoRunnable);
+                            longPressVideoRunnable = null;
+                        }
+
+                        if (vShutterOuter != null) {
+                            vShutterOuter.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                        }
+
+                        if (isHandsFreeLocked) {
+                            if (duration < 300) {
+                                stopVideoRecording();
+                            }
+                        } else if (isLongPressRecording || activeRecording != null) {
+                            isLongPressRecording = false;
+                            stopVideoRecording();
+                        } else if (duration < 300) {
+                            // Short Tap Action
+                            if (currentMode == MODE_PHOTO) {
+                                takePhoto();
+                            } else if (currentMode == MODE_VIDEO) {
+                                toggleVideoRecording();
+                            } else if (currentMode == MODE_FOOD_ANALYZE) {
+                                takeFoodPhotoAndAnalyze();
+                            }
+                        }
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
         });
     }
 
@@ -445,23 +578,39 @@ public class CameraFragment extends Fragment {
     }
 
     private void updateFlashAvailability() {
-        if (camera == null) return;
+        if (btnFlash == null) return;
 
-        boolean hasFlash = camera.getCameraInfo().hasFlashUnit();
-        if (isFrontCamera || !hasFlash) {
-            btnFlash.setAlpha(0.4f);
-            btnFlash.setImageResource(R.drawable.ic_flash_off);
-            isFlashOn = false;
-        } else {
+        boolean hasFlash = camera != null && camera.getCameraInfo().hasFlashUnit();
+
+        if (isFrontCamera) {
             btnFlash.setAlpha(1.0f);
             btnFlash.setImageResource(isFlashOn ? R.drawable.ic_flash_on : R.drawable.ic_flash_off);
+            applySelfieFlashMode(isFlashOn);
+        } else {
+            applySelfieFlashMode(false);
+            if (!hasFlash) {
+                btnFlash.setAlpha(0.4f);
+                btnFlash.setImageResource(R.drawable.ic_flash_off);
+                isFlashOn = false;
+            } else {
+                btnFlash.setAlpha(1.0f);
+                btnFlash.setImageResource(isFlashOn ? R.drawable.ic_flash_on : R.drawable.ic_flash_off);
+            }
         }
     }
 
     private void toggleFlash() {
+        if (isFrontCamera) {
+            isFlashOn = !isFlashOn;
+            btnFlash.setImageResource(isFlashOn ? R.drawable.ic_flash_on : R.drawable.ic_flash_off);
+            applySelfieFlashMode(isFlashOn);
+            Toast.makeText(getContext(), isFlashOn ? "Selfie Screen Flash On" : "Flash Off", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (camera == null) return;
         boolean hasFlash = camera.getCameraInfo().hasFlashUnit();
-        if (isFrontCamera || !hasFlash) {
+        if (!hasFlash) {
             Toast.makeText(getContext(), "Flash unavailable on active camera", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -471,6 +620,29 @@ public class CameraFragment extends Fragment {
         if (imageCapture != null) {
             imageCapture.setFlashMode(isFlashOn ? ImageCapture.FLASH_MODE_ON : ImageCapture.FLASH_MODE_OFF);
         }
+        try {
+            camera.getCameraControl().enableTorch(isFlashOn);
+        } catch (Exception ignored) {}
+    }
+
+    private void applySelfieFlashMode(boolean enable) {
+        if (vSelfieFlashBorder != null) {
+            vSelfieFlashBorder.setVisibility(enable ? View.VISIBLE : View.GONE);
+        }
+        if (enable) {
+            setScreenBrightness(1.0f);
+        } else {
+            setScreenBrightness(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE);
+        }
+    }
+
+    private void setScreenBrightness(float brightnessValue) {
+        if (getActivity() == null) return;
+        Window window = getActivity().getWindow();
+        if (window == null) return;
+        WindowManager.LayoutParams lp = window.getAttributes();
+        lp.screenBrightness = brightnessValue;
+        window.setAttributes(lp);
     }
 
     private void setCaptureMode(int mode) {
@@ -482,8 +654,9 @@ public class CameraFragment extends Fragment {
         currentMode = mode;
         isPhotoMode = (mode == MODE_PHOTO);
 
-        btnModePhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
-        btnModeVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
+        if (btnModePhoto != null) {
+            btnModePhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
+        }
         if (btnModeFood != null) {
             btnModeFood.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary_blue));
         }
@@ -493,10 +666,11 @@ public class CameraFragment extends Fragment {
         }
 
         if (mode == MODE_PHOTO) {
-            btnModePhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_electric_blue));
+            if (btnModePhoto != null) {
+                btnModePhoto.setTextColor(Color.WHITE);
+            }
             vShutterInner.setBackgroundResource(R.drawable.bg_shutter_inner_photo);
         } else if (mode == MODE_VIDEO) {
-            btnModeVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_electric_blue));
             vShutterInner.setBackgroundResource(R.drawable.bg_shutter_inner_video);
         } else if (mode == MODE_FOOD_ANALYZE) {
             if (btnModeFood != null) {
@@ -701,6 +875,14 @@ public class CameraFragment extends Fragment {
         if (timerRunnable != null) {
             mainHandler.removeCallbacks(timerRunnable);
         }
+
+        if (layoutVideoLockTarget != null) {
+            layoutVideoLockTarget.setVisibility(View.GONE);
+        }
+        if (ivLockTarget != null) {
+            ivLockTarget.setColorFilter(Color.WHITE);
+        }
+        isHandsFreeLocked = false;
 
         layoutRecordingTimer.setVisibility(View.GONE);
         vShutterInner.setBackgroundResource(R.drawable.bg_shutter_inner_video);
@@ -1143,8 +1325,15 @@ public class CameraFragment extends Fragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        applySelfieFlashMode(false);
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
+        applySelfieFlashMode(false);
         if (timerRunnable != null) {
             mainHandler.removeCallbacks(timerRunnable);
         }

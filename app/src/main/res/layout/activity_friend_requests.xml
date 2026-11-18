@@ -16,12 +16,17 @@
         android:layout_height="wrap_content" />
 
     <!-- Main Content Container -->
-    <LinearLayout
-        android:id="@+id/layout_requests_container"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_requests"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/layout_requests_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
 
         <!-- Top Bar -->
         <LinearLayout
@@ -122,5 +127,7 @@
             android:visibility="visible" />
 
     </LinearLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>

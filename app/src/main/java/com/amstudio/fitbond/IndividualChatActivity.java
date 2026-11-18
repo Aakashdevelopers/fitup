@@ -51,10 +51,14 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.amstudio.fitbond.model.SnapMetadata;
 import com.amstudio.fitbond.model.UserProfile;
+import com.amstudio.fitbond.util.ScreenshotDetector;
 import com.amstudio.fitbond.repository.ActiveCallManager;
 import com.amstudio.fitbond.repository.ChatCacheManager;
 import com.amstudio.fitbond.repository.ImgBBUploader;
+import com.amstudio.fitbond.repository.SnapMediaCache;
+import com.amstudio.fitbond.repository.SnapRepository;
 import com.amstudio.fitbond.repository.TencentChatManager;
 import com.amstudio.fitbond.repository.UserRepository;
 import com.google.firebase.firestore.DocumentChange;
@@ -135,6 +139,8 @@ public class IndividualChatActivity extends AppCompatActivity {
     private ActiveCallManager.OnCallStateChangeListener activeCallStateListener;
     private final Handler bannerHandler = new Handler(Looper.getMainLooper());
     private Runnable bannerTimerRunnable;
+
+    private ScreenshotDetector screenshotDetector;
 
     private String chatId = "1";
     private String userName = "Gym Buddy";
@@ -233,6 +239,32 @@ public class IndividualChatActivity extends AppCompatActivity {
         setupTencentMessageListener();
         setupFirestoreRealtimeListener();
         setupActiveCallBanner();
+        setupScreenshotDetector();
+    }
+
+    private void setupScreenshotDetector() {
+        screenshotDetector = new ScreenshotDetector(this, path -> {
+            if (!isFinishing()) {
+                String noticeText = "📸 " + (userName != null ? "You" : "Someone") + " took a screenshot of chat!";
+                sendScreenshotNoticeMessage(noticeText);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (screenshotDetector != null) {
+            screenshotDetector.startListening();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (screenshotDetector != null) {
+            screenshotDetector.stopListening();
+        }
     }
 
     private void setupActivityLaunchers() {
@@ -251,7 +283,7 @@ public class IndividualChatActivity extends AppCompatActivity {
                     if (bitmap != null) {
                         Uri uri = getImageUriFromBitmap(bitmap);
                         if (uri != null) {
-                            sendImageFromGallery(uri);
+                            sendSnapFromCamera(uri);
                         }
                     }
                 }
@@ -497,18 +529,8 @@ public class IndividualChatActivity extends AppCompatActivity {
 
             @Override
             public void onSnapClick(ChatMessage message, int startIndex) {
-                boolean isVideo = message.getSnapKind() == ChatMessage.SnapKind.VIDEO;
                 if (message.isSnap()) {
-                    SnapViewerDialog dialog = SnapViewerDialog.newInstance(
-                            userName,
-                            userInitials,
-                            gradientRes,
-                            isVideo,
-                            message.getDurationText(),
-                            message.getId(),
-                            message.getMediaUri()
-                    );
-                    dialog.show(getSupportFragmentManager(), "SnapViewerDialog");
+                    handleSnapClick(message);
                 } else {
                     ArrayList<String> uris = new ArrayList<>();
                     if (message.getMediaUris() != null && !message.getMediaUris().isEmpty()) {
@@ -525,7 +547,13 @@ public class IndividualChatActivity extends AppCompatActivity {
         });
         adapter.setFriendDetails(userInitials, gradientRes);
 
-        adapter.setOnMessageLongClickListener((message, anchorView) -> showReactionPicker(message, anchorView));
+        adapter.setOnMessageLongClickListener((message, anchorView) -> {
+            if (message.isSnap()) {
+                showSnapOptionsDialog(message);
+            } else {
+                showReactionPicker(message, anchorView);
+            }
+        });
         adapter.setOnReactionClickListener((message, emoji) -> toggleReactionOnMessage(message, emoji));
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -534,6 +562,138 @@ public class IndividualChatActivity extends AppCompatActivity {
         rvMessages.setAdapter(adapter);
 
         loadCachedMessages();
+    }
+
+    private void handleSnapClick(ChatMessage message) {
+        if (message == null) return;
+
+        if (message.isExpired()) {
+            Toast.makeText(this, "Snap expired and data deleted", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!message.isViewed() && !message.isOutgoing()) {
+            message.setViewed(true);
+            if (adapter != null) adapter.notifyDataSetChanged();
+            markMessageAsViewedInFirestore(message);
+
+            boolean isVideo = message.getSnapKind() == ChatMessage.SnapKind.VIDEO;
+            SnapViewerDialog dialog = SnapViewerDialog.newInstance(
+                    userName,
+                    userInitials,
+                    gradientRes,
+                    isVideo,
+                    message.getDurationText(),
+                    message.getId(),
+                    message.getMediaUri()
+            );
+            dialog.show(getSupportFragmentManager(), "SnapViewerDialog");
+        } else {
+            showSnapOptionsDialog(message);
+        }
+    }
+
+    private void markMessageAsViewedInFirestore(ChatMessage message) {
+        if (chatId == null || message == null || message.getId() == null) return;
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("isViewed", true);
+        updates.put("status", "READ");
+
+        FirebaseFirestore.getInstance()
+                .collection("chats").document(chatId)
+                .collection("messages").document(message.getId())
+                .update(updates);
+    }
+
+    private void showSnapOptionsDialog(ChatMessage message) {
+        if (message == null || isFinishing()) return;
+
+        SnapOptionsDialog dialog = SnapOptionsDialog.newInstance(
+                message.getReplayCount(),
+                message.isSavedInChat(),
+                message.isExpired()
+        );
+
+        dialog.setOnSnapOptionSelectedListener(new SnapOptionsDialog.OnSnapOptionSelectedListener() {
+            @Override
+            public void onReplaySelected() {
+                if (message.isExpired() || message.getRemainingReplays() <= 0) {
+                    Toast.makeText(IndividualChatActivity.this, "Maximum 3 replays reached for this snap", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                SnapRepository.getInstance().incrementSnapReplayCount(chatId, message.getId(), message.getId(), new SnapRepository.SnapReplayCallback() {
+                    @Override
+                    public void onSuccess(int newReplayCount, boolean isExpired) {
+                        message.setReplayCount(newReplayCount);
+                        if (isExpired) {
+                            message.setExpired(true);
+                            SnapMediaCache.getInstance().deleteCachedFile(IndividualChatActivity.this, message.getMediaUri());
+                        }
+                        if (adapter != null) adapter.notifyDataSetChanged();
+
+                        if (!isExpired) {
+                            boolean isVideo = message.getSnapKind() == ChatMessage.SnapKind.VIDEO;
+                            SnapViewerDialog snapViewer = SnapViewerDialog.newInstance(
+                                    userName,
+                                    userInitials,
+                                    gradientRes,
+                                    isVideo,
+                                    message.getDurationText(),
+                                    message.getId(),
+                                    message.getMediaUri()
+                            );
+                            snapViewer.show(getSupportFragmentManager(), "SnapViewerDialog");
+                        } else {
+                            Toast.makeText(IndividualChatActivity.this, "Final replay used. Snap expired and data deleted", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(IndividualChatActivity.this, "Failed to replay snap: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onSaveToggleSelected(boolean currentSavedState) {
+                boolean newSavedState = !currentSavedState;
+                SnapRepository.getInstance().setSnapSavedStatus(chatId, message.getId(), newSavedState, new SnapRepository.SnapActionCallback() {
+                    @Override
+                    public void onSuccess() {
+                        message.setSavedInChat(newSavedState);
+                        if (adapter != null) adapter.notifyDataSetChanged();
+                        Toast.makeText(IndividualChatActivity.this, newSavedState ? "Snap saved in chat 💾" : "Snap unsaved", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(IndividualChatActivity.this, "Failed to update save status", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onDeleteSelected() {
+                SnapRepository.getInstance().deleteSnapMediaAndDoc(chatId, message.getId(), message.getId(), message.getMediaUri(), new SnapRepository.SnapActionCallback() {
+                    @Override
+                    public void onSuccess() {
+                        SnapMediaCache.getInstance().deleteCachedFile(IndividualChatActivity.this, message.getMediaUri());
+                        messageList.remove(message);
+                        if (adapter != null) adapter.notifyDataSetChanged();
+                        Toast.makeText(IndividualChatActivity.this, "Snap deleted", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(IndividualChatActivity.this, "Failed to delete snap", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+
+        dialog.show(getSupportFragmentManager(), "SnapOptionsDialog");
     }
 
     private void showReactionPicker(ChatMessage message, View anchorView) {
@@ -874,23 +1034,32 @@ public class IndividualChatActivity extends AppCompatActivity {
                                 String mediaUrl = doc.getString("mediaUrl");
                                 Long duration = doc.getLong("duration");
                                 boolean isVideo = "VIDEO".equalsIgnoreCase(mType);
+                                boolean isSnapDoc = "SNAP".equalsIgnoreCase(type) || (mType != null && (mType.equalsIgnoreCase("PHOTO") || mType.equalsIgnoreCase("VIDEO")));
 
                                 ChatMessage.MessageType msgType;
                                 ChatMessage.SnapKind kind;
                                 if (isVideo) {
                                     msgType = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
                                     kind = ChatMessage.SnapKind.VIDEO;
+                                } else if (isSnapDoc) {
+                                    msgType = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
+                                    kind = ChatMessage.SnapKind.PHOTO;
                                 } else {
                                     msgType = isSelf ? ChatMessage.MessageType.IMAGE_OUTGOING : ChatMessage.MessageType.IMAGE_INCOMING;
                                     kind = ChatMessage.SnapKind.NONE;
                                 }
 
-                                String durationStr = isVideo ? "0:" + (duration != null ? duration : 15) : "";
-                                String label = isVideo ? "Video Snap" : "Photo";
+                                String durationStr = isVideo ? "0:" + (duration != null ? duration : 15) : (isSnapDoc ? (duration != null ? duration : 10) + "s" : "");
+                                String label = isVideo ? "Video Snap" : (isSnapDoc ? "Snap" : "Photo");
 
                                 ChatMessage snapMsg = new ChatMessage(mId, isSelf ? "me" : chatId, isSelf ? "You" : userName, label, msgType, kind, getCurrentFormattedTime(), durationStr, mediaUrl, false);
                                 snapMsg.setStatus(docStatus);
                                 parseAndApplyReactionsFromDoc(doc, snapMsg, currentUid);
+
+                                if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                                    SnapMediaCache.getInstance().preloadMedia(IndividualChatActivity.this, mediaUrl, isVideo);
+                                }
+
                                 if (adapter != null) {
                                     adapter.addMessage(snapMsg);
                                     scrollToBottom();
@@ -1048,12 +1217,16 @@ public class IndividualChatActivity extends AppCompatActivity {
                         type = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
                         kind = ChatMessage.SnapKind.VIDEO;
                     } else {
-                        type = isSelf ? ChatMessage.MessageType.IMAGE_OUTGOING : ChatMessage.MessageType.IMAGE_INCOMING;
-                        kind = ChatMessage.SnapKind.NONE;
+                        type = isSelf ? ChatMessage.MessageType.SNAP_OUTGOING : ChatMessage.MessageType.SNAP_INCOMING;
+                        kind = ChatMessage.SnapKind.PHOTO;
                     }
 
-                    String durationStr = isVideo ? "0:" + duration : "";
-                    String label = isVideo ? "Video Snap" : "Photo";
+                    String durationStr = isVideo ? "0:" + duration : duration + "s";
+                    String label = isVideo ? "Video Snap" : "Snap";
+
+                    if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                        SnapMediaCache.getInstance().preloadMedia(IndividualChatActivity.this, mediaUrl, isVideo);
+                    }
 
                     return new ChatMessage(snapId, senderId, senderName, label, type, kind, timeStr, durationStr, mediaUrl, false);
                 }
@@ -1365,6 +1538,64 @@ public class IndividualChatActivity extends AppCompatActivity {
         }
     }
 
+    private void sendScreenshotNoticeMessage(String noticeText) {
+        if (noticeText == null || noticeText.isEmpty()) return;
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        String msgId = "ss_" + System.currentTimeMillis();
+        String currentTime = getCurrentFormattedTime();
+
+        processedMsgIds.add(msgId);
+
+        ChatMessage msg = new ChatMessage(
+                msgId,
+                "me",
+                "You",
+                noticeText,
+                ChatMessage.MessageType.TEXT_OUTGOING,
+                ChatMessage.SnapKind.NONE,
+                currentTime,
+                "",
+                null,
+                false
+        );
+
+        if (adapter != null) {
+            adapter.addMessage(msg);
+            scrollToBottom();
+        }
+        saveCurrentMessagesToCache();
+
+        TencentChatManager.getInstance().sendTextMessage(
+                chatId,
+                noticeText,
+                new TencentChatManager.MessageCallback() {
+                    @Override
+                    public void onSuccess(V2TIMMessage message) {}
+
+                    @Override
+                    public void onError(int code, String desc) {
+                        Log.w(TAG, "Tencent IM send screenshot notice code " + code + ": " + desc);
+                    }
+                }
+        );
+
+        if (currentUid != null && chatId != null && !chatId.isEmpty()) {
+            String conversationId = currentUid.compareTo(chatId) < 0 ? currentUid + "_" + chatId : chatId + "_" + currentUid;
+            Map<String, Object> msgDoc = new HashMap<>();
+            msgDoc.put("id", msgId);
+            msgDoc.put("senderUid", currentUid);
+            msgDoc.put("senderName", "You");
+            msgDoc.put("text", noticeText);
+            msgDoc.put("type", "TEXT");
+            msgDoc.put("status", "SENT");
+            msgDoc.put("createdAt", FieldValue.serverTimestamp());
+
+            FirebaseFirestore.getInstance().collection("chats").document(conversationId)
+                    .collection("messages").document(msgId)
+                    .set(msgDoc);
+        }
+    }
+
     private Uri getImageUriFromBitmap(Bitmap bitmap) {
         if (bitmap == null) return null;
         try {
@@ -1461,6 +1692,66 @@ public class IndividualChatActivity extends AppCompatActivity {
                 Toast.makeText(IndividualChatActivity.this, "Image upload failed", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void sendSnapFromCamera(Uri imageUri) {
+        if (imageUri == null) return;
+
+        String currentUid = UserRepository.getInstance().getCurrentUid();
+        if (currentUid == null || chatId == null || chatId.isEmpty()) return;
+
+        String snapId = java.util.UUID.randomUUID().toString();
+        String msgId = "snap_" + snapId;
+        String currentTime = getCurrentFormattedTime();
+
+        processedMsgIds.add(msgId);
+        processedMsgIds.add(snapId);
+
+        ChatMessage localMsg = new ChatMessage(
+                snapId,
+                "me",
+                "You",
+                "Snap",
+                ChatMessage.MessageType.SNAP_OUTGOING,
+                ChatMessage.SnapKind.PHOTO,
+                currentTime,
+                "10s",
+                imageUri.toString(),
+                false
+        );
+
+        if (adapter != null) {
+            adapter.addMessage(localMsg);
+            scrollToBottom();
+        }
+        saveCurrentMessagesToCache();
+
+        Toast.makeText(this, "Sending Private Snap...", Toast.LENGTH_SHORT).show();
+
+        List<String> recipientUids = java.util.Collections.singletonList(chatId);
+
+        SnapRepository.getInstance().sendPrivateSnap(
+                this,
+                imageUri,
+                "PHOTO",
+                "",
+                recipientUids,
+                10,
+                new SnapRepository.SnapUploadCallback() {
+                    @Override
+                    public void onSuccess(SnapMetadata metadata) {
+                        Log.d(TAG, "Private snap sent successfully to " + chatId);
+                        localMsg.setStatus(ChatMessage.Status.SENT);
+                        if (adapter != null) adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e(TAG, "Failed to send private snap", e);
+                        Toast.makeText(IndividualChatActivity.this, "Snap send error: " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 
     private void openSnapCamera() {

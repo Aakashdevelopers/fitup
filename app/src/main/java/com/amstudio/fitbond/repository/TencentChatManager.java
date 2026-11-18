@@ -368,12 +368,16 @@ public class TencentChatManager {
 
                         @Override
                         public void onSuccess(V2TIMMessage v2TIMMessage) {
-                            callback.onSuccess(v2TIMMessage);
+                            if (callback != null) {
+                                callback.onSuccess(v2TIMMessage);
+                            }
                         }
 
                         @Override
                         public void onError(int code, String desc) {
-                            callback.onError(code, desc);
+                            if (callback != null) {
+                                callback.onError(code, desc);
+                            }
                         }
                     }
             );

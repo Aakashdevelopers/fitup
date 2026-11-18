@@ -26,15 +26,14 @@
     <!-- Distinct Private Snap Card Bubble -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/card_snap_bubble"
-        android:layout_width="220dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:background="@drawable/bg_snap_incoming_bubble"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
-        android:padding="12dp"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:padding="14dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/tv_incoming_avatar"
         app:layout_constraintTop_toTopOf="parent">

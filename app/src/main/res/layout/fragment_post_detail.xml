@@ -8,11 +8,17 @@
     android:background="#050608">
 
     <!-- 1. VERTICAL VIEWPAGER2 FOR SWIPING ALL POSTS -->
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/vp_posts"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_posts"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical" />
+        android:layout_height="match_parent">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vp_posts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- 2. EMPTY STATE WHEN NO POSTS EXIST -->
     <LinearLayout

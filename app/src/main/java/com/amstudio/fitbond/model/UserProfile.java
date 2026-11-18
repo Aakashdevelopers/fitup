@@ -18,6 +18,8 @@ public class UserProfile {
     private long friendsCount;
     private boolean isOnline;
     private boolean isPrivate;
+    private boolean showLocation = true;
+    private boolean isPremium = false;
 
     @ServerTimestamp
     private Timestamp lastActive;
@@ -156,15 +158,7 @@ public class UserProfile {
         return isOnline;
     }
 
-    public boolean getIsOnline() {
-        return isOnline;
-    }
-
     public void setOnline(boolean isOnline) {
-        this.isOnline = isOnline;
-    }
-
-    public void setIsOnline(boolean isOnline) {
         this.isOnline = isOnline;
     }
 
@@ -172,16 +166,16 @@ public class UserProfile {
         return isPrivate;
     }
 
-    public boolean getIsPrivate() {
-        return isPrivate;
-    }
-
     public void setPrivate(boolean isPrivate) {
         this.isPrivate = isPrivate;
     }
 
-    public void setIsPrivate(boolean isPrivate) {
-        this.isPrivate = isPrivate;
+    public boolean isShowLocation() {
+        return showLocation;
+    }
+
+    public void setShowLocation(boolean showLocation) {
+        this.showLocation = showLocation;
     }
 
     public Timestamp getLastActive() {
@@ -206,5 +200,13 @@ public class UserProfile {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isPremium() {
+        return isPremium;
+    }
+
+    public void setPremium(boolean premium) {
+        isPremium = premium;
     }
 }

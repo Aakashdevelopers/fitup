@@ -18,6 +18,32 @@
         android:contentDescription="@null"
         tools:src="@drawable/bg_sample_gym_preview" />
 
+    <!-- Multi-Photo Horizontal Carousel ViewPager2 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/vp_post_carousel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- Top-Right Page Indicator Badge (e.g., 1/3) -->
+    <TextView
+        android:id="@+id/tv_carousel_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="68dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_pill_surface"
+        android:fontFamily="sans-serif-medium"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:text="1/3" />
+
     <!-- Dark Gradient Overlay at Bottom for Text Legibility -->
     <View
         android:layout_width="match_parent"

@@ -30,4 +30,22 @@
         android:visibility="gone"
         app:tint="@color/white" />
 
+    <!-- Date & Time Overlay for Snaps -->
+    <TextView
+        android:id="@+id/tv_grid_date_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#99000000"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:paddingStart="4dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="2dp"
+        android:textColor="@color/white"
+        android:textSize="9sp"
+        android:visibility="gone" />
+
 </FrameLayout>

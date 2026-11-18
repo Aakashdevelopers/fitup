@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.amstudio.fitbond.repository.SnapMediaCache;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
@@ -248,7 +249,13 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.tvSnapLabel.setText(isVideo ? "Video Snap" : "Snap");
             vh.ivSnapIcon.setImageResource(isVideo ? R.drawable.ic_snap_video : R.drawable.ic_nav_camera);
 
-            if (message.isOutgoing()) {
+            if (message.isExpired()) {
+                vh.tvSnapSubtext.setText("Snap Expired");
+                vh.cardSnapBubble.setAlpha(0.5f);
+            } else if (message.isSavedInChat()) {
+                vh.tvSnapSubtext.setText("Saved in Chat • Hold for options");
+                vh.cardSnapBubble.setAlpha(1.0f);
+            } else if (message.isOutgoing()) {
                 if (message.getStatus() == ChatMessage.Status.READ) {
                     vh.tvSnapSubtext.setText("Opened • " + message.getDurationText());
                 } else if (message.getStatus() == ChatMessage.Status.DELIVERED) {
@@ -256,8 +263,19 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 } else {
                     vh.tvSnapSubtext.setText("Sent • " + message.getDurationText());
                 }
+                vh.cardSnapBubble.setAlpha(1.0f);
             } else {
-                vh.tvSnapSubtext.setText(message.isViewed() ? "Opened • Tap to replay" : "Tap to view • " + message.getDurationText());
+                if (message.isViewed()) {
+                    int remaining = message.getRemainingReplays();
+                    if (remaining > 0) {
+                        vh.tvSnapSubtext.setText("Opened • Hold to replay (" + remaining + "/3)");
+                    } else {
+                        vh.tvSnapSubtext.setText("Opened • 0 replays left");
+                    }
+                } else {
+                    vh.tvSnapSubtext.setText("Tap to view • " + message.getDurationText());
+                }
+                vh.cardSnapBubble.setAlpha(1.0f);
             }
 
             vh.tvMessageTime.setText(message.getTimestamp());
@@ -268,12 +286,9 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 vh.tvIncomingAvatar.setBackgroundResource(friendGradientRes);
             }
 
-            // Preload snap image silently for instant playback on click
-            if (!isVideo && message.getMediaUri() != null && !message.getMediaUri().isEmpty()) {
-                Glide.with(holder.itemView.getContext())
-                        .load(message.getMediaUri())
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .preload();
+            // Preload snap media (photo or video) silently for instant playback on click
+            if (!message.isExpired() && message.getMediaUri() != null && !message.getMediaUri().isEmpty()) {
+                SnapMediaCache.getInstance().preloadMedia(holder.itemView.getContext(), message.getMediaUri(), isVideo);
             }
 
             vh.cardSnapBubble.setOnClickListener(v -> {
@@ -554,14 +569,14 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    static class SnapMessageViewHolder extends RecyclerView.ViewHolder {
-        final View cardSnapBubble;
-        final ImageView ivSnapIcon;
-        final TextView tvSnapLabel;
-        final TextView tvSnapSubtext;
-        final TextView tvMessageTime;
-        final TextView tvIncomingAvatar;
-        final ImageView ivMessageStatus;
+    public static class SnapMessageViewHolder extends RecyclerView.ViewHolder {
+        public final View cardSnapBubble;
+        public final ImageView ivSnapIcon;
+        public final TextView tvSnapLabel;
+        public final TextView tvSnapSubtext;
+        public final TextView tvMessageTime;
+        public final TextView tvIncomingAvatar;
+        public final ImageView ivMessageStatus;
 
         SnapMessageViewHolder(@NonNull View itemView) {
             super(itemView);

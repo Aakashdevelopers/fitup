@@ -28,6 +28,7 @@ public class UserProfileDetailsDialog extends DialogFragment {
 
     private static final String ARG_UID = "arg_uid";
 
+    private TextView tvHeaderTitle;
     private ImageView ivAvatar;
     private TextView tvDisplayName;
     private TextView tvUsername;
@@ -74,6 +75,12 @@ public class UserProfileDetailsDialog extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        if (getContext() != null && !TextUtils.isEmpty(targetUid)) {
+            UserProfileActivity.start(getContext(), targetUid);
+            dismissAllowingStateLoss();
+            return;
+        }
+
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -84,6 +91,7 @@ public class UserProfileDetailsDialog extends DialogFragment {
     }
 
     private void initViews(View view) {
+        tvHeaderTitle = view.findViewById(R.id.tv_dialog_header_title);
         ivAvatar = view.findViewById(R.id.iv_dialog_avatar);
         tvDisplayName = view.findViewById(R.id.tv_dialog_display_name);
         tvUsername = view.findViewById(R.id.tv_dialog_username);
@@ -246,19 +254,19 @@ public class UserProfileDetailsDialog extends DialogFragment {
             if (btnFollow != null) btnFollow.setEnabled(true);
             Toast.makeText(getContext(), "Follow request pending", Toast.LENGTH_SHORT).show();
         } else {
-            FriendRepository.getInstance().sendFriendRequest(targetUid, new FriendRepository.OperationCallback() {
+            FriendRepository.getInstance().followUser(targetUid, new FriendRepository.FollowCallback() {
                 @Override
-                public void onSuccess() {
+                public void onSuccess(boolean isDirectFollow) {
                     isFollowLoading = false;
                     if (!isAdded()) return;
-                    if (loadedProfile != null && loadedProfile.isPrivate()) {
-                        isPending = true;
-                        isFollowing = false;
-                        Toast.makeText(getContext(), "Follow request sent!", Toast.LENGTH_SHORT).show();
-                    } else {
+                    if (isDirectFollow) {
                         isFollowing = true;
                         isPending = false;
                         Toast.makeText(getContext(), "Following!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        isPending = true;
+                        isFollowing = false;
+                        Toast.makeText(getContext(), "Follow request sent!", Toast.LENGTH_SHORT).show();
                     }
                     if (btnFollow != null) btnFollow.setEnabled(true);
                     updateFollowButtonUI();
@@ -328,6 +336,11 @@ public class UserProfileDetailsDialog extends DialogFragment {
     }
 
     private void populateData(@NonNull UserProfile profile) {
+        if (tvHeaderTitle != null) {
+            String handle = !TextUtils.isEmpty(profile.getUsername()) ? "@" + profile.getUsername() : (!TextUtils.isEmpty(profile.getDisplayName()) ? profile.getDisplayName() : "Profile");
+            tvHeaderTitle.setText(handle);
+        }
+
         if (tvDisplayName != null) {
             tvDisplayName.setText(!TextUtils.isEmpty(profile.getDisplayName()) ? profile.getDisplayName() : "FitUp Member");
         }

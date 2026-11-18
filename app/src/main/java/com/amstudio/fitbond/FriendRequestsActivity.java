@@ -59,6 +59,7 @@ public class FriendRequestsActivity extends AppCompatActivity {
     private SearchUsersAdapter searchAdapter;
     private final List<UserProfile> discoverableUsers = new ArrayList<>();
     private boolean hasPendingRequests = false;
+    private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshRequests;
 
     // Active Call Banner Views
     private View activeCallBanner;
@@ -117,6 +118,21 @@ public class FriendRequestsActivity extends AppCompatActivity {
         }
         if (btnClose != null) {
             btnClose.setOnClickListener(v -> finish());
+        }
+
+        swipeRefreshRequests = findViewById(R.id.swipe_refresh_requests);
+        if (swipeRefreshRequests != null) {
+            swipeRefreshRequests.setColorSchemeResources(R.color.electric_blue, R.color.primary_blue);
+            swipeRefreshRequests.setOnRefreshListener(() -> {
+                FriendRepository.getInstance().invalidateFriendsCache();
+                loadPendingRequests();
+                loadDiscoverableUsers();
+                swipeRefreshRequests.postDelayed(() -> {
+                    if (swipeRefreshRequests != null) {
+                        swipeRefreshRequests.setRefreshing(false);
+                    }
+                }, 800);
+            });
         }
 
         setupActiveCallBanner();
@@ -620,11 +636,15 @@ public class FriendRequestsActivity extends AppCompatActivity {
             holder.btnAddFriend.setOnClickListener(v -> {
                 holder.btnAddFriend.setEnabled(false);
 
-                FriendRepository.getInstance().sendFriendRequest(uid, new FriendRepository.OperationCallback() {
+                FriendRepository.getInstance().followUser(uid, new FriendRepository.FollowCallback() {
                     @Override
-                    public void onSuccess() {
+                    public void onSuccess(boolean isDirectFollow) {
                         sentRequestUids.add(uid);
-                        Toast.makeText(FriendRequestsActivity.this, "Friend request sent to " + name + "!", Toast.LENGTH_SHORT).show();
+                        if (isDirectFollow) {
+                            Toast.makeText(FriendRequestsActivity.this, "Now following " + name + "!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(FriendRequestsActivity.this, "Follow request sent to " + name + "!", Toast.LENGTH_SHORT).show();
+                        }
                         holder.btnAddFriend.setBackgroundResource(R.drawable.bg_circle_action_dark);
                         holder.btnAddFriend.setImageResource(R.drawable.ic_check);
                     }
