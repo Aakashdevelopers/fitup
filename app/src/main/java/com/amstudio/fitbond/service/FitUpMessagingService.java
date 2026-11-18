@@ -36,7 +36,7 @@ public class FitUpMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-        Log.d(TAG, "New FCM Token received: " + token);
+        Log.d(TAG, "FCM registration token refreshed.");
         saveTokenToFirestore(token);
     }
 
@@ -126,11 +126,11 @@ public class FitUpMessagingService extends FirebaseMessagingService {
                 );
             }
         } else {
-            showNotification(title, body, data);
+            showNotification(title, body, data, remoteMessage.getMessageId());
         }
     }
 
-    private void showNotification(String title, String body, Map<String, String> data) {
+    private void showNotification(String title, String body, Map<String, String> data, String messageId) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -148,11 +148,15 @@ public class FitUpMessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
+        int notificationId = messageId != null && !messageId.isEmpty()
+                ? messageId.hashCode()
+                : (int) System.currentTimeMillis();
+
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
-                0,
+                notificationId,
                 intent,
-                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -164,7 +168,7 @@ public class FitUpMessagingService extends FirebaseMessagingService {
                 .setContentIntent(pendingIntent);
 
         if (notificationManager != null) {
-            notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
+            notificationManager.notify(notificationId, notificationBuilder.build());
         }
     }
 
@@ -174,10 +178,18 @@ public class FitUpMessagingService extends FirebaseMessagingService {
 
         String uid = currentUser.getUid();
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult() != null) {
-                String token = task.getResult();
-                saveTokenToFirestoreForUid(uid, token);
+            if (!task.isSuccessful()) {
+                Log.e(TAG, "Unable to retrieve the current FCM registration token.", task.getException());
+                return;
             }
+
+            String token = task.getResult();
+            if (token == null || token.isEmpty()) {
+                Log.w(TAG, "Firebase returned an empty FCM registration token.");
+                return;
+            }
+
+            saveTokenToFirestoreForUid(uid, token);
         });
     }
 
