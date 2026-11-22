@@ -75,12 +75,6 @@ public class UserProfileDetailsDialog extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (getContext() != null && !TextUtils.isEmpty(targetUid)) {
-            UserProfileActivity.start(getContext(), targetUid);
-            dismissAllowingStateLoss();
-            return;
-        }
-
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
